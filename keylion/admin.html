@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KeyLion — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon"  type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
+<style>
+  .admin-wrap{ width:100%; max-width:1100px; margin:0 auto; padding:40px 24px 64px; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th,td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); }
+  th{ color:var(--text-faint); font-weight:600; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; }
+  .note{ color:var(--text-faint); font-size:13px; margin-bottom:20px; line-height:1.6; }
+  .warn{ background:#3a1414; color:#ffb4b4; padding:12px 16px; border-radius:var(--radius); margin-bottom:20px; font-size:13px; }
+  .admin-tabs{ display:flex; gap:6px; background:var(--bg-elev); border:1px solid var(--border); border-radius:999px; padding:4px; width:fit-content; margin-bottom:24px; }
+  .admin-tabs button{ background:none; border:none; color:var(--text-faint); font-size:13px; font-weight:500; padding:8px 16px; border-radius:999px; }
+  .admin-tabs button.active{ background:var(--bg-elev-2); color:var(--accent); }
+  .admin-tab-panel{ display:none; }
+  .admin-tab-panel.active{ display:block; }
+  .field-row{ margin-bottom:14px; }
+  .field-row label{ display:block; font-size:12px; color:var(--text-faint); margin-bottom:6px; font-family:var(--font-mono); }
+  .field-row input[type=text], .field-row input[type=url]{
+    width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius);
+    padding:9px 12px; color:var(--text); font-size:13px; font-family:var(--font-body);
+  }
+  .field-row.checkbox-row{ display:flex; align-items:center; gap:8px; }
+  .field-row.checkbox-row label{ margin:0; font-size:13px; color:var(--text); font-family:var(--font-body); }
+  #adSaveStatus{ font-size:12px; color:var(--success); min-height:16px; margin-top:10px; }
+  #adSaveStatus.err{ color:var(--error); }
+</style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <a href="index.html" class="logo" style="text-decoration:none;">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 4 V20"/>
+        <path d="M7 12 L17 5"/>
+        <path d="M7 12 L17 19"/>
+        <path d="M7 20 H13"/>
+      </svg>
+    </div>
+    <span class="logo-wordmark">Key<span>Lion</span></span>
+  </a>
+  <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint); letter-spacing:.4px; text-transform:uppercase;">admin panel</span>
+</header>
+
+<main style="align-items:stretch; padding:0;">
+<div class="admin-wrap">
+
+  <h2 class="view-title" style="text-align:left; margin-bottom:10px;">Admin panel</h2>
+  <p class="note">
+    Bu sahifa navigatsiyada ko'rinmaydi va hech qayerga havola qilinmagan — faqat siz uni to'g'ridan-to'g'ri URL orqali ochasiz.
+    Shunga qaramay, haqiqiy himoya bu sahifada emas, <b>Firebase Rules</b>da: faqat <code>xolmamatovsamdbek@gmail.com</code> hisobi
+    foydalanuvchilar ro'yxatini o'qiy oladi va reklama sozlamalarini yoza oladi. <b>Boshqa foydalanuvchilarning parollari bu yerda yo'q va bo'lmaydi ham</b> —
+    Firebase Authentication ularni xesh (bir tomonlama shifrlangan) holda alohida saqlaydi va hech qanday koddan o'qib bo'lmaydi.
+  </p>
+
+  <div id="gate" class="panel" style="max-width:380px; margin:32px auto; text-align:center;">
+    <p style="margin:0 0 16px; font-size:13px; color:var(--text-faint);">Admin email va parolingiz bilan kiring. Birinchi marta kirsangiz, shu yerda kiritgan parolingiz o'rnatiladi.</p>
+    <input type="email" id="gateEmail" placeholder="email" autocomplete="username" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:8px; font-family:var(--font-body);">
+    <input type="password" id="gatePassword" placeholder="parol (kamida 6 belgi)" autocomplete="current-password" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:12px; font-family:var(--font-body);">
+    <button class="btn accent" id="btnAdminLogin" style="width:100%; justify-content:center;">kirish</button>
+    <div id="gateError" style="color:var(--error); font-size:12px; margin-top:10px; min-height:14px;"></div>
+  </div>
+  <div id="deniedMsg" style="display:none;" class="warn">
+    Bu hisob admin emas. Faqat <code>xolmamatovsamdbek@gmail.com</code> hisobi bu panelni ko'ra oladi.
+  </div>
+
+  <div id="adminBody" style="display:none;">
+    <div class="admin-tabs" id="adminTabs">
+      <button data-tab="users" class="active">Foydalanuvchilar</button>
+      <button data-tab="ad">Reklama</button>
+    </div>
+
+    <!-- USERS TAB -->
+    <div class="admin-tab-panel active panel" id="tab-users">
+      <table>
+        <thead><tr>
+          <th>ism</th><th>email</th><th>telefon</th><th>ro'yxatdan o'tgan</th><th>oxirgi kirish</th><th>testlar</th><th>eng yaxshi wpm</th>
+        </tr></thead>
+        <tbody id="usersBody"><tr><td colspan="7">yuklanmoqda...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- AD TAB -->
+    <div class="admin-tab-panel panel" id="tab-ad">
+      <p class="note">
+        Bu yerda sozlangan reklama sayt bosh sahifasida, so'z yozish (typing) maydonining tagida, kichik va xira
+        ko'rinishda chiqadi — u foydalanuvchi test yozayotganda butunlay xiralashadi (ko'zga tashlanmaydi), toki
+        e'tiborni chalg'itmasin.
+      </p>
+      <div class="field-row checkbox-row">
+        <input type="checkbox" id="adEnabled">
+        <label for="adEnabled">Reklama yoqilgan (saytda ko'rsatilsin)</label>
+      </div>
+      <div class="field-row">
+        <label for="adImageUrl">Rasm URL (32×32 atrofida, kvadrat rasm tavsiya etiladi)</label>
+        <input type="url" id="adImageUrl" placeholder="https://...">
+      </div>
+      <div class="field-row">
+        <label for="adLinkUrl">Havola URL (bosilganda qayerga olib boradi)</label>
+        <input type="url" id="adLinkUrl" placeholder="https://...">
+      </div>
+      <div class="field-row">
+        <label for="adText">Qisqa matn (bitta qisqa jumla, majburiy emas)</label>
+        <input type="text" id="adText" maxlength="80" placeholder="masalan: onlayn matematika kurslari — MS/DTM tayyorgarligi">
+      </div>
+      <button class="btn accent" id="btnSaveAd">saqlash</button>
+      <div id="adSaveStatus"></div>
+
+      <h3 style="font-family:var(--font-display); font-size:14px; margin:28px 0 12px; color:var(--text-faint);">ko'rinishi qanday bo'ladi</h3>
+      <a href="#" class="ad-slot" id="adPreview" style="opacity:1; pointer-events:none;">
+        <img id="adPreviewImg" class="ad-slot-img" alt="">
+        <span id="adPreviewText" class="ad-slot-text"></span>
+        <span class="ad-slot-label">reklama</span>
+      </a>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBLCoeH_wuUKat2GXwLS2C-9S47Tf1Ikc4",
+    authDomain: "englishlearning-bb966.firebaseapp.com",
+    databaseURL: "https://englishlearning-bb966-default-rtdb.firebaseio.com",
+    projectId: "englishlearning-bb966",
+    storageBucket: "englishlearning-bb966.firebasestorage.app",
+    messagingSenderId: "782738149172",
+    appId: "1:782738149172:web:3fa9f70c1c5529ece29f61",
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  /* the single account allowed into this panel. ADMIN_EMAIL is only used for the
+     login form's early check (nicer error message); the real gate — here and in
+     Firebase Rules — is ADMIN_UID, since it can't have a casing mismatch the way
+     an email string comparison can. */
+  const ADMIN_EMAIL = 'xolmamatovsamdbek@gmail.com';
+  const ADMIN_UID = '7CbBj6bYnuYOOSRoWndin3DNb1n2';
+
+  document.getElementById('btnAdminLogin').addEventListener('click', ()=>{
+    const email = document.getElementById('gateEmail').value.trim();
+    const password = document.getElementById('gatePassword').value;
+    const errEl = document.getElementById('gateError');
+    errEl.textContent = '';
+    if(email.toLowerCase() !== ADMIN_EMAIL){
+      errEl.textContent = 'Bu panel faqat bitta admin hisobi uchun.';
+      return;
+    }
+    if(password.length < 6){
+      errEl.textContent = 'Parol kamida 6 belgidan iborat bo\'lishi kerak.';
+      return;
+    }
+    auth.signInWithEmailAndPassword(email, password).catch((err)=>{
+      console.error('admin signIn error', err.code, err.message);
+      /* newer Firebase projects hide "no such account" behind the same generic
+         auth/invalid-credential code used for a wrong password (anti email-enumeration).
+         So on ANY of these we try to create the account — if one already exists,
+         Firebase will say auth/email-already-in-use and THAT tells us it was really
+         just a wrong password. */
+      if(['auth/user-not-found','auth/invalid-credential','auth/wrong-password'].includes(err.code)){
+        auth.createUserWithEmailAndPassword(email, password).catch((err2)=>{
+          console.error('admin createUser error', err2.code, err2.message);
+          if(err2.code === 'auth/email-already-in-use'){
+            errEl.textContent = 'Parol noto\'g\'ri (hisob allaqachon mavjud).';
+          } else if(err2.code === 'auth/operation-not-allowed'){
+            errEl.textContent = 'Email/parol usuli o\'chiq: Firebase Console → Authentication → Sign-in method → Email/Password ni yoqing.';
+          } else {
+            errEl.textContent = 'Xato: ' + err2.message;
+          }
+        });
+      } else if(err.code === 'auth/operation-not-allowed'){
+        errEl.textContent = 'Email/parol usuli o\'chiq: Firebase Console → Authentication → Sign-in method → Email/Password ni yoqing.';
+      } else {
+        errEl.textContent = 'Xato: ' + err.message;
+      }
+    });
+  });
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, ch=>({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[ch]));
+  }
+
+  function fmtDate(ts){
+    if(!ts) return '—';
+    const d = new Date(ts);
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString().slice(0,5);
+  }
+
+  /* ---- tabs ---- */
+  document.getElementById('adminTabs').addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-tab]');
+    if(!btn) return;
+    document.querySelectorAll('#adminTabs button').forEach(b=> b.classList.toggle('active', b===btn));
+    document.querySelectorAll('.admin-tab-panel').forEach(p=> p.classList.toggle('active', p.id==='tab-'+btn.dataset.tab));
+  });
+
+  /* ---- users tab ---- */
+  function loadUsers(){
+    Promise.all([
+      db.ref('private').once('value'),
+      db.ref('users').once('value'),
+    ]).then(([privateSnap, usersSnap])=>{
+      const priv = privateSnap.val() || {};
+      const users = usersSnap.val() || {};
+      const allUids = new Set([...Object.keys(priv), ...Object.keys(users)]);
+      const rows = [...allUids].map(uid=>{
+        const p = priv[uid] || {};
+        const u = users[uid] || {};
+        return {
+          name: u.name || '(noma\'lum)',
+          email: p.email || '—',
+          phone: p.phone || '—',
+          createdAt: p.createdAt || u.createdAt,
+          lastLoginAt: p.lastLoginAt,
+          testsCount: u.testsCount || 0,
+          bestWpm: u.bestWpm || 0,
+        };
+      }).sort((a,b)=> (b.lastLoginAt||0) - (a.lastLoginAt||0));
+
+      const body = document.getElementById('usersBody');
+      body.innerHTML = rows.map(r=>
+        '<tr><td>'+escapeHtml(r.name)+'</td><td>'+escapeHtml(r.email)+'</td><td>'+escapeHtml(r.phone)+'</td><td>'+fmtDate(r.createdAt)+'</td><td>'+fmtDate(r.lastLoginAt)+'</td><td>'+r.testsCount+'</td><td>'+r.bestWpm+'</td></tr>'
+      ).join('') || '<tr><td colspan="7">Hali foydalanuvchi yo\u2019q.</td></tr>';
+    }).catch((err)=>{
+      document.getElementById('usersBody').innerHTML = '<tr><td colspan="7">Ma\u2019lumot o\u2019qishda xato (Rules tekshiring): '+escapeHtml(err.code||err.message)+'</td></tr>';
+    });
+  }
+
+  /* ---- ad tab ---- */
+  function updateAdPreview(){
+    const imgUrl = document.getElementById('adImageUrl').value.trim();
+    const text = document.getElementById('adText').value.trim();
+    document.getElementById('adPreviewImg').src = imgUrl;
+    document.getElementById('adPreviewImg').style.visibility = imgUrl ? 'visible' : 'hidden';
+    document.getElementById('adPreviewText').textContent = text || '(matn kiritilmagan)';
+  }
+  ['adImageUrl','adText'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', updateAdPreview);
+  });
+
+  function loadAdSettings(){
+    db.ref('settings/ad').once('value').then((snap)=>{
+      const ad = snap.val() || {};
+      document.getElementById('adEnabled').checked = !!ad.enabled;
+      document.getElementById('adImageUrl').value = ad.imageUrl || '';
+      document.getElementById('adLinkUrl').value = ad.linkUrl || '';
+      document.getElementById('adText').value = ad.text || '';
+      updateAdPreview();
+    }).catch((err)=>{
+      document.getElementById('adSaveStatus').textContent = 'Yuklashda xato: ' + (err.code || err.message);
+      document.getElementById('adSaveStatus').classList.add('err');
+    });
+  }
+
+  document.getElementById('btnSaveAd').addEventListener('click', ()=>{
+    const status = document.getElementById('adSaveStatus');
+    status.classList.remove('err');
+    status.textContent = 'saqlanmoqda...';
+    const ad = {
+      enabled: document.getElementById('adEnabled').checked,
+      imageUrl: document.getElementById('adImageUrl').value.trim(),
+      linkUrl: document.getElementById('adLinkUrl').value.trim(),
+      text: document.getElementById('adText').value.trim(),
+    };
+    db.ref('settings/ad').set(ad).then(()=>{
+      status.textContent = 'saqlandi ✓';
+    }).catch((err)=>{
+      status.textContent = 'Xato: ' + (err.code || err.message);
+      status.classList.add('err');
+    });
+  });
+
+  auth.onAuthStateChanged((user)=>{
+    if(!user || user.uid !== ADMIN_UID){
+      document.getElementById('gate').style.display = user ? 'none' : 'block';
+      const denied = document.getElementById('deniedMsg');
+      denied.style.display = user ? 'block' : 'none';
+      if(user){
+        denied.innerHTML = 'Hozir <code>'+escapeHtml(user.email || '(email yo\'q — mehmon/anonim hisob)')+'</code> hisobi bilan kirilgan, u admin emas. '
+          + 'Faqat <code>xolmamatovsamdbek@gmail.com</code> hisobi bu panelni ko\'ra oladi.'
+          + '<div style="margin-top:10px;"><button class="btn" id="btnAdminSignOut">chiqish va qayta urinish</button></div>';
+        const signOutBtn = document.getElementById('btnAdminSignOut');
+        if(signOutBtn) signOutBtn.addEventListener('click', ()=> auth.signOut());
+      }
+      document.getElementById('adminBody').style.display = 'none';
+      return;
+    }
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('deniedMsg').style.display = 'none';
+    document.getElementById('adminBody').style.display = 'block';
+    loadUsers();
+    loadAdSettings();
+  });
+</script>
+</body>
+</html>
