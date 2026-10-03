@@ -12,7 +12,7 @@ Static frontend in `keylion/`, backend = one Netlify Function (`netlify/function
    | name | what |
    |---|---|
    | `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` | from step 1 |
-   | `JWT_SECRET` | long random string (`openssl rand -hex 32`) |
+   | `JWT_SECRET` | optional: long random string; if unset it is derived from the Turso token |
    | `GOOGLE_CLIENT_ID` | Google Cloud → OAuth client (Web); add your site URL under *Authorized JavaScript origins* |
    | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | login for `/admin.html` |
    | `GROQ_API_KEY` | AI coach (Groq, optional `GROQ_MODEL`, default llama-3.3-70b-versatile) |

@@ -1,7 +1,7 @@
 /* KeyLion API — single Netlify Function (served at /api/*), backed by Turso (libSQL).
    Env vars (Netlify → Site settings → Environment variables):
      TURSO_DATABASE_URL, TURSO_AUTH_TOKEN   database
-     JWT_SECRET                             long random string, signs login tokens
+     JWT_SECRET                             optional; signs login tokens (derived from the Turso token if unset)
      GOOGLE_CLIENT_ID                       Google OAuth web client id (for "Sign in with Google")
      ADMIN_EMAIL, ADMIN_PASSWORD            credentials for /admin.html
      GROQ_API_KEY                           AI coach (key never reaches the browser); optional GROQ_MODEL */
@@ -36,17 +36,19 @@ const uid = () => crypto.randomUUID().replace(/-/g, '').slice(0, 24);
 const clean = (s, n = 24) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
 const num = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
 
+/* JWT_SECRET is optional: without it the signing key is derived from the (secret) Turso token */
+const jwtKey = () => process.env.JWT_SECRET || crypto.createHash('sha256').update('keylion-jwt:' + (process.env.TURSO_AUTH_TOKEN || '') + (process.env.TURSO_DATABASE_URL || '')).digest('hex');
 const b64u = (b) => Buffer.from(b).toString('base64url');
 function sign(payload, days = 90) {
   const body = b64u(JSON.stringify({ ...payload, exp: Math.floor(now() / 1000) + days * 86400 }));
-  const sig = crypto.createHmac('sha256', process.env.JWT_SECRET).update(body).digest('base64url');
+  const sig = crypto.createHmac('sha256', jwtKey()).update(body).digest('base64url');
   return body + '.' + sig;
 }
 function verify(token) {
-  if (!token || !process.env.JWT_SECRET) return null;
+  if (!token) return null;
   const [body, sig] = token.split('.');
   if (!body || !sig) return null;
-  const exp = crypto.createHmac('sha256', process.env.JWT_SECRET).update(body).digest('base64url');
+  const exp = crypto.createHmac('sha256', jwtKey()).update(body).digest('base64url');
   const a = Buffer.from(sig), b = Buffer.from(exp);
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
   try {
@@ -487,7 +489,7 @@ export default async (req, context) => {
       try { await db().execute('SELECT 1'); } catch (e) { dbStatus = 'error: ' + String(e.message).slice(0, 200); }
       return json({ api: 'ok', env: Object.fromEntries(names.map((k) => [k, !!process.env[k]])), database: dbStatus });
     }
-    const missing = ['TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN', 'JWT_SECRET'].filter((k) => !process.env[k] && !(k === 'TURSO_AUTH_TOKEN' && /^file:/.test(process.env.TURSO_DATABASE_URL || '')));
+    const missing = ['TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN'].filter((k) => !process.env[k] && !(k === 'TURSO_AUTH_TOKEN' && /^file:/.test(process.env.TURSO_DATABASE_URL || '')));
     if (missing.length) throw new HttpError(503, 'server not configured, missing environment variables: ' + missing.join(', '));
     await ensureSchema();
     const url = new URL(req.url);
