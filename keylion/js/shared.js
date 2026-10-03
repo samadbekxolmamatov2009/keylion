@@ -94,7 +94,7 @@
       const row = Math.round(curSpan.offsetTop / lineHeight);
       if(row !== el._klRow){
         el._klRow = row;
-        el.scrollTop = row * lineHeight;
+        el.scrollTop = row * lineHeight; // instant (scroll-behavior is auto), keeps caret in sync
       }
       /* caret is its own element so it can slide smoothly (CSS transition on left/top)
          between characters, instead of popping discretely from span to span like the old
@@ -102,8 +102,14 @@
       const caret = el._klCaret;
       if(caret){
         caret.style.height = Math.max(lineHeight - 6, 10) + 'px';
-        caret.style.top = (curSpan.offsetTop + 3 - el.scrollTop) + 'px';
+        /* caret lives inside the scrolling text box (position:relative), so it uses content
+           coordinates and scrolls together with the text - no scrollTop math, no drift */
+        caret.style.top = (curSpan.offsetTop + 3) + 'px';
         caret.style.left = (curSpan.offsetLeft - 1) + 'px';
+        /* keep the caret solid while typing (like monkeytype); resume blinking when idle */
+        caret.classList.add('typing');
+        clearTimeout(el._klIdle);
+        el._klIdle = setTimeout(()=> caret.classList.remove('typing'), 500);
         if(freshText){
           // let it render once at the instant position, then re-enable the sliding transition
           requestAnimationFrame(()=>{ caret.style.transition = ''; });

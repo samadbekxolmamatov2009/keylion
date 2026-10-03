@@ -6,8 +6,9 @@
     const achvWrap = document.getElementById('statsAchvWrap');
     if(!cardsWrap) return;
 
+    document.querySelector('.profile-panel').classList.toggle('is-guest', !!isGuest);
     if(isGuest){
-      cardsWrap.innerHTML = '<p class="empty-note">'+t('stats.guestNote')+'</p>';
+      cardsWrap.innerHTML = '';
       chartWrap.innerHTML = '';
       tableWrap.innerHTML = '';
       achvWrap.innerHTML = '';

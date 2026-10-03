@@ -76,6 +76,7 @@
       </div>
     </div>
     <div class="profile-auth-actions">
+      <div class="profile-auth-hint" id="profileGuestHint" data-i18n="stats.guestNote">Sign in to save your stats.</div>
       <button class="btn accent" id="btnOpenAuth" data-i18n="nav.login">kirish</button>
       <button class="btn" id="btnLogout" style="display:none;" data-i18n="nav.logout">chiqish</button>
     </div>
@@ -98,19 +99,17 @@
 </div>
 
 <!-- WELCOME / NAME MODAL -->
-<div id="welcomeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:60; align-items:center; justify-content:center;">
-  <div class="panel" style="width:320px; text-align:center;">
-    <svg viewBox="0 0 32 32" fill="none" style="width:34px; height:34px; margin:0 auto 14px; color:var(--accent);">
-      <path d="M16 4c-2 0-3.2 1.4-3.2 3 0 1 .5 1.7 .5 2.6 0 .9-1.1 1-1.9 1.6-2 1.5-3.4 4-3.4 7 0 4.5 3.8 8.4 8 8.4s8-3.9 8-8.4c0-3-1.4-5.5-3.4-7-.8-.6-1.9-.7-1.9-1.6 0-.9 .5-1.6 .5-2.6C19.2 5.4 18 4 16 4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-      <circle cx="13" cy="17.5" r="1" fill="currentColor" stroke="none"/>
-      <circle cx="19" cy="17.5" r="1" fill="currentColor" stroke="none"/>
-    </svg>
-    <h3 style="font-family:var(--font-display); font-size:16px; margin:0 0 6px;" data-i18n="welcome.title">Xush kelibsiz!</h3>
-    <p style="font-size:13px; color:var(--text-faint); margin:0 0 16px;" data-i18n="welcome.desc">Ismingizni kiriting — u doimiy saqlanadi va leaderboard'da shu ism ko'rinadi.</p>
-    <input id="welcomeNameInput" placeholder="ismingiz" data-i18n-placeholder="welcome.placeholder" maxlength="24" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:14px; text-align:center; font-family:var(--font-body);">
-    <button class="btn accent" id="btnWelcomeContinue" style="width:100%; justify-content:center; margin-top:12px;" data-i18n="welcome.continue">davom etish</button>
-    <div style="margin:16px 0 8px; font-size:11px; color:var(--text-faint); font-family:var(--font-mono);" data-i18n="welcome.or">yoki</div>
-    <button class="btn" id="btnWelcomeLogin" style="width:100%; justify-content:center;" data-i18n="welcome.loginBtn">hisobga kirish / ro'yxatdan o'tish</button>
+<div id="welcomeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); backdrop-filter:blur(4px); z-index:60; align-items:center; justify-content:center; padding:16px;">
+  <div class="panel welcome-panel">
+    <div class="welcome-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 V20"/><path d="M7 12 L17 5"/><path d="M7 12 L17 19"/><path d="M7 20 H13"/></svg>
+    </div>
+    <h3 class="welcome-title" data-i18n="welcome.title">Xush kelibsiz!</h3>
+    <p class="welcome-desc" data-i18n="welcome.desc">Ismingizni kiriting — u doimiy saqlanadi va leaderboard'da shu ism ko'rinadi.</p>
+    <input id="welcomeNameInput" class="welcome-input" placeholder="ismingiz" data-i18n-placeholder="welcome.placeholder" maxlength="24" autocomplete="off" spellcheck="false">
+    <button class="btn accent" id="btnWelcomeContinue" style="margin-top:12px;" data-i18n="welcome.continue">davom etish</button>
+    <div class="welcome-divider" data-i18n="welcome.or">yoki</div>
+    <button class="btn" id="btnWelcomeLogin" data-i18n="welcome.loginBtn">hisobga kirish / ro'yxatdan o'tish</button>
   </div>
 </div>
 
