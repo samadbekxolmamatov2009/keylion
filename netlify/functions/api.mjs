@@ -19,7 +19,10 @@ function db() {
   return client;
 }
 function ensureSchema() {
-  if (!schemaReady) schemaReady = db().batch(SCHEMA.map((sql) => ({ sql, args: [] })), 'write');
+  if (!schemaReady) {
+    /* don't cache a failure: a transient Turso error must not break every later request on a warm instance */
+    schemaReady = db().batch(SCHEMA.map((sql) => ({ sql, args: [] })), 'write').catch((e) => { schemaReady = null; throw e; });
+  }
   return schemaReady;
 }
 async function q(sql, args = []) { return (await db().execute({ sql, args })).rows; }
