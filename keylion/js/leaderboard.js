@@ -50,15 +50,13 @@
   function loadLeaderboard(){
     const body = document.getElementById('lbBody');
     body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-faint); padding:26px; font-family:var(--font-mono); font-size:12px;">' + t('leaderboard.loading') + '</td></tr>';
-    if(!fbReady || !db){
+    if(!fbReady){
       body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-faint); padding:26px; font-family:var(--font-mono); font-size:12px;">' + t('leaderboard.connecting') + '</td></tr>';
       setTimeout(()=>{ if(document.getElementById('view-leaderboard').classList.contains('active')) loadLeaderboard(); }, 1200);
       return;
     }
-    db.ref('scores').orderByChild('wpm').limitToLast(100).once('value').then((snap)=>{
-      const rows = [];
-      snap.forEach((child)=>{ rows.push(child.val()); });
-      lbRowsCache = rows;
+    api('GET', '/leaderboard').then((res)=>{
+      lbRowsCache = res.scores;
       renderLeaderboardRows();
     }).catch((err)=>{
       console.error(err);

@@ -34,13 +34,13 @@
   }
 
   function loadAd(){
-    if(!fbReady || !db){
+    if(!fbReady){
       setTimeout(loadAd, 1500);
       return;
     }
-    db.ref('settings/ad').once('value').then((snap)=>{
-      renderAd(snap.val());
+    api('GET', '/settings/ad').then((res)=>{
+      renderAd(res.ad);
     }).catch((err)=>{
-      logDebug('reklama sozlamalarini o\u2018qishda xato: ' + err.code);
+      logDebug('reklama sozlamalarini o\u2018qishda xato: ' + err.message);
     });
   }

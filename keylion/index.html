@@ -9,9 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -118,9 +116,7 @@
   <div class="panel" style="width:320px; max-height:88vh; overflow-y:auto; position:relative;">
     <button id="authClose" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-faint); font-size:18px; line-height:1;">&times;</button>
     <h3 style="font-family:var(--font-display); font-size:16px; margin:0 0 18px;" data-i18n="auth.title">Hisobga kirish</h3>
-    <button class="btn accent" id="btnGoogleLogin" style="width:100%; justify-content:center; margin-bottom:16px;">
-      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg> <span data-i18n="auth.google">Google bilan kirish</span>
-    </button>
+    <div id="googleBtnWrap" style="display:flex; justify-content:center; margin-bottom:16px; min-height:44px;"></div>
     <div style="text-align:center; color:var(--text-faint); font-size:11px; margin:12px 0; font-family:var(--font-mono);" data-i18n="auth.orEmail">yoki email orqali</div>
     <input type="text" id="authName" placeholder="ismingiz" data-i18n-placeholder="auth.namePlaceholder" maxlength="24" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:8px; font-family:var(--font-body);">
     <input type="email" id="authEmail" placeholder="email" data-i18n-placeholder="auth.emailPlaceholder" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:8px; font-family:var(--font-body);">
@@ -131,16 +127,6 @@
     </div>
     <div id="authError" style="color:var(--error); font-size:12px; margin-top:12px; min-height:14px; line-height:1.5;"></div>
 
-    <div style="text-align:center; color:var(--text-faint); font-size:11px; margin:16px 0 12px; font-family:var(--font-mono);" data-i18n="auth.orPhone">yoki telefon orqali</div>
-    <div id="phoneAuthStep1">
-      <input type="tel" id="authPhone" placeholder="+998901234567" data-i18n-placeholder="auth.phonePlaceholder" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:8px; font-family:var(--font-body);">
-      <button class="btn" id="btnSendCode" style="width:100%; justify-content:center;" data-i18n="auth.sendCode">SMS kod yuborish</button>
-    </div>
-    <div id="phoneAuthStep2" style="display:none;">
-      <input type="text" id="authPhoneCode" placeholder="6 xonali kod" data-i18n-placeholder="auth.codePlaceholder" maxlength="6" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:8px; font-family:var(--font-mono); text-align:center; letter-spacing:3px;">
-      <button class="btn accent" id="btnVerifyCode" style="width:100%; justify-content:center;" data-i18n="auth.verify">tasdiqlash</button>
-    </div>
-    <div id="recaptcha-container"></div>
   </div>
 </div>
 
@@ -382,7 +368,7 @@
 <script src="js/shared.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/achievements.js"></script>
-<script src="js/firebase.js"></script>
+<script src="js/backend.js"></script>
 <script src="js/leaderboard.js"></script>
 <script src="js/stats.js"></script>
 <script src="js/test.js"></script>

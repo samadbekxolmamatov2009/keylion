@@ -14,7 +14,7 @@
       achvWrap.innerHTML = '';
       return;
     }
-    if(!fbReady || !db || !uid){
+    if(!fbReady || !uid){
       cardsWrap.innerHTML = '<p class="empty-note">'+t('leaderboard.connecting')+'</p>';
       setTimeout(()=>{ if(isProfileModalOpen()) renderStats(); }, 1200);
       return;
@@ -22,12 +22,12 @@
 
     cardsWrap.innerHTML = '<p class="empty-note">'+t('leaderboard.loading')+'</p>';
     Promise.all([
-      db.ref('users/'+uid).once('value'),
-      db.ref('users/'+uid+'/history').orderByChild('ts').limitToLast(50).once('value'),
-    ]).then(([profSnap, histSnap])=>{
-      const profile = profSnap.val() || {};
-      const history = [];
-      histSnap.forEach(child=> history.push(child.val()));
+      api('GET', '/me'),
+      api('GET', '/history?limit=50'),
+    ]).then(([meRes, histRes])=>{
+      const profile = meRes.profile || {};
+      cachedProfile = profile;
+      const history = histRes.history || [];
       renderStatCards(cardsWrap, profile, history);
       renderWpmChart(chartWrap, history);
       renderRecentTestsTable(tableWrap, history);

@@ -186,12 +186,9 @@
   }
 
   function endRaceAsHost(){
-    if(!db || !raceState.roomCode || raceState.resultsShown) return;
-    db.ref('rooms/'+raceState.roomCode).once('value').then((snap)=>{
-      const room = snap.val();
-      if(!room || room.status === 'finished') return;
-      db.ref('rooms/'+raceState.roomCode).update({ status: 'finished', finishedAt: firebase.database.ServerValue.TIMESTAMP });
-    });
+    if(!fbReady || !raceState.roomCode || raceState.resultsShown || raceState.ending) return;
+    raceState.ending = true;
+    api('POST', '/rooms/'+raceState.roomCode+'/finish').catch(()=>{}).then(()=>{ raceState.ending = false; });
   }
 
   function showRaceResults(players){
@@ -242,53 +239,35 @@
   });
 
   document.getElementById('btnRaceReplay').addEventListener('click', ()=>{
-    if(!db || !raceState.roomCode) return;
+    if(!fbReady || !raceState.roomCode) return;
     document.getElementById('raceResultsScreen').style.display = 'none';
     document.getElementById('roomWaitingPanel').style.display = 'block';
     document.getElementById('raceLobby').style.display = 'block';
-    if(raceState.isHost){
-      // host resets the room back to a waiting lobby with the same code & players, ready to reconfigure
-      const resetPlayers = {};
-      Object.keys(roomPlayersCache).forEach(k=>{
-        resetPlayers[k] = { name: roomPlayersCache[k].name, progress: 0, wpm: 0, finished: false };
-      });
-      db.ref('rooms/'+raceState.roomCode).update({ status: 'waiting', players: resetPlayers }).catch(()=>{});
-    }
+    // host resets the room back to a waiting lobby with the same code & players, ready to reconfigure
+    if(raceState.isHost) api('POST', '/rooms/'+raceState.roomCode+'/reset').catch(()=>{});
   });
 
   /* ---- private room (real backend) ---- */
-  function generateRoomCode(){
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let s = '';
-    for(let i=0;i<5;i++) s += chars[Math.floor(Math.random()*chars.length)];
-    return s;
-  }
-
   document.getElementById('btnPrivateRoom').addEventListener('click', ()=>{
-    if(!fbReady || !db || !uid){
+    if(!fbReady || !uid){
       alert(t('dyn.race.needConnect'));
       return;
     }
-    const code = generateRoomCode();
     const maxPlayers = parseInt(document.getElementById('maxPlayersSelect').value, 10) || 10;
     const text = buildRaceText(raceOpts);
     const timeLimit = raceOpts.type==='time' ? raceOpts.timeLen : 60;
-    raceState.roomCode = code;
-    raceState.isHost = true;
-    raceState.maxPlayers = maxPlayers;
-    raceState.text = text;
-    raceState.timeLimit = timeLimit;
-    raceState.roomType = raceOpts.type;
-    raceState.lang = raceOpts.lang;
-    raceState.textLang = raceOpts.textLang;
-    raceState.syntaxMap = raceOpts.type==='code' ? tokenizeSyntax(text, raceOpts.lang) : null;
 
-    logDebug('xona yaratilmoqda: ' + code);
-    db.ref('rooms/'+code).set({
-      hostUid: uid, text: text, lang: raceOpts.lang, textLang: raceOpts.textLang, type: raceOpts.type, timeLimit: timeLimit, maxPlayers: maxPlayers,
-      status: 'waiting', createdAt: firebase.database.ServerValue.TIMESTAMP,
-      players: { [uid]: { name: playerName, progress: 0, wpm: 0, finished: false } }
-    }).then(()=>{
+    logDebug('xona yaratilmoqda...');
+    api('POST', '/rooms', { text, lang: raceOpts.lang, textLang: raceOpts.textLang, type: raceOpts.type, timeLimit, maxPlayers }).then(({ code })=>{
+      raceState.roomCode = code;
+      raceState.isHost = true;
+      raceState.maxPlayers = maxPlayers;
+      raceState.text = text;
+      raceState.timeLimit = timeLimit;
+      raceState.roomType = raceOpts.type;
+      raceState.lang = raceOpts.lang;
+      raceState.textLang = raceOpts.textLang;
+      raceState.syntaxMap = raceOpts.type==='code' ? tokenizeSyntax(text, raceOpts.lang) : null;
       logDebug('xona yaratildi OK: ' + code);
       const link = location.origin + location.pathname + '?room=' + code;
       document.getElementById('roomWaitingTitle').textContent = 'xona tayyor';
@@ -299,12 +278,8 @@
       document.getElementById('roomGuestWait').style.display = 'none';
       attachRoomListener(code);
     }).catch((err)=>{
-      logDebug('XATO xona yaratishda: ' + err.code + ' — ' + err.message);
-      if(err.code === 'PERMISSION_DENIED'){
-        alert(t('dyn.race.createFailPerm'));
-      } else {
-        alert(t('dyn.race.createFailGeneric') + ' (' + (err.code||err.message) + ')');
-      }
+      logDebug('XATO xona yaratishda: ' + err.message);
+      alert(t('dyn.race.createFailGeneric') + ' (' + err.message + ')');
     });
   });
 
@@ -320,13 +295,10 @@
   });
 
   function leaveRoom(){
-    if(raceState.roomCode && db){
-      db.ref('rooms/'+raceState.roomCode).off();
-      if(raceState.isHost){
-        db.ref('rooms/'+raceState.roomCode).remove().catch(()=>{});
-      } else if(uid){
-        db.ref('rooms/'+raceState.roomCode+'/players/'+uid).remove().catch(()=>{});
-      }
+    if(raceState.roomCode && fbReady){
+      stopRoomPolling();
+      /* server deletes the room when the host leaves, otherwise just removes this player */
+      api('POST', '/rooms/'+raceState.roomCode+'/leave').catch(()=>{});
     }
     raceState.roomCode = null;
     raceState.isHost = false;
@@ -347,7 +319,7 @@
       err.textContent = t('dyn.race.codeLength');
       return;
     }
-    if(!fbReady || !db || !uid){
+    if(!fbReady || !uid){
       err.textContent = t('dyn.race.connecting');
       return;
     }
@@ -357,23 +329,8 @@
   function joinRoomFromUrl(code){
     logDebug('xonaga qo‘shilishga urinilmoqda: ' + code);
     function tryJoin(){
-      if(!fbReady || !db || !uid){ setTimeout(tryJoin, 300); return; }
-      db.ref('rooms/'+code).once('value').then((snap)=>{
-        const data = snap.val();
-        const err = document.getElementById('joinCodeError');
-        if(!data){
-          if(err) err.textContent = t('dyn.race.roomNotFound');
-          return;
-        }
-        const players = data.players || {};
-        if(data.status && data.status !== 'waiting' && !players[uid]){
-          if(err) err.textContent = t('dyn.race.alreadyStarted');
-          return;
-        }
-        if(Object.keys(players).length >= (data.maxPlayers||10) && !players[uid]){
-          if(err) err.textContent = t('dyn.race.roomFull') + " (" + (data.maxPlayers||10) + ")";
-          return;
-        }
+      if(!fbReady || !uid){ setTimeout(tryJoin, 300); return; }
+      api('POST', '/rooms/'+code+'/join').then(({ room: data })=>{
         raceState.roomCode = code;
         raceState.isHost = (data.hostUid === uid);
         raceState.maxPlayers = data.maxPlayers || 10;
@@ -390,25 +347,25 @@
         document.getElementById('roomWaitingPanel').style.display = 'block';
         document.getElementById('roomHostControls').style.display = raceState.isHost ? 'block' : 'none';
         document.getElementById('roomGuestWait').style.display = raceState.isHost ? 'none' : 'block';
-        db.ref('rooms/'+code+'/players/'+uid).set({ name: playerName, progress: 0, wpm: 0, finished: false }).then(()=>{
-          logDebug('xonaga qo‘shildim OK: ' + code);
-          attachRoomListener(code);
-        }).catch((e2)=> logDebug('XATO players yozishda: ' + e2.code));
+        logDebug('xonaga qo‘shildim OK: ' + code);
+        attachRoomListener(code);
       }).catch((err)=>{
-        logDebug('XATO xonaga ulanishda: ' + err.code + ' — ' + err.message);
+        logDebug('XATO xonaga ulanishda: ' + err.message);
         const errEl = document.getElementById('joinCodeError');
-        if(errEl) errEl.textContent = err.code === 'PERMISSION_DENIED'
-          ? t('dyn.race.connectFailPerm')
-          : t('dyn.race.connectFail') + ' (' + (err.code||'') + ')';
+        if(!errEl) return;
+        errEl.textContent = err.status === 404 ? t('dyn.race.roomNotFound')
+          : err.message === 'already started' ? t('dyn.race.alreadyStarted')
+          : err.message === 'room full' ? t('dyn.race.roomFull')
+          : t('dyn.race.connectFail') + ' (' + err.message + ')';
       });
     }
     tryJoin();
   }
 
   document.getElementById('btnStartRace').addEventListener('click', ()=>{
-    if(!raceState.isHost || !db || !raceState.roomCode) return;
-    db.ref('rooms/'+raceState.roomCode).update({ status: 'racing', startedAt: firebase.database.ServerValue.TIMESTAMP }).catch((err)=>{
-      logDebug('XATO race boshlashda: ' + err.code);
+    if(!raceState.isHost || !fbReady || !raceState.roomCode) return;
+    api('POST', '/rooms/'+raceState.roomCode+'/start').then(pollRoomNow).catch((err)=>{
+      logDebug('XATO race boshlashda: ' + err.message);
     });
   });
 
@@ -424,14 +381,37 @@
     });
   }
 
+  /* The server has no push channel, so the client polls the room ~every 700 ms while it is in one. */
+  let roomPollTimer = null, roomPollBusy = false, handleRoom = null;
+  function stopRoomPolling(){
+    if(roomPollTimer){ clearInterval(roomPollTimer); roomPollTimer = null; }
+    handleRoom = null;
+  }
+  function pollRoomNow(){
+    const code = raceState.roomCode;
+    if(!code || roomPollBusy) return;
+    roomPollBusy = true;
+    api('GET', '/rooms/'+code).then(({ room })=>{
+      if(raceState.roomCode === code && handleRoom) handleRoom(room);
+    }).catch((err)=>{
+      if(err.status === 404 && raceState.roomCode === code){
+        logDebug('xona o‘chirildi yoki topilmadi');
+        if(raceState.resultsShown) stopRoomPolling();
+        if(!raceState.isHost && !raceState.resultsShown){
+          leaveRoom();
+          document.getElementById('raceScreen').style.display = 'none';
+          document.getElementById('raceLobby').style.display = 'block';
+        }
+      } else {
+        logDebug('XATO xona so‘rovi: ' + err.message);
+      }
+    }).then(()=>{ roomPollBusy = false; });
+  }
+
   function attachRoomListener(code){
     logDebug('xona tinglovchisi ulandi: ' + code);
-    db.ref('rooms/'+code).on('value', (snap)=>{
-      const room = snap.val();
-      if(!room){
-        logDebug('xona o‘chirildi yoki topilmadi');
-        return;
-      }
+    stopRoomPolling();
+    handleRoom = (room)=>{
       raceState.hostUid = room.hostUid;
       raceState.isHost = room.hostUid === uid;
       const players = room.players || {};
@@ -479,17 +459,16 @@
         raceState.started = false;
         showRaceResults(players);
       }
-    }, (err)=>{
-      logDebug('XATO xona tinglovchisi: ' + err.code + ' — ' + err.message);
-    });
+    };
+    roomPollTimer = setInterval(pollRoomNow, 700);
+    pollRoomNow();
   }
 
   function syncRoomProgress(finished, r){
-    if(!db || !raceState.roomCode || !uid) return;
+    if(!fbReady || !raceState.roomCode || !uid) return;
     const now = Date.now();
-    if(!finished && now - lastSync < 150) return;
+    if(!finished && now - lastSync < 400) return;
     lastSync = now;
-    const payload = { progress: r.pct, wpm: r.wpm, finished: !!finished };
-    if(finished) payload.finishedAt = firebase.database.ServerValue.TIMESTAMP;
-    db.ref('rooms/'+raceState.roomCode+'/players/'+uid).update(payload).catch((err)=> logDebug('XATO progress sync: ' + err.code));
+    api('POST', '/rooms/'+raceState.roomCode+'/progress', { progress: r.pct, wpm: r.wpm, finished: !!finished })
+      .catch((err)=> logDebug('XATO progress sync: ' + err.message));
   }

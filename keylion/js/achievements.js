@@ -30,7 +30,7 @@
   ];
 
   /* returns achievement defs not yet in profile.achievements whose check() passes against
-     the profile as it will look right after this test (see updateUserStats in firebase.js) */
+     the profile as it will look right after this test (see updateUserStats in backend.js) */
   function checkNewAchievements(profile, lastTest){
     const already = profile.achievements || {};
     return ACHIEVEMENTS.filter(a=> a.id!=='racer_win' && !already[a.id] && a.check(profile, lastTest));

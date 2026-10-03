@@ -1,0 +1,12 @@
+{
+  "name": "keylion",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate": "node scripts/migrate-firebase-to-turso.mjs"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "@netlify/blobs": "^8.1.0"
+  }
+}

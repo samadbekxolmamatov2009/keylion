@@ -6,7 +6,7 @@
   const profileNameInput = document.getElementById('profileNameInput');
 
   /* single place that keeps every name/avatar element in the UI in sync;
-     called from here and from firebase.js whenever playerName changes */
+     called from here and from backend.js whenever playerName changes */
   function syncProfileUI(name){
     nameDisplay.textContent = name;
     avatarEl.textContent = name.slice(0,2).toUpperCase();
@@ -34,10 +34,7 @@
     const val = profileNameInput.value.replace(/\s+/g,' ').trim();
     playerName = val || playerName;
     syncProfileUI(playerName);
-    if(db && uid){
-      if(isGuest) db.ref('guests/'+uid+'/name').set(playerName).catch(()=>{});
-      else db.ref('users/'+uid+'/name').set(playerName).catch(()=>{});
-    }
+    if(fbReady && uid) api('PUT', '/me', { name: playerName }).catch(()=>{});
   }
   document.getElementById('btnSaveProfileName').addEventListener('click', saveProfileName);
   profileNameInput.addEventListener('keydown', (e)=>{

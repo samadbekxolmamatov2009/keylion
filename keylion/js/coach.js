@@ -1,44 +1,18 @@
   /* ============ coach ============ */
   /* aggregate mistakes from the last 5 saved tests (persistent, cross-session);
      guests have no persistent history, so fall back to this session's mistakes only */
-  /* ---- AI Coach: real Claude API call ----
-     \u26a0\ufe0f XAVFSIZLIK ESLATMASI: bu kalit brauzer tomonida (client-side) ochiq turibdi \u2014
-     har qanday tashrifchi "view source"/Network tab orqali uni ko'rishi va sizning hisobingiz
-     hisobidan foydalanishi mumkin. Bu SIZNING ANIQ SO'ROVINGIZ bilan shunday qoldirildi.
-     Ishlab chiqarishga (production) chiqarishdan oldin: (1) bu kalitni Anthropic Console'da
-     bekor qilib yangisini yarating, (2) so'rovni Firebase Cloud Function orqali serverga
-     ko'chiring, u yerda kalit muhit o'zgaruvchisi sifatida yashirin turadi. */
-  const ANTHROPIC_API_KEY = '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';
+  /* ---- AI Coach: the Claude call happens on the server (/api/coach), the API key never reaches the browser ---- */
   async function fetchAICoachMessage(promptText){
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 220,
-        messages: [{ role: 'user', content: promptText }]
-      })
-    });
-    if(!res.ok){
-      const errBody = await res.text().catch(()=> '');
-      throw new Error('API ' + res.status + ' ' + errBody.slice(0,200));
-    }
-    const data = await res.json();
-    return (data.content && data.content[0] && data.content[0].text) ? data.content[0].text.trim() : null;
+    const res = await api('POST', '/coach', { prompt: promptText });
+    return res.text || null;
   }
 
   function getRecentMissedTally(callback){
-    if(!isGuest && db && uid){
-      db.ref('users/'+uid+'/history').orderByChild('ts').limitToLast(5).once('value').then((snap)=>{
+    if(!isGuest && fbReady && uid){
+      api('GET', '/history?limit=5').then((res)=>{
         const tally = {};
         let sawAny = false;
-        snap.forEach((child)=>{
-          const entry = child.val();
+        (res.history || []).forEach((entry)=>{
           if(entry && entry.missed){
             Object.entries(entry.missed).forEach(([ch,count])=>{
               tally[ch] = (tally[ch]||0) + count;
