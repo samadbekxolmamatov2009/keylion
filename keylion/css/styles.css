@@ -435,3 +435,24 @@
   }
   .achv-tile.locked .achv-tile-icon{ background:none; }
   .achv-tile-label{ font-size:10px; color: var(--text-faint); line-height:1.3; }
+
+  /* ---- profile: level bar + AI analysis ---- */
+  .level-bar{ flex:1; max-width:120px; height:6px; border-radius:999px; background: var(--bg-elev-2); border:1px solid var(--border); overflow:hidden; }
+  .level-bar-fill{ height:100%; width:0; background: linear-gradient(90deg, var(--accent-dim), var(--accent)); border-radius:999px; transition: width .5s ease; }
+  .level-next{ font-family: var(--font-mono); font-size:10px; color: var(--text-dim); white-space:nowrap; }
+  .panel h3.icon-ai::before{ content:'\2728'; font-size:13px; } /* sparkles */
+  .ai-panel{ margin: 0 0 16px; }
+  .ai-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+  .ai-head h3{ margin:0 !important; }
+  .ai-head .btn{ padding:7px 14px; font-size:12px; }
+  .ai-summary{ font-size:13.5px; line-height:1.6; color: var(--text); margin:0 0 14px; }
+  .ai-sec-title{ font-family: var(--font-mono); font-size:10px; letter-spacing:.6px; text-transform:uppercase; color: var(--text-dim); margin:14px 0 8px; }
+  .ai-weak{ display:flex; gap:10px; padding:10px 12px; border:1px solid var(--border); border-left:3px solid var(--error); background: var(--bg-elev); border-radius:8px; margin-bottom:8px; }
+  .ai-weak b{ display:block; font-size:13px; margin-bottom:2px; }
+  .ai-weak span{ font-size:12px; color: var(--text-faint); line-height:1.5; }
+  .ai-tips{ margin:0; padding-left:18px; font-size:12.5px; color: var(--text-faint); line-height:1.65; }
+  .ai-chips{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:4px; }
+  .ai-chip{ font-family: var(--font-mono); font-size:13px; min-width:30px; text-align:center; padding:4px 8px; border-radius:6px; background: var(--error-bg); color: var(--error); border:1px solid var(--border); }
+  .ai-chip small{ color: var(--text-faint); font-size:10px; margin-left:4px; }
+  .ai-practice{ margin-top:14px; width:100%; justify-content:center; }
+  .profile-panel.is-guest .ai-panel{ display:block; }

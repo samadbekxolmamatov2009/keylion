@@ -15,7 +15,7 @@ Static frontend in `keylion/`, backend = one Netlify Function (`netlify/function
    | `JWT_SECRET` | long random string (`openssl rand -hex 32`) |
    | `GOOGLE_CLIENT_ID` | Google Cloud → OAuth client (Web); add your site URL under *Authorized JavaScript origins* |
    | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | login for `/admin.html` |
-   | `ANTHROPIC_API_KEY` | AI coach (new key — the old one was public in git history and must be revoked) |
+   | `GROQ_API_KEY` | AI coach (Groq, optional `GROQ_MODEL`, default llama-3.3-70b-versatile) |
 
 3. Netlify build settings come from `netlify.toml` (publish `keylion/`, functions `netlify/functions/`).
 4. Local dev: `npm install && npx netlify dev` (put the variables in `.env`, see `.env.example`).

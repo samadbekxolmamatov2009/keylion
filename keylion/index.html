@@ -70,6 +70,10 @@
         </div>
         <div class="profile-meta-row">
           <span id="profileModalLevel"></span>
+          <div class="level-bar" id="levelBarWrap" style="display:none;" title="">
+            <div class="level-bar-fill" id="levelBarFill"></div>
+          </div>
+          <span class="level-next" id="levelNextLabel"></span>
         </div>
       </div>
     </div>
@@ -79,6 +83,13 @@
       <button class="btn" id="btnLogout" style="display:none;" data-i18n="nav.logout">chiqish</button>
     </div>
     <div class="stat-cards" id="statsCardsWrap"></div>
+    <div class="panel ai-panel" id="aiPanel">
+      <div class="ai-head">
+        <h3 class="icon-ai" data-i18n="ai.title">AI tahlil</h3>
+        <button class="btn accent" id="btnAiAnalyze" data-i18n="ai.btn">tahlil qilish</button>
+      </div>
+      <div id="aiResult"><p class="empty-note" data-i18n="ai.hint">AI so'nggi testlaringizni tahlil qilib, asosiy kamchiliklaringizni aytadi.</p></div>
+    </div>
     <div class="panel" style="margin:16px 0;">
       <h3 class="icon-chart" data-i18n="stats.section.chart">wpm dinamikasi</h3>
       <div id="statsWpmChartWrap"></div>

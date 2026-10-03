@@ -27,6 +27,7 @@
     ]).then(([meRes, histRes])=>{
       const profile = meRes.profile || {};
       cachedProfile = profile;
+      renderLevelBar(profile.bestWpm || 0);
       const history = histRes.history || [];
       renderStatCards(cardsWrap, profile, history);
       renderWpmChart(chartWrap, history);
@@ -158,3 +159,79 @@
         '</div>';
     }).join('');
   }
+
+
+  /* ============ profile: level progress + AI analysis ============ */
+  function renderLevelBar(bestWpm){
+    const wrap = document.getElementById('levelBarWrap');
+    if(!wrap) return;
+    const lvl = 1 + Math.floor(bestWpm/10);
+    wrap.style.display = 'block';
+    document.getElementById('levelBarFill').style.width = ((bestWpm % 10) / 10 * 100) + '%';
+    document.getElementById('levelNextLabel').textContent = t('ai.nextLvl', { n: lvl*10, l: lvl+1 });
+  }
+
+  function startFocusPractice(chars){
+    const pool = chars.split('').filter(c=> c.trim());
+    if(!pool.length) return;
+    const bank = wordBanks[state.textLang] || wordBanks.en;
+    const relevant = bank.filter(w=> pool.some(c=> w.includes(c)));
+    const words = [];
+    for(let i=0;i<12;i++) words.push((relevant.length ? relevant : bank)[Math.floor(Math.random()*(relevant.length||bank.length))]);
+    for(let i=0;i<8;i++) words.push(bank[Math.floor(Math.random()*bank.length)]);
+    for(let i=words.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [words[i],words[j]]=[words[j],words[i]]; }
+    closeProfileModal();
+    switchView('test');
+    state.mode = 'words';
+    document.querySelectorAll('#typeSeg button').forEach(x=>x.classList.toggle('active', x.dataset.mode==='words'));
+    document.getElementById('langRow').style.display='none';
+    document.getElementById('textLangRow').style.display='flex';
+    document.getElementById('timeLeftWrap').style.display='none';
+    renderLenSeg();
+    buildTest(words.join(' '));
+  }
+
+  function renderAiAnalysis(res){
+    const wrap = document.getElementById('aiResult');
+    const btn = document.getElementById('btnAiAnalyze');
+    btn.disabled = false;
+    btn.textContent = t('ai.again');
+    if(!res.analysis){
+      wrap.innerHTML = '<p class="empty-note">'+t('ai.notEnough')+'</p>';
+      return;
+    }
+    const a = res.analysis;
+    let html = '<p class="ai-summary">'+escapeHtml(a.summary)+'</p>';
+    if(a.weaknesses.length){
+      html += '<div class="ai-sec-title">'+t('ai.weak')+'</div>' + a.weaknesses.map(w=>
+        '<div class="ai-weak"><div><b>'+escapeHtml(w.title)+'</b><span>'+escapeHtml(w.detail)+'</span></div></div>').join('');
+    }
+    const missed = (res.stats && res.stats.topMissed) || [];
+    if(missed.length){
+      html += '<div class="ai-sec-title">'+t('ai.missed')+'</div><div class="ai-chips">' + missed.slice(0,8).map(m=>
+        '<span class="ai-chip">'+escapeHtml(m.ch)+'<small>×'+m.n+'</small></span>').join('') + '</div>';
+    }
+    if(a.tips.length){
+      html += '<div class="ai-sec-title">'+t('ai.tips')+'</div><ul class="ai-tips">' + a.tips.map(x=> '<li>'+escapeHtml(x)+'</li>').join('') + '</ul>';
+    }
+    if(a.focusChars){
+      html += '<button class="btn accent ai-practice" id="btnAiPractice">'+t('ai.practice')+' ('+escapeHtml(a.focusChars.split('').join(' '))+')</button>';
+    }
+    wrap.innerHTML = html;
+    const pb = document.getElementById('btnAiPractice');
+    if(pb) pb.addEventListener('click', ()=> startFocusPractice(a.focusChars));
+  }
+
+  document.getElementById('btnAiAnalyze').addEventListener('click', ()=>{
+    const wrap = document.getElementById('aiResult');
+    const btn = document.getElementById('btnAiAnalyze');
+    btn.disabled = true;
+    wrap.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div> <span class="empty-note">'+t('ai.loading')+'</span>';
+    api('POST', '/coach/analyze', { lang: currentLang, missed: isGuest ? missedChars : undefined })
+      .then(renderAiAnalysis)
+      .catch((err)=>{
+        btn.disabled = false;
+        wrap.innerHTML = '<p class="empty-note" style="color:var(--error);">'+t('ai.error')+'</p>';
+        logDebug('XATO AI tahlil: ' + err.message);
+      });
+  });

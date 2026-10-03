@@ -4,7 +4,7 @@
      JWT_SECRET                             long random string, signs login tokens
      GOOGLE_CLIENT_ID                       Google OAuth web client id (for "Sign in with Google")
      ADMIN_EMAIL, ADMIN_PASSWORD            credentials for /admin.html
-     ANTHROPIC_API_KEY                      AI coach (key never reaches the browser) */
+     GROQ_API_KEY                           AI coach (key never reaches the browser); optional GROQ_MODEL */
 import { createClient } from '@libsql/client';
 import { getStore } from '@netlify/blobs';
 import crypto from 'node:crypto';
@@ -403,20 +403,75 @@ route('GET', '/media/:key', async (req, ctx) => {
   return new Response(got.data, { headers: { 'content-type': got.metadata?.type || 'application/octet-stream', 'cache-control': 'public, max-age=86400' } });
 });
 
-/* ---------- AI coach (server-side Anthropic call) ---------- */
+/* ---------- AI coach (server-side Groq call, OpenAI-compatible API) ---------- */
+async function groqChat(messages, { json = false, maxTokens = 400 } = {}) {
+  if (!process.env.GROQ_API_KEY) throw new HttpError(503, 'coach unavailable');
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + process.env.GROQ_API_KEY },
+    body: JSON.stringify({
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+      messages, max_tokens: maxTokens, temperature: 0.6,
+      ...(json ? { response_format: { type: 'json_object' } } : {}),
+    }),
+  });
+  if (!r.ok) { console.error('groq error', r.status, await r.text().catch(() => '')); throw new HttpError(502, 'coach upstream error'); }
+  const data = await r.json();
+  return data.choices?.[0]?.message?.content?.trim() || null;
+}
+
 route('POST', '/coach', async (req, ctx, body) => {
   const u = await requireUser(req);
-  limit('coach:' + u.id, 20, 3600e3);
+  limit('coach:' + u.id, 30, 3600e3);
   const prompt = String(body.prompt || '').slice(0, 2000);
-  if (!prompt || !process.env.ANTHROPIC_API_KEY) throw new HttpError(503, 'coach unavailable');
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 220, messages: [{ role: 'user', content: prompt }] }),
+  if (!prompt) throw new HttpError(400, 'prompt required');
+  return json({ text: await groqChat([{ role: 'user', content: prompt }], { maxTokens: 260 }) });
+});
+
+const LANG_NAMES = { uz: "Uzbek (Latin script)", ru: 'Russian', en: 'English', kk: 'Kazakh (Cyrillic)', ky: 'Kyrgyz (Cyrillic)' };
+const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
+
+/* Builds a numeric picture of the user's recent typing, then asks the model to explain the weak spots. */
+route('POST', '/coach/analyze', async (req, ctx, body) => {
+  const u = await requireUser(req);
+  limit('analyze:' + u.id, 12, 3600e3);
+  const lang = LANG_NAMES[body.lang] ? body.lang : 'en';
+  const rows = u.kind === 'guest' ? [] : (await q('SELECT wpm, acc, mode, missed, ts FROM history WHERE user_id = ? ORDER BY ts DESC LIMIT 50', [u.id])).reverse();
+  const missed = {};
+  const addMissed = (m) => Object.entries(m || {}).forEach(([k, v]) => { if (k.length <= 2) missed[k] = (missed[k] || 0) + num(v, 0, 10000); });
+  rows.slice(-10).forEach((r) => addMissed(JSON.parse(r.missed || '{}')));
+  if (!rows.length) addMissed(body.missed); // guests: this session's mistakes sent by the client
+  const wpms = rows.map((r) => Number(r.wpm)), accs = rows.map((r) => Number(r.acc));
+  const last = rows.slice(-5), prev = rows.slice(-10, -5);
+  const byMode = {};
+  rows.forEach((r) => { const m = String(r.mode).split(' · ')[0]; (byMode[m] ||= []).push(Number(r.wpm)); });
+  const stats = {
+    tests: rows.length, avgWpm: Math.round(avg(wpms)), bestWpm: Math.max(0, ...wpms), avgAcc: Math.round(avg(accs)),
+    lowAccTests: accs.filter((a) => a < 90).length,
+    recentWpm: Math.round(avg(last.map((r) => Number(r.wpm)))), previousWpm: prev.length ? Math.round(avg(prev.map((r) => Number(r.wpm)))) : null,
+    recentAcc: Math.round(avg(last.map((r) => Number(r.acc)))),
+    modes: Object.fromEntries(Object.entries(byMode).map(([m, v]) => [m, Math.round(avg(v))])),
+    streak: Number(u.streak_current),
+    topMissed: Object.entries(missed).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([ch, n]) => ({ ch: ch === ' ' ? '(space)' : ch === '\n' ? '(newline)' : ch, n })),
+  };
+  if (stats.tests < 3 && !stats.topMissed.length) return json({ stats, analysis: null, reason: 'not_enough_data' });
+
+  const sys = `You are a friendly, honest typing coach inside a typing-speed app. Analyse the user's stats and reply ONLY with a JSON object:
+{"summary": string (1-2 sentences, overall level and trend), "weaknesses": [{"title": string (max 5 words), "detail": string (1 sentence, cite numbers)}] (1 to 3 items, the most important problems first), "tips": [string] (2 to 3 concrete practice tips), "focusChars": string (up to 5 characters worth drilling, no spaces, or empty)}.
+Rules: base every claim on the numbers given; do not invent data; accuracy below 92% matters more than speed; a trend is only meaningful with previousWpm present; be encouraging, no jargon. Write all text in ${LANG_NAMES[lang]}.`;
+  const raw = await groqChat([{ role: 'system', content: sys }, { role: 'user', content: 'User name: ' + u.name + '\nStats JSON: ' + JSON.stringify(stats) }], { json: true, maxTokens: 600 });
+  let a = null;
+  try { a = JSON.parse(raw); } catch { throw new HttpError(502, 'coach bad response'); }
+  const str = (v, n) => String(v ?? '').slice(0, n);
+  return json({
+    stats,
+    analysis: {
+      summary: str(a.summary, 400),
+      weaknesses: (Array.isArray(a.weaknesses) ? a.weaknesses : []).slice(0, 3).map((w) => ({ title: str(w.title, 60), detail: str(w.detail, 300) })),
+      tips: (Array.isArray(a.tips) ? a.tips : []).slice(0, 3).map((x) => str(x, 300)),
+      focusChars: str(a.focusChars, 12).replace(/\s/g, ''),
+    },
   });
-  if (!r.ok) throw new HttpError(502, 'coach upstream error');
-  const data = await r.json();
-  return json({ text: data.content?.[0]?.text?.trim() || null });
 });
 
 /* ---------- entry ---------- */
