@@ -12,6 +12,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
 <style>
   .admin-wrap{ width:100%; max-width:1100px; margin:0 auto; padding:40px 24px 64px; }
   table{ width:100%; border-collapse:collapse; font-size:13px; }
@@ -33,7 +34,8 @@
   .field-row.checkbox-row{ display:flex; align-items:center; gap:8px; }
   .field-row.checkbox-row label{ margin:0; font-size:13px; color:var(--text); font-family:var(--font-body); }
   #adSaveStatus{ font-size:12px; color:var(--success); min-height:16px; margin-top:10px; }
-  #adSaveStatus.err{ color:var(--error); }
+  .err{ color:var(--error) !important; }
+  .field-row input[type=file]{ font-size:12px; color:var(--text-faint); }
 </style>
 </head>
 <body>
@@ -94,16 +96,32 @@
     <!-- AD TAB -->
     <div class="admin-tab-panel panel" id="tab-ad">
       <p class="note">
-        Bu yerda sozlangan reklama sayt bosh sahifasida, so'z yozish (typing) maydonining tagida, kichik va xira
-        ko'rinishda chiqadi — u foydalanuvchi test yozayotganda butunlay xiralashadi (ko'zga tashlanmaydi), toki
-        e'tiborni chalg'itmasin.
+        Bu yerda sozlangan reklama sayt bosh sahifasida, so'z yozish (typing) maydonining tagida, to'liq eniga
+        cho'ziladigan banner sifatida chiqadi, lekin xira/muted uslubda (kichik emas, shunchaki ko'zga tiqilib
+        turmaydi) — foydalanuvchi test yozayotganda esa butunlay xiralashadi, toki e'tiborni chalg'itmasin.
       </p>
       <div class="field-row checkbox-row">
         <input type="checkbox" id="adEnabled">
         <label for="adEnabled">Reklama yoqilgan (saytda ko'rsatilsin)</label>
       </div>
       <div class="field-row">
-        <label for="adImageUrl">Rasm URL (32×32 atrofida, kvadrat rasm tavsiya etiladi)</label>
+        <label for="adVideoFile">Video yuklash (kompyuter/telefondan tanlang, mp4)</label>
+        <input type="file" id="adVideoFile" accept="video/mp4,video/webm">
+        <button class="btn" id="btnUploadVideo" type="button" style="margin-top:8px;">videoni yuklash</button>
+        <div id="adVideoUploadStatus" style="font-size:12px; color:var(--text-faint); margin-top:6px; min-height:16px;"></div>
+      </div>
+      <div class="field-row">
+        <label for="adVideoUrl">...yoki video URL (agar video allaqachon boshqa joyda joylashgan bo'lsa). To'ldirilsa, rasm o'rniga shu video ko'rsatiladi</label>
+        <input type="url" id="adVideoUrl" placeholder="https://.../reklama.mp4">
+      </div>
+      <div class="field-row">
+        <label for="adImageFile">Rasm yuklash (kompyuter/telefondan tanlang)</label>
+        <input type="file" id="adImageFile" accept="image/*">
+        <button class="btn" id="btnUploadImage" type="button" style="margin-top:8px;">rasmni yuklash</button>
+        <div id="adImageUploadStatus" style="font-size:12px; color:var(--text-faint); margin-top:6px; min-height:16px;"></div>
+      </div>
+      <div class="field-row">
+        <label for="adImageUrl">...yoki rasm URL (video bo'sh bo'lsa ishlatiladi; keng banner, taxminan 4:1 nisbat tavsiya etiladi)</label>
         <input type="url" id="adImageUrl" placeholder="https://...">
       </div>
       <div class="field-row">
@@ -119,9 +137,14 @@
 
       <h3 style="font-family:var(--font-display); font-size:14px; margin:28px 0 12px; color:var(--text-faint);">ko'rinishi qanday bo'ladi</h3>
       <a href="#" class="ad-slot" id="adPreview" style="opacity:1; pointer-events:none;">
-        <img id="adPreviewImg" class="ad-slot-img" alt="">
-        <span id="adPreviewText" class="ad-slot-text"></span>
-        <span class="ad-slot-label">reklama</span>
+        <div class="ad-slot-media-wrap">
+          <img id="adPreviewImg" class="ad-slot-img" alt="" style="display:none;">
+          <video id="adPreviewVideo" class="ad-slot-video" muted loop playsinline style="display:none;"></video>
+          <span class="ad-slot-label">reklama</span>
+        </div>
+        <div class="ad-slot-body">
+          <span id="adPreviewText" class="ad-slot-text"></span>
+        </div>
       </a>
     </div>
   </div>
@@ -142,6 +165,7 @@
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.database();
+  const storage = firebase.storage();
 
   /* the single account allowed into this panel. ADMIN_EMAIL is only used for the
      login form's early check (nicer error message); the real gate — here and in
@@ -242,14 +266,76 @@
   }
 
   /* ---- ad tab ---- */
+  /* ---- ad tab: file uploads ----
+     Uploads to Storage under ads/<kind>_<timestamp>.<ext>, then drops the resulting
+     download URL straight into the matching URL field (which is what actually gets
+     saved to settings/ad and read by the site). Requires Storage Rules that let
+     ADMIN_UID write under ads/ \u2014 same idea as the Database Rules for settings/ad. */
+  function uploadAdFile(file, kind, statusEl){
+    return new Promise((resolve, reject)=>{
+      if(!file){ reject(new Error('avval fayl tanlang')); return; }
+      const extMatch = /\.[a-zA-Z0-9]+$/.exec(file.name);
+      const ext = extMatch ? extMatch[0] : (kind==='video' ? '.mp4' : '.jpg');
+      const path = 'ads/' + kind + '_' + Date.now() + ext;
+      const task = storage.ref().child(path).put(file);
+      task.on('state_changed', (snap)=>{
+        const pct = snap.totalBytes ? Math.round((snap.bytesTransferred / snap.totalBytes) * 100) : 0;
+        if(statusEl) statusEl.textContent = 'yuklanmoqda... ' + pct + '%';
+      }, (err)=>{
+        reject(err);
+      }, ()=>{
+        task.snapshot.ref.getDownloadURL().then(resolve).catch(reject);
+      });
+    });
+  }
+  document.getElementById('btnUploadVideo').addEventListener('click', ()=>{
+    const file = document.getElementById('adVideoFile').files[0];
+    const statusEl = document.getElementById('adVideoUploadStatus');
+    statusEl.classList.remove('err');
+    uploadAdFile(file, 'video', statusEl).then((url)=>{
+      document.getElementById('adVideoUrl').value = url;
+      statusEl.textContent = 'yuklandi \u2713 \u2014 endi pastdagi "saqlash" tugmasini bosing';
+      updateAdPreview();
+    }).catch((err)=>{
+      statusEl.textContent = 'Xato: ' + (err.code || err.message);
+      statusEl.classList.add('err');
+    });
+  });
+  document.getElementById('btnUploadImage').addEventListener('click', ()=>{
+    const file = document.getElementById('adImageFile').files[0];
+    const statusEl = document.getElementById('adImageUploadStatus');
+    statusEl.classList.remove('err');
+    uploadAdFile(file, 'image', statusEl).then((url)=>{
+      document.getElementById('adImageUrl').value = url;
+      statusEl.textContent = 'yuklandi \u2713 \u2014 endi pastdagi "saqlash" tugmasini bosing';
+      updateAdPreview();
+    }).catch((err)=>{
+      statusEl.textContent = 'Xato: ' + (err.code || err.message);
+      statusEl.classList.add('err');
+    });
+  });
+
   function updateAdPreview(){
+    const videoUrl = document.getElementById('adVideoUrl').value.trim();
     const imgUrl = document.getElementById('adImageUrl').value.trim();
     const text = document.getElementById('adText').value.trim();
-    document.getElementById('adPreviewImg').src = imgUrl;
-    document.getElementById('adPreviewImg').style.visibility = imgUrl ? 'visible' : 'hidden';
+    const imgEl = document.getElementById('adPreviewImg');
+    const vidEl = document.getElementById('adPreviewVideo');
+    if(videoUrl){
+      vidEl.src = videoUrl;
+      vidEl.style.display = 'block';
+      vidEl.play().catch(()=>{});
+      imgEl.style.display = 'none';
+    } else {
+      vidEl.pause();
+      vidEl.removeAttribute('src');
+      vidEl.style.display = 'none';
+      imgEl.src = imgUrl;
+      imgEl.style.display = imgUrl ? 'block' : 'none';
+    }
     document.getElementById('adPreviewText').textContent = text || '(matn kiritilmagan)';
   }
-  ['adImageUrl','adText'].forEach(id=>{
+  ['adVideoUrl','adImageUrl','adText'].forEach(id=>{
     document.getElementById(id).addEventListener('input', updateAdPreview);
   });
 
@@ -257,6 +343,7 @@
     db.ref('settings/ad').once('value').then((snap)=>{
       const ad = snap.val() || {};
       document.getElementById('adEnabled').checked = !!ad.enabled;
+      document.getElementById('adVideoUrl').value = ad.videoUrl || '';
       document.getElementById('adImageUrl').value = ad.imageUrl || '';
       document.getElementById('adLinkUrl').value = ad.linkUrl || '';
       document.getElementById('adText').value = ad.text || '';
@@ -273,6 +360,7 @@
     status.textContent = 'saqlanmoqda...';
     const ad = {
       enabled: document.getElementById('adEnabled').checked,
+      videoUrl: document.getElementById('adVideoUrl').value.trim(),
       imageUrl: document.getElementById('adImageUrl').value.trim(),
       linkUrl: document.getElementById('adLinkUrl').value.trim(),
       text: document.getElementById('adText').value.trim(),

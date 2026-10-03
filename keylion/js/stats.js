@@ -42,13 +42,17 @@
     const avgWpm = history.length ? Math.round(history.reduce((s,h)=> s+(h.wpm||0), 0) / history.length) : 0;
     const avgAcc = history.length ? Math.round(history.reduce((s,h)=> s+(h.acc||0), 0) / history.length) : 0;
     const cards = [
-      [bestWpm, t('stats.card.best')],
-      [avgWpm, t('stats.card.avgWpm')],
-      [testsCount, t('stats.card.tests')],
-      [avgAcc + '%', t('stats.card.avgAcc')],
+      { val: bestWpm, lbl: t('stats.card.best'), icon: '\u26a1', hero: true }, // \u26a1 lightning bolt
+      { val: avgWpm, lbl: t('stats.card.avgWpm'), icon: '\ud83d\udcca' }, // \u{1F4CA} bar chart
+      { val: testsCount, lbl: t('stats.card.tests'), icon: '\u2705' }, // \u2705 check mark
+      { val: avgAcc + '%', lbl: t('stats.card.avgAcc'), icon: '\ud83c\udfaf' }, // \u{1F3AF} target
     ];
-    wrap.innerHTML = cards.map(([val,lbl])=>
-      '<div class="stat-card"><div class="stat-card-val">'+val+'</div><div class="stat-card-lbl">'+lbl+'</div></div>'
+    wrap.innerHTML = cards.map(c=>
+      '<div class="stat-card'+(c.hero?' hero':'')+'">'+
+        '<div class="stat-card-icon">'+c.icon+'</div>'+
+        '<div class="stat-card-val">'+c.val+'</div>'+
+        '<div class="stat-card-lbl">'+c.lbl+'</div>'+
+      '</div>'
     ).join('');
   }
 
@@ -67,6 +71,8 @@
     const yAt = v => padT + plotH - (v/yMax)*plotH;
     const points = history.map((h,i)=> [xAt(i), yAt(h.wpm||0)]);
     const pathD = points.map((p,i)=> (i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+    const baseY = (padT+plotH).toFixed(1);
+    const areaD = pathD + ' L'+points[points.length-1][0].toFixed(1)+','+baseY+' L'+points[0][0].toFixed(1)+','+baseY+' Z';
     const gridLines = [0,0.25,0.5,0.75,1].map(f=>{
       const y = padT + plotH*(1-f);
       const val = Math.round(yMax*f);
@@ -78,7 +84,12 @@
     wrap.innerHTML =
       '<div class="chart-box">'+
         '<svg viewBox="0 0 '+W+' '+H+'" class="wpm-chart" preserveAspectRatio="none">'+
+          '<defs><linearGradient id="wpmAreaGrad" x1="0" y1="0" x2="0" y2="1">'+
+            '<stop offset="0%" style="stop-color:var(--accent); stop-opacity:.32"/>'+
+            '<stop offset="100%" style="stop-color:var(--accent); stop-opacity:0"/>'+
+          '</linearGradient></defs>'+
           gridLines +
+          '<path d="'+areaD+'" class="chart-area"/>' +
           '<path d="'+pathD+'" class="chart-line"/>' +
           dots +
           '<line class="chart-crosshair" id="statsCrosshair" x1="0" y1="'+padT+'" x2="0" y2="'+(padT+plotH)+'" style="display:none;"/>' +

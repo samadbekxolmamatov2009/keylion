@@ -60,7 +60,6 @@
     currentTestMissed = {};
     document.getElementById('resultsScreen').style.display = 'none';
     document.getElementById('typingScreen').style.display = 'block';
-    updateDimming();
 
     if(customText) state.text = customText;
     else if(state.mode==='code') state.text = randomCode(state.lang);
@@ -72,6 +71,8 @@
     state.startTime = null;
     state.timeLeft = state.timeLen;
     document.getElementById('liveTime').textContent = state.timeLeft;
+    updateDimming(); // must run AFTER state.typed is reset to '', or a restart mid-test (Tab/Restart/Next)
+                      // reads the previous test's typed length and leaves the header stuck dimmed
     renderTyped(typeText, state.text, state.typed, state.syntaxMap);
     document.getElementById('liveWpm').textContent = '0';
     document.getElementById('liveAcc').textContent = '100%';
@@ -148,6 +149,23 @@
 
   document.addEventListener('keydown', (e)=>{
     if(state.finished && e.key==='Enter'){ buildTest(); }
+  });
+
+  /* monkeytype-style: any ordinary key press anywhere on the test view refocuses the hidden
+     input, so a test starts the instant the user starts typing \u2014 no need to click into the
+     typing box first. Only single printable characters and Backspace trigger it, so we never
+     hijack Tab/Enter/arrow keys/shortcuts, and we back off while another input (profile name,
+     join-room code, etc.) or a modal is focused. */
+  document.addEventListener('keydown', (e)=>{
+    if(document.activeElement === typeInput) return;
+    if(e.ctrlKey || e.metaKey || e.altKey) return;
+    if(e.key.length !== 1 && e.key !== 'Backspace') return;
+    const activeTag = document.activeElement && document.activeElement.tagName;
+    if(activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+    const testView = document.getElementById('view-test');
+    if(!testView || !testView.classList.contains('active')) return;
+    if(typeof isProfileModalOpen === 'function' && isProfileModalOpen()) return;
+    typeInput.focus();
   });
 
   function finishTest(){

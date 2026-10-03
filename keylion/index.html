@@ -81,16 +81,16 @@
     </div>
     <div class="stat-cards" id="statsCardsWrap"></div>
     <div class="panel" style="margin:16px 0;">
-      <h3 data-i18n="stats.section.chart">wpm dinamikasi</h3>
+      <h3 class="icon-chart" data-i18n="stats.section.chart">wpm dinamikasi</h3>
       <div id="statsWpmChartWrap"></div>
     </div>
     <div class="stats-grid">
       <div class="panel">
-        <h3 data-i18n="stats.section.history">so'nggi testlar</h3>
+        <h3 class="icon-history" data-i18n="stats.section.history">so'nggi testlar</h3>
         <div id="statsTableWrap"></div>
       </div>
       <div class="panel">
-        <h3 data-i18n="stats.section.achievements">yutuqlar</h3>
+        <h3 class="icon-trophy" data-i18n="stats.section.achievements">yutuqlar</h3>
         <div class="achv-grid" id="statsAchvWrap"></div>
       </div>
     </div>
@@ -191,9 +191,14 @@
 
     <!-- unobtrusive ad slot: hidden unless admin has configured+enabled an ad; dims/hides while typing -->
     <a href="#" target="_blank" rel="noopener sponsored nofollow" class="ad-slot" id="adSlot" style="display:none;">
-      <img id="adSlotImg" class="ad-slot-img" alt="">
-      <span id="adSlotText" class="ad-slot-text"></span>
-      <span class="ad-slot-label">reklama</span>
+      <div class="ad-slot-media-wrap">
+        <img id="adSlotImg" class="ad-slot-img" alt="" style="display:none;">
+        <video id="adSlotVideo" class="ad-slot-video" autoplay muted loop playsinline style="display:none;"></video>
+        <span class="ad-slot-label">reklama</span>
+      </div>
+      <div class="ad-slot-body">
+        <span id="adSlotText" class="ad-slot-text"></span>
+      </div>
     </a>
 
     <div class="results" id="resultsScreen" style="display:none;">

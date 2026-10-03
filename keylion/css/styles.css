@@ -105,8 +105,13 @@
     font-size:20px; line-height:1; padding:4px;
   }
   .modal-close-btn:hover{ color: var(--text); }
-  .profile-modal-head{ display:flex; align-items:center; gap:16px; margin: 4px 46px 18px 0; }
-  .avatar-lg{ width:52px; height:52px; font-size:17px !important; }
+  .profile-modal-head{ display:flex; align-items:center; gap:18px; margin: 4px 46px 22px 0; }
+  .avatar-lg{
+    width:64px; height:64px; font-size:19px !important; flex:none;
+    background: linear-gradient(155deg, var(--accent-bg), var(--bg-elev-2));
+    border: 2px solid var(--accent-dim);
+    box-shadow: 0 0 0 4px var(--bg-elev), 0 10px 22px rgba(0,0,0,.35);
+  }
   .profile-modal-idbox{ flex:1; min-width:0; }
   .profile-name-row{ display:flex; gap:8px; }
   .profile-name-input{
@@ -114,8 +119,14 @@
     padding:9px 12px; color: var(--text); font-size:14px; font-family: var(--font-body);
   }
   .profile-name-input:focus{ outline:none; border-color: var(--accent-dim); }
-  .profile-meta-row{ display:flex; align-items:center; gap:8px; margin-top:8px; font-size:11px; color: var(--text-faint); }
-  .profile-auth-actions{ display:flex; gap:10px; margin-bottom:20px; }
+  .profile-meta-row{ display:flex; align-items:center; gap:8px; margin-top:10px; font-size:11px; color: var(--text-faint); }
+  #profileModalLevel{
+    display:inline-flex; align-items:center; gap:5px; font-family: var(--font-mono); font-size:11px;
+    color: var(--accent); background: var(--accent-bg); border:1px solid var(--accent-dim);
+    border-radius:999px; padding:3px 10px; letter-spacing:.3px;
+  }
+  #profileModalLevel:not(:empty)::before{ content:'\2726'; font-size:10px; } /* \u2726 = four-pointed star, no DOM child so i18n's textContent swap can't wipe it */
+  .profile-auth-actions{ display:flex; gap:10px; margin-bottom:22px; }
 
   main{ flex:1; display:flex; flex-direction:column; align-items:center; padding: 64px 24px; }
   .view{ width:100%; max-width: 960px; display:none; }
@@ -159,13 +170,17 @@
   .type-text .c.syn-string{ color: #d99a5b; }
   .type-text .c.syn-number{ color: #6fc9c5; }
   .type-text .c.syn-comment{ color: var(--text-faint); font-style: italic; }
-  .type-text .c{ position:relative; }
+  .type-text .c{ position:relative; transition: color .1s ease, background-color .1s ease; }
   .type-text .c.correct{ color: var(--text); }
   .type-text .c.incorrect{ color: var(--error); background: var(--error-bg); border-radius:2px; }
   .type-text .c.current{ color: var(--text-dim); }
-  .type-text .c.current::before{
-    content:''; position:absolute; left:-1px; top:3px; bottom:3px; width:2px; background: var(--accent);
+  /* single caret element that slides smoothly between characters, instead of the old approach
+     of an ::before pseudo-element re-created on whichever span had .current \u2014 that never
+     animated between positions, it just popped from spot to spot. */
+  .type-caret{
+    position:absolute; width:2px; background: var(--accent); border-radius:1px; pointer-events:none;
     animation: blink 1s step-end infinite;
+    transition: left .08s cubic-bezier(.3,.1,.2,1), top .08s cubic-bezier(.3,.1,.2,1);
   }
   @keyframes blink{ 50%{ opacity:0; } }
 
@@ -288,18 +303,30 @@
   .streak-badge{ align-items:center; font-family: var(--font-mono); font-size:11px; color: var(--accent); background: var(--accent-bg); border:1px solid var(--accent-dim); border-radius:999px; padding:3px 8px; }
 
   /* ---- ad slot: small, muted, non-distracting; fades out while typing ---- */
+  /* full-width banner instead of a small floating icon-strip, so it actually fills the space
+     under the typing area \u2014 kept unobtrusive via muted colors/opacity/thin border rather than
+     via being tiny. Media (image or video) spans the full width at a modest fixed height. */
   .ad-slot{
-    display:flex; align-items:center; gap:10px; max-width:420px; margin: 22px auto 0; padding:8px 12px;
+    display:flex; flex-direction:column; width:100%; margin: 26px auto 0;
     background: var(--bg-elev); border:1px solid var(--border); border-radius: var(--radius);
-    text-decoration:none; color: var(--text-faint); opacity:.7; transition: opacity .35s ease, border-color .15s;
+    text-decoration:none; color: var(--text-faint); opacity:.75; transition: opacity .35s ease, border-color .15s;
+    overflow:hidden;
   }
   .ad-slot:hover{ opacity:1; border-color: var(--border-strong); }
   .ad-slot.dim{ opacity:.05; pointer-events:none; }
-  .ad-slot-img{ width:36px; height:36px; border-radius:6px; object-fit:cover; flex:none; }
+  .ad-slot-media-wrap{
+    position:relative; width:100%; height:160px; background: var(--bg-elev-2); flex:none;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ad-slot-img, .ad-slot-video{ width:100%; height:100%; object-fit:contain; display:block; }
+  @media (max-width: 720px){
+    .ad-slot-media-wrap{ height:120px; }
+  }
+  .ad-slot-body{ display:flex; align-items:center; gap:10px; padding:8px 12px; }
   .ad-slot-text{ flex:1; font-size:12px; line-height:1.4; }
   .ad-slot-label{
-    font-family: var(--font-mono); font-size:9px; text-transform:lowercase; color: var(--text-dim);
-    border:1px solid var(--border); border-radius:4px; padding:2px 5px; flex:none;
+    position:absolute; top:6px; right:6px; font-family: var(--font-mono); font-size:9px; text-transform:lowercase;
+    color:#fff; background: rgba(0,0,0,.5); border-radius:4px; padding:2px 6px; flex:none;
   }
 
   /* ---- results: new personal best ---- */
@@ -317,19 +344,36 @@
   .achv-toast-label{ font-size:13px; font-weight:500; }
 
   /* ---- stats view ---- */
-  .stat-cards{ display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; margin-bottom:20px; }
+  .stat-cards{ display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; margin-bottom:22px; }
   @media (max-width: 640px){ .stat-cards{ grid-template-columns: repeat(2, 1fr); } }
-  .stat-card{ background: var(--bg-elev); border:1px solid var(--border); border-radius:12px; padding:16px; text-align:center; }
+  .stat-card{
+    background: var(--bg-elev); border:1px solid var(--border); border-radius:14px; padding:18px 16px;
+    text-align:center; transition: border-color .15s, transform .15s;
+  }
+  .stat-card.hero{
+    background: linear-gradient(155deg, var(--accent-bg), var(--bg-elev));
+    border-color: var(--accent-dim);
+    box-shadow: 0 8px 20px rgba(0,0,0,.25);
+  }
+  .stat-card-icon{ font-size:16px; margin-bottom:6px; opacity:.85; }
   .stat-card-val{ font-family: var(--font-display); font-size:26px; font-weight:700; color: var(--accent); }
   .stat-card-lbl{ font-size:11px; color: var(--text-faint); margin-top:4px; text-transform:lowercase; }
 
   .stats-grid{ display:grid; grid-template-columns: 1.2fr 1fr; gap:20px; align-items:start; }
   @media (max-width: 780px){ .stats-grid{ grid-template-columns:1fr; } }
 
+  /* small icon prefix on section titles, via ::before so re-running textContent-based
+     i18n (which replaces the h3's children) never wipes it \u2014 no real DOM child involved */
+  .panel h3{ display:flex; align-items:center; gap:8px; }
+  .panel h3.icon-chart::before{ content:'\1F4C8'; font-size:13px; } /* \u{1F4C8} chart-increasing emoji */
+  .panel h3.icon-history::before{ content:'\1F553'; font-size:13px; } /* \u{1F553} clock emoji */
+  .panel h3.icon-trophy::before{ content:'\1F3C6'; font-size:13px; } /* \u{1F3C6} trophy emoji */
+
   .chart-box{ position:relative; }
   .wpm-chart{ width:100%; height:auto; display:block; overflow:visible; }
   .chart-grid{ stroke: var(--border); stroke-width:1; }
   .chart-axis-label{ font-family: var(--font-mono); font-size:9px; fill: var(--text-faint); }
+  .chart-area{ fill: url(#wpmAreaGrad); stroke:none; }
   .chart-line{ stroke: var(--accent); stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
   .chart-dot{ fill: var(--bg-elev); stroke: var(--accent); stroke-width:1.5; transition: r .1s; }
   .chart-dot.active{ fill: var(--accent); r:4.5; }
@@ -341,11 +385,16 @@
     pointer-events:none; white-space:nowrap;
   }
 
-  .achv-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap:10px; }
+  .achv-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap:12px; }
   .achv-tile{
-    background: var(--bg-elev-2); border:1px solid var(--border); border-radius:10px; padding:12px 8px;
-    text-align:center; transition: border-color .15s;
+    background: var(--bg-elev-2); border:1px solid var(--border); border-radius:14px; padding:14px 8px;
+    text-align:center; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
   }
-  .achv-tile.locked{ opacity:.35; filter: grayscale(1); }
-  .achv-tile-icon{ font-size:22px; margin-bottom:6px; }
+  .achv-tile:not(.locked):hover{ transform: translateY(-3px); border-color: var(--accent-dim); box-shadow: 0 8px 18px rgba(0,0,0,.3); }
+  .achv-tile.locked{ opacity:.45; filter: grayscale(1); border-style:dashed; }
+  .achv-tile-icon{
+    font-size:22px; margin: 0 auto 8px; width:42px; height:42px; display:flex; align-items:center;
+    justify-content:center; border-radius:50%; background: linear-gradient(155deg, var(--accent-bg), transparent);
+  }
+  .achv-tile.locked .achv-tile-icon{ background:none; }
   .achv-tile-label{ font-size:10px; color: var(--text-faint); line-height:1.3; }
