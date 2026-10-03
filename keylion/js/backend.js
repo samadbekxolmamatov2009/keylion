@@ -108,7 +108,9 @@
       setFbStatus('error', 'ulanish xatosi');
       logDebug('XATO backend init: ' + err.message);
       const banner = document.getElementById('criticalBanner');
-      banner.textContent = "⚠️ Serverga ulanib bo'lmadi. Internetni tekshiring va sahifani qayta yuklang.";
+      banner.textContent = err.status
+        ? "⚠️ Server xatosi: " + err.message
+        : "⚠️ Serverga ulanib bo'lmadi. Internetni tekshiring va sahifani qayta yuklang.";
       banner.style.display = 'block';
     }
   }

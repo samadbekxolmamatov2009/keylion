@@ -477,6 +477,9 @@ Rules: base every claim on the numbers given; do not invent data; accuracy below
 /* ---------- entry ---------- */
 export default async (req, context) => {
   try {
+    /* a missing env var would otherwise surface as an opaque 500; say exactly which one is absent (names only) */
+    const missing = ['TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN', 'JWT_SECRET'].filter((k) => !process.env[k] && !(k === 'TURSO_AUTH_TOKEN' && /^file:/.test(process.env.TURSO_DATABASE_URL || '')));
+    if (missing.length) throw new HttpError(503, 'server not configured, missing environment variables: ' + missing.join(', '));
     await ensureSchema();
     const url = new URL(req.url);
     const path = url.pathname.replace(/^\/(\.netlify\/functions\/api|api)/, '') || '/';
