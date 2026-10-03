@@ -478,6 +478,12 @@ Rules: base every claim on the numbers given; do not invent data; accuracy below
 export default async (req, context) => {
   try {
     /* a missing env var would otherwise surface as an opaque 500; say exactly which one is absent (names only) */
+    if (new URL(req.url).pathname.endsWith('/health')) {
+      const names = ['TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN', 'JWT_SECRET', 'GOOGLE_CLIENT_ID', 'ADMIN_EMAIL', 'ADMIN_PASSWORD', 'GROQ_API_KEY'];
+      let dbStatus = 'ok';
+      try { await db().execute('SELECT 1'); } catch (e) { dbStatus = 'error: ' + String(e.message).slice(0, 200); }
+      return json({ api: 'ok', env: Object.fromEntries(names.map((k) => [k, !!process.env[k]])), database: dbStatus });
+    }
     const missing = ['TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN', 'JWT_SECRET'].filter((k) => !process.env[k] && !(k === 'TURSO_AUTH_TOKEN' && /^file:/.test(process.env.TURSO_DATABASE_URL || '')));
     if (missing.length) throw new HttpError(503, 'server not configured, missing environment variables: ' + missing.join(', '));
     await ensureSchema();
