@@ -1,7 +1,7 @@
   /* ============ ad slot (admin-managed, shown under the typing area) ============
      Reads a single config node the admin panel writes to: settings/ad
        { enabled: bool, imageUrl: string, videoUrl: string, linkUrl: string, text: string }
-     Publicly readable (see Firebase Rules), only ADMIN_UID can write it.
+     Publicly readable; only the admin panel (/api/admin/ad) can write it.
      Kept muted (opacity/border, not size) and gets dimmed out while the user is
      actually typing (see updateDimming() in test.js), so it never competes
      for attention with the typing test itself. If both videoUrl and imageUrl are
@@ -31,7 +31,16 @@
     document.getElementById('adSlotText').textContent = ad.text || '';
     slot.href = ad.linkUrl || '#';
     slot.style.display = 'flex';
+    adEvent('view');
   }
+
+  /* impressions / clicks for the admin panel's ad stats (one view per page load) */
+  let adViewSent = false;
+  function adEvent(kind){
+    if(kind === 'view'){ if(adViewSent) return; adViewSent = true; }
+    fetch('/api/ad/event', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind }) }).catch(()=>{});
+  }
+  document.getElementById('adSlot').addEventListener('click', ()=> adEvent('click'));
 
   function loadAd(){
     if(!fbReady){

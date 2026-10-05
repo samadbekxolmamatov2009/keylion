@@ -746,7 +746,9 @@ const I18N = {
   if(!LANG_LABELS[currentLang]) currentLang = 'en';
 
   function t(key, vars){
-    let str = (I18N[currentLang] && I18N[currentLang][key]) || (I18N.uz && I18N.uz[key]) || key;
+    let str = (I18N[currentLang] && I18N[currentLang][key])
+      || ((currentLang === 'kk' || currentLang === 'ky') && I18N.ru[key])   // Cyrillic readers: Russian before Uzbek
+      || (I18N.uz && I18N.uz[key]) || key;
     if(vars){
       Object.entries(vars).forEach(([k,v])=>{ str = str.split('{'+k+'}').join(v); });
     }
@@ -766,6 +768,10 @@ const I18N = {
     });
     /* re-render bits that are built dynamically in JS, not just static textContent */
     if(typeof renderLenSeg === 'function') renderLenSeg();
+    if(typeof currentView !== 'undefined' && fbReady){
+      if(currentView === 'profile') renderProfile();
+      if(currentView === 'leaderboard') loadLeaderboard();
+    }
   }
 
   function setLang(lang){

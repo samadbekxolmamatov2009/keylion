@@ -27,8 +27,9 @@
 
   function bgUrl(bg){
     if(!bg || bg === 'none') return null;
-    if(BG_PRESETS.some(p=> p.id === bg)) return 'bg/' + bg + '.svg';
-    if(bg.startsWith('custom:')) return '/api/bg/' + encodeURIComponent(bg.slice(7));
+    /* absolute URLs: a relative url() inside a CSS variable resolves against the stylesheet (css/), not the page */
+    if(BG_PRESETS.some(p=> p.id === bg)) return new URL('bg/' + bg + '.svg', document.baseURI).href;
+    if(bg.startsWith('custom:')) return new URL('/api/bg/' + encodeURIComponent(bg.slice(7)), document.baseURI).href;
     if(bg === 'local') return lsGet(LOCAL_BG_KEY);
     return null;
   }
@@ -427,8 +428,7 @@
         const blob = await encodeBg(img, 1920, 2.2 * 1024 * 1024);
         const dataUrl = await new Promise((res)=>{ const r = new FileReader(); r.onload = ()=> res(r.result); r.readAsDataURL(blob); });
         if(!lsSet(LOCAL_BG_KEY, dataUrl)) return setBgNote(t('set.bg.storageFull'), true);
-        lsSet(ACCENT_CACHE + 'local', '');
-        try{ localStorage.removeItem(ACCENT_CACHE + 'local'); }catch(e){}
+        try{ localStorage.removeItem(ACCENT_CACHE + 'local'); }catch(e){}   // new image: re-pick its accent colour
         setPref('bg', 'local');
         document.getElementById('bgGrid').innerHTML = bgTilesHtml();
         refreshSettingsUI();
