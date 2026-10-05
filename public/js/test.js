@@ -124,6 +124,7 @@
     document.getElementById('siteHeader').classList.toggle('dim', started);
     const adSlot = document.getElementById('adSlot');
     if(adSlot) adSlot.classList.toggle('dim', started);
+    if(typeof setAdTyping === 'function') setAdTyping(started);   // pauses a video ad while typing
   }
 
   function computeStats(endTime){

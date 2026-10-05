@@ -1,7 +1,7 @@
-# KeyLion
+# Tezlash
 
 Typing-speed site: tests, multiplayer race, leaderboard, AI coach, profile & achievements.
-Static frontend in `keylion/`, backend = one API module (`netlify/functions/api.mjs`) on **Turso** (libSQL),
+Static frontend in `public/`, backend = one API module (`netlify/functions/api.mjs`) on **Turso** (libSQL),
 run either as a Netlify Function or by `server.mjs` on any Node.js host (Render, a VPS, locally).
 
 ## Deploy on Render (no Netlify needed)
@@ -13,7 +13,7 @@ run either as a Netlify Function or by `server.mjs` on any Node.js host (Render,
 2. Click the button (or Render → **New → Blueprint** → pick this repo; the button reads `render.yaml`
    from the default branch). Sign in with GitHub, fill in `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`,
    `ADMIN_EMAIL`, `ADMIN_PASSWORD` (`JWT_SECRET` is generated), then **Apply**.
-3. After ~3 minutes the site is at `https://keylion-xxxx.onrender.com`; every push to the branch redeploys it.
+3. After ~3 minutes the site is at `https://tezlash-xxxx.onrender.com`; every push to the branch redeploys it.
 4. Optional, under the service's **Environment** tab: `GROQ_API_KEY` (AI coach), `GOOGLE_CLIENT_ID`
    (also add the new site URL to the OAuth client's *Authorized JavaScript origins*).
 
@@ -23,7 +23,7 @@ Run the same server locally with `npm install && npm start` (http://localhost:88
 
 ## Setup (Netlify)
 
-1. **Turso**: `turso db create keylion` → `turso db show keylion --url` and `turso db tokens create keylion`.
+1. **Turso**: `turso db create tezlash` → `turso db show tezlash --url` and `turso db tokens create tezlash`.
    Tables are created automatically on the first request (`netlify/functions/schema.mjs`).
 2. **Netlify → Site settings → Environment variables**
 
@@ -35,7 +35,7 @@ Run the same server locally with `npm install && npm start` (http://localhost:88
    | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | login for `/admin.html` |
    | `GROQ_API_KEY` | AI coach (Groq, optional `GROQ_MODEL`, default llama-3.3-70b-versatile) |
 
-3. Netlify build settings come from `netlify.toml` (publish `keylion/`, functions `netlify/functions/`).
+3. Netlify build settings come from `netlify.toml` (publish `public/`, functions `netlify/functions/`).
 4. Local dev: `npm install && npx netlify dev` (put the variables in `.env`, see `.env.example`).
 
 ## Moving the data out of Firebase
@@ -68,7 +68,7 @@ Google users are matched by verified e-mail, so they can log in again right away
 ## Profiles & settings
 - `#/profile` (own) and `#/u/<id>` (public, shareable): rank, tier, stats, wpm/accuracy chart,
   activity heatmap, records by mode, achievement progress, PNG result card, Telegram share.
-- *Settings* tab: 6 built-in vector backgrounds (`keylion/bg/`), own image upload (resized to ≤2560 px
+- *Settings* tab: 6 built-in vector backgrounds (`public/bg/`), own image upload (resized to ≤2560 px
   WebP in the browser, stored in Netlify Blobs, 3 per player), dim / blur / glass panels, accent colour,
   caret style, letter and mistake animations, end-of-test effects, key sounds, public/private profile.
   Saved per device and synced to the account.

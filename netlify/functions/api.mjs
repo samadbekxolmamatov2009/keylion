@@ -6,7 +6,7 @@
      ADMIN_EMAIL, ADMIN_PASSWORD            credentials for /admin.html
      GROQ_API_KEY                           AI coach (key never reaches the browser); optional GROQ_MODEL */
 import { createClient } from '@libsql/client';
-import { putMedia, getMedia, deleteMedia } from './media.mjs';
+import { putMedia, headMedia, readMedia, listMedia, deleteMedia } from './media.mjs';
 import crypto from 'node:crypto';
 import { SCHEMA, MIGRATIONS } from './schema.mjs';
 
@@ -334,11 +334,28 @@ route('DELETE', '/me/background/:key', async (req, ctx) => {
   return json({ ok: true });
 });
 
-route('GET', '/bg/:key', async (req, ctx) => {
-  const got = await getMedia(db(), 'backgrounds', ctx.key);
-  if (!got) throw new HttpError(404, 'not found');
-  return new Response(got.data, { headers: { 'content-type': got.type || 'image/webp', 'cache-control': 'public, max-age=31536000, immutable', 'x-content-type-options': 'nosniff' } });
-});
+/* uploaded files with HEAD and byte-range support (Safari only plays video that it can fetch in ranges);
+   keys are unique per upload, so responses can be cached for good */
+async function serveMedia(req, store, key) {
+  const head = await headMedia(db(), store, key);
+  if (!head) throw new HttpError(404, 'not found');
+  const size = head.size;
+  const base = { 'content-type': head.type || 'application/octet-stream', 'cache-control': 'public, max-age=31536000, immutable', 'x-content-type-options': 'nosniff', 'accept-ranges': 'bytes' };
+  if (req.method === 'HEAD') return new Response(null, { headers: { ...base, 'content-length': String(size) } });
+  const m = /^bytes=(\d*)-(\d*)$/.exec((req.headers.get('range') || '').trim());
+  if (m && (m[1] || m[2]) && size > 0) {
+    let start, end;
+    if (m[1]) { start = Number(m[1]); end = m[2] ? Math.min(Number(m[2]), size - 1) : size - 1; }
+    else { start = Math.max(0, size - Number(m[2])); end = size - 1; }
+    if (start > end || start >= size) return new Response(null, { status: 416, headers: { ...base, 'content-range': `bytes */${size}` } });
+    const part = await readMedia(db(), store, key, head, start, end);
+    return new Response(part, { status: 206, headers: { ...base, 'content-range': `bytes ${start}-${end}/${size}`, 'content-length': String(part.length) } });
+  }
+  const data = size ? await readMedia(db(), store, key, head) : new Uint8Array(0);
+  return new Response(data, { headers: { ...base, 'content-length': String(size) } });
+}
+route('GET', '/bg/:key', async (req, ctx) => serveMedia(req, 'backgrounds', ctx.key));
+route('HEAD', '/bg/:key', async (req, ctx) => serveMedia(req, 'backgrounds', ctx.key));
 
 /* ---------- test results ---------- */
 /* a signed "test started" stamp: lets the server check that a result did not take less time
@@ -626,16 +643,20 @@ route('POST', '/rooms/:code/reset', async (req, ctx) => {
 });
 
 /* ---------- ad slot ---------- */
+/* the live ad, or null: a switched-off (draft) ad is only visible to the admin */
 route('GET', '/settings/ad', async () => {
   const r = await q1("SELECT value FROM settings WHERE key = 'ad'");
-  return json({ ad: r ? JSON.parse(r.value) : null });
+  const ad = r ? JSON.parse(r.value) : null;
+  const live = ad && ad.enabled && (ad.videoUrl || ad.imageUrl);
+  return json({ ad: live ? ad : null });
 });
 
 const dayKey = (t = now()) => new Date(t + TZ_MS).toISOString().slice(0, 10);
 route('POST', '/ad/event', async (req, ctx, body, ip) => {
   const kind = pick(body.kind, ['view', 'click'], null);
   if (!kind) throw new HttpError(400, 'bad kind');
-  await limit('ad:' + kind + ':' + ip, 60, 3600e3);
+  /* the page sends one view per visitor per day and at most one click per page view */
+  await limit('ad:' + kind + ':' + ip, kind === 'view' ? 30 : 20, 3600e3);
   await q('INSERT INTO ad_stats (day, kind, count) VALUES (?, ?, 1) ON CONFLICT(day, kind) DO UPDATE SET count = count + 1', [dayKey(), kind]);
   return json({ ok: true });
 });
@@ -763,17 +784,50 @@ route('GET', '/admin/log', async (req) => {
 route('GET', '/admin/ad-stats', async (req) => {
   requireAdmin(req);
   const rows = await q('SELECT day, kind, count FROM ad_stats WHERE day >= ? ORDER BY day', [dayKey(now() - 29 * 86400e3)]);
+  /* every one of the last 30 days, zeros included, so the chart's x axis is real time */
   const by = {};
-  rows.forEach((r) => { (by[r.day] ||= { day: r.day, view: 0, click: 0 })[r.kind] = Number(r.count); });
+  for (let i = 29; i >= 0; i--) { const d = dayKey(now() - i * 86400e3); by[d] = { day: d, view: 0, click: 0 }; }
+  rows.forEach((r) => { if (by[r.day]) by[r.day][r.kind] = Number(r.count); });
   return json({ days: Object.values(by) });
 });
 
+/* link: absolute http(s) only. media: an uploaded file (/api/media/<key>) or an absolute http(s) URL */
+const MEDIA_PATH = /^\/api\/media\/[A-Za-z0-9._-]+$/;
+function adUrl(v, field, { media }) {
+  const s = String(v ?? '').trim();
+  if (!s) return '';
+  if (s.length > 500) throw new HttpError(400, field + ': too long');
+  if (media && MEDIA_PATH.test(s)) return s;
+  let u;
+  try { u = new URL(s); } catch { throw new HttpError(400, field + ': must start with https://'); }
+  if (u.protocol !== 'https:' && u.protocol !== 'http:') throw new HttpError(400, field + ': must start with https://');
+  return u.href;
+}
 route('PUT', '/admin/ad', async (req, ctx, body) => {
   requireAdmin(req);
-  const ad = { enabled: !!body.enabled, videoUrl: clean(body.videoUrl, 500), imageUrl: clean(body.imageUrl, 500), linkUrl: clean(body.linkUrl, 500), text: clean(body.text, 200) };
+  const ad = {
+    enabled: !!body.enabled,
+    imageUrl: adUrl(body.imageUrl, 'image', { media: true }),
+    mobileImageUrl: adUrl(body.mobileImageUrl, 'mobile image', { media: true }),
+    videoUrl: adUrl(body.videoUrl, 'video', { media: true }),
+    linkUrl: adUrl(body.linkUrl, 'link', { media: false }),
+    text: clean(body.text, 120),
+  };
+  if (ad.enabled && !ad.imageUrl && !ad.videoUrl) throw new HttpError(400, 'add an image or a video before switching the ad on');
   await q("INSERT INTO settings (key, value) VALUES ('ad', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", [JSON.stringify(ad)]);
-  await adminLog('ad-update', null, ad.enabled ? 'enabled' : 'disabled');
-  return json({ ok: true });
+  /* uploads that the saved ad no longer uses (older than an hour, so a file uploaded but not yet saved survives) */
+  const used = new Set([ad.imageUrl, ad.mobileImageUrl, ad.videoUrl].filter((u) => MEDIA_PATH.test(u)).map((u) => u.slice('/api/media/'.length)));
+  const stale = (await listMedia(db(), 'ads')).filter((m) => !used.has(m.key) && m.createdAt < now() - 3600e3);
+  for (const m of stale) await deleteMedia(db(), 'ads', m.key);
+  await adminLog('ad-update', null, (ad.enabled ? 'enabled' : 'disabled') + (stale.length ? ', removed ' + stale.length + ' old file(s)' : ''));
+  return json({ ok: true, ad });
+});
+
+/* the admin panel reads the saved ad including a switched-off draft */
+route('GET', '/admin/ad', async (req) => {
+  requireAdmin(req);
+  const r = await q1("SELECT value FROM settings WHERE key = 'ad'");
+  return json({ ad: r ? JSON.parse(r.value) : null });
 });
 
 /* ad media: stored in the database (media.mjs), served from /api/media/<key>. Netlify limits request bodies to ~6 MB. */
@@ -789,11 +843,8 @@ route('POST', '/admin/upload', async (req) => {
   return json({ url: '/api/media/' + key });
 });
 
-route('GET', '/media/:key', async (req, ctx) => {
-  const got = await getMedia(db(), 'ads', ctx.key);
-  if (!got) throw new HttpError(404, 'not found');
-  return new Response(got.data, { headers: { 'content-type': got.type || 'application/octet-stream', 'cache-control': 'public, max-age=86400', 'x-content-type-options': 'nosniff' } });
-});
+route('GET', '/media/:key', async (req, ctx) => serveMedia(req, 'ads', ctx.key));
+route('HEAD', '/media/:key', async (req, ctx) => serveMedia(req, 'ads', ctx.key));
 
 /* ---------- AI coach (server-side Groq call, OpenAI-compatible API) ---------- */
 async function groqChat(messages, { json = false, maxTokens = 400 } = {}) {
@@ -901,7 +952,7 @@ export default async (req, context) => {
       const m = r.re.exec(path);
       if (!m) continue;
       let body = {};
-      if (req.method !== 'GET' && !(req.headers.get('content-type') || '').match(/^(image|video)\//)) {
+      if (req.method !== 'GET' && req.method !== 'HEAD' && !(req.headers.get('content-type') || '').match(/^(image|video)\//)) {
         body = await req.json().catch(() => ({}));
       }
       return await r.fn(req, m.groups || {}, body, ip);

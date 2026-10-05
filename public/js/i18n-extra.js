@@ -1,6 +1,7 @@
   /* ============ i18n: profile, leaderboard, settings, tiers ============
      Merged into I18N from i18n.js. Kazakh / Kyrgyz fall back to Russian for these keys (see t()). */
   Object.assign(I18N.uz, {
+    "ad.label": "reklama",
     "test.mode.daily": "kunlik",
     "test.dailyNote": "📅 Kunlik challenge: bugun hamma bir xil matnni yozadi. Natijangiz kunlik reytingga tushadi.",
     "test.note.ranked": "✓ natija reytingga qo'shildi",
@@ -109,6 +110,7 @@
   });
 
   Object.assign(I18N.ru, {
+    "ad.label": "реклама",
     "test.mode.daily": "челлендж",
     "test.dailyNote": "📅 Челлендж дня: сегодня все печатают один и тот же текст. Результат попадёт в рейтинг дня.",
     "test.note.ranked": "✓ результат добавлен в рейтинг",
@@ -217,6 +219,7 @@
   });
 
   Object.assign(I18N.en, {
+    "ad.label": "ad",
     "test.mode.daily": "daily",
     "test.dailyNote": "📅 Daily challenge: everyone types the same text today. Your result goes to the daily leaderboard.",
     "test.note.ranked": "✓ added to the leaderboard",
@@ -323,3 +326,7 @@
     "set.publicHint": "when off, only you can see your profile (your name stays on the leaderboard)",
     "set.reset": "reset to defaults",
   });
+
+  /* Kazakh / Kyrgyz: the few keys that should not fall back to Russian */
+  Object.assign(I18N.kk, { "ad.label": "жарнама" });
+  Object.assign(I18N.ky, { "ad.label": "жарнама" });

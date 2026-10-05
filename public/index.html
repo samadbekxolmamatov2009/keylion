@@ -26,14 +26,9 @@
 <header id="siteHeader">
   <a href="/" class="logo" style="text-decoration:none;">
     <div class="logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M7 4 V20"/>
-        <path d="M7 12 L17 5"/>
-        <path d="M7 12 L17 19"/>
-        <path d="M7 20 H13"/> 
-      </svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g transform="matrix(1 0 -0.2126 1 4.851 0)"><rect x="7.2" y="6" width="5.2" height="14.5" rx="1.3"/><rect x="7.2" y="3.5" width="12.2" height="6.6" rx="1.3"/><rect x="0" y="3.5" width="9" height="2.6" rx="1.3"/><rect x="3" y="7.5" width="6" height="2.6" rx="1.3"/></g></svg>
     </div>
-    <span class="logo-wordmark">Key<span>Lion</span></span>
+    <span class="logo-wordmark">Tez<span>lash</span></span>
   </a>
   <nav id="mainNav">
     <button data-view="test" class="active">
@@ -71,7 +66,7 @@
 <div id="welcomeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); backdrop-filter:blur(4px); z-index:60; align-items:center; justify-content:center; padding:16px;">
   <div class="panel welcome-panel">
     <div class="welcome-logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 V20"/><path d="M7 12 L17 5"/><path d="M7 12 L17 19"/><path d="M7 20 H13"/></svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g transform="matrix(1 0 -0.2126 1 4.851 0)"><rect x="7.2" y="6" width="5.2" height="14.5" rx="1.3"/><rect x="7.2" y="3.5" width="12.2" height="6.6" rx="1.3"/><rect x="0" y="3.5" width="9" height="2.6" rx="1.3"/><rect x="3" y="7.5" width="6" height="2.6" rx="1.3"/></g></svg>
     </div>
     <h3 class="welcome-title" data-i18n="welcome.title">Xush kelibsiz!</h3>
     <p class="welcome-desc" data-i18n="welcome.desc">Ismingizni kiriting — u doimiy saqlanadi va leaderboard'da shu ism ko'rinadi.</p>
@@ -148,18 +143,6 @@
       </div>
     </div>
 
-    <!-- unobtrusive ad slot: hidden unless admin has configured+enabled an ad; dims/hides while typing -->
-    <a href="#" target="_blank" rel="noopener sponsored nofollow" class="ad-slot" id="adSlot" style="display:none;">
-      <div class="ad-slot-media-wrap">
-        <img id="adSlotImg" class="ad-slot-img" alt="" style="display:none;">
-        <video id="adSlotVideo" class="ad-slot-video" autoplay muted loop playsinline style="display:none;"></video>
-        <span class="ad-slot-label">reklama</span>
-      </div>
-      <div class="ad-slot-body">
-        <span id="adSlotText" class="ad-slot-text"></span>
-      </div>
-    </a>
-
     <div class="results" id="resultsScreen" style="display:none;">
       <div class="big-row">
         <div><div class="big" id="resWpm">0</div><div class="lbl" data-i18n="test.result.wpm">wpm</div></div>
@@ -182,6 +165,20 @@
         </button>
       </div>
     </div>
+
+    <!-- ad slot (admin panel → Reklama): hidden unless an ad is switched on; sits under the typing area and the
+         results, fades out while the player types. Desktop banner 8:1, optional phone banner 3:1 (see ads.js). -->
+    <a class="ad-slot" id="adSlot" hidden>
+      <div class="ad-slot-media-wrap">
+        <picture id="adSlotPicture" hidden>
+          <source id="adSlotMobileSrc" media="(max-width: 600px)">
+          <img id="adSlotImg" class="ad-slot-img" alt="">
+        </picture>
+        <video id="adSlotVideo" class="ad-slot-video" muted loop playsinline preload="metadata" hidden></video>
+        <span class="ad-slot-label" data-i18n="ad.label">reklama</span>
+      </div>
+      <div class="ad-slot-body" id="adSlotBody"><span id="adSlotText" class="ad-slot-text"></span></div>
+    </a>
 
     <div class="footer-tip" id="footerTip">
       <kbd>Tab</kbd> — <span data-i18n="test.footerTip">testni qayta boshlash</span>

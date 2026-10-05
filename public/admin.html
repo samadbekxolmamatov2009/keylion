@@ -78,6 +78,19 @@
   .detail-cols{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
   @media (max-width: 860px){ .detail-cols{ grid-template-columns:1fr; } }
   .muted{ color:var(--text-faint); font-size:12px; }
+  .bars .bar{ flex-direction:row; align-items:flex-end; gap:1px; }
+  .bars .bar i{ flex:1; }
+  .ad-guide{ background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; font-size:12px; line-height:1.7; color:var(--text-faint); margin-bottom:18px; }
+  .ad-guide b{ color:var(--text); }
+  .upload-row{ display:flex; gap:8px; align-items:center; margin-bottom:6px; flex-wrap:wrap; }
+  .upload-row .btn{ padding:6px 12px; }
+  .upload-status{ font-size:12px; color:var(--text-faint); margin-top:6px; min-height:16px; }
+  .ad-previews{ display:grid; grid-template-columns: 1fr 390px; gap:18px; align-items:start; }
+  .ad-preview-phone{ width:390px; max-width:100%; }
+  @media (max-width: 900px){ .ad-previews{ grid-template-columns:1fr; } }
+  .ad-previews .ad-slot{ margin:0; max-width:none; }
+  .ad-preview-phone .ad-slot.has-mobile .ad-slot-media-wrap{ aspect-ratio: 3 / 1; }
+  .ad-off{ opacity:.45; }
 </style>
 </head>
 <body>
@@ -85,14 +98,9 @@
 <header id="siteHeader">
   <a href="index.html" class="logo" style="text-decoration:none;">
     <div class="logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M7 4 V20"/>
-        <path d="M7 12 L17 5"/>
-        <path d="M7 12 L17 19"/>
-        <path d="M7 20 H13"/>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g transform="matrix(1 0 -0.2126 1 4.851 0)"><rect x="7.2" y="6" width="5.2" height="14.5" rx="1.3"/><rect x="7.2" y="3.5" width="12.2" height="6.6" rx="1.3"/><rect x="0" y="3.5" width="9" height="2.6" rx="1.3"/><rect x="3" y="7.5" width="6" height="2.6" rx="1.3"/></g></svg>
     </div>
-    <span class="logo-wordmark">Key<span>Lion</span></span>
+    <span class="logo-wordmark">Tez<span>lash</span></span>
   </a>
   <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint); letter-spacing:.4px; text-transform:uppercase;">admin panel</span>
 </header>
@@ -202,58 +210,60 @@
       <h3>statistika (30 kun)</h3>
       <div class="kpi-grid" id="adKpis"></div>
       <div class="bars" id="adBars" style="height:90px;"></div>
+      <div class="bars-x" id="adBarsX"></div>
       <div class="legend" style="margin-bottom:24px;"><span><i></i>ko'rishlar</span><span><i class="su"></i>bosishlar</span></div>
       <p class="note">
-        Bu yerda sozlangan reklama sayt bosh sahifasida, so'z yozish (typing) maydonining tagida, to'liq eniga
-        cho'ziladigan banner sifatida chiqadi, lekin xira/muted uslubda (kichik emas, shunchaki ko'zga tiqilib
-        turmaydi) — foydalanuvchi test yozayotganda esa butunlay xiralashadi, toki e'tiborni chalg'itmasin.
+        Reklama test sahifasida, yozish maydoni va natijalar <b>ostida</b> chiqadi; foydalanuvchi yozayotganda xiralashadi
+        va video to'xtaydi. "Ko'rish" — reklama yuklanib, kamida yarmi 1 soniya ekranda turganda, bir kishiga kuniga bir marta
+        sanaladi; "bosish" — faqat havola bo'lsa.
       </p>
+      <div class="ad-guide">
+        <b>O'lchamlar:</b>
+        kompyuter banneri — <b>1600×200 px (8:1)</b>, JPG/PNG/WebP, 5 MB gacha ·
+        telefon banneri (ixtiyoriy) — <b>900×300 px (3:1)</b>; bo'lmasa telefonda ham 8:1 banner ko'rsatiladi ·
+        video — <b>8:1</b>, MP4 (H.264), ovozsiz, 10–15 soniya, 5 MB gacha. Rasm ramkaga to'liq to'ldiriladi:
+        muhim matn va logotipni chetlardan uzoqroq, markazga joylang.
+      </div>
       <div class="field-row checkbox-row">
         <input type="checkbox" id="adEnabled">
         <label for="adEnabled">Reklama yoqilgan (saytda ko'rsatilsin)</label>
       </div>
-      <div class="field-row">
-        <label for="adVideoFile">Video yuklash (kompyuter/telefondan tanlang, mp4)</label>
-        <input type="file" id="adVideoFile" accept="video/mp4,video/webm">
-        <button class="btn" id="btnUploadVideo" type="button" style="margin-top:8px;">videoni yuklash</button>
-        <div id="adVideoUploadStatus" style="font-size:12px; color:var(--text-faint); margin-top:6px; min-height:16px;"></div>
-      </div>
-      <div class="field-row">
-        <label for="adVideoUrl">...yoki video URL (agar video allaqachon boshqa joyda joylashgan bo'lsa). To'ldirilsa, rasm o'rniga shu video ko'rsatiladi</label>
-        <input type="url" id="adVideoUrl" placeholder="https://.../reklama.mp4">
-      </div>
-      <div class="field-row">
-        <label for="adImageFile">Rasm yuklash (kompyuter/telefondan tanlang)</label>
-        <input type="file" id="adImageFile" accept="image/*">
-        <button class="btn" id="btnUploadImage" type="button" style="margin-top:8px;">rasmni yuklash</button>
-        <div id="adImageUploadStatus" style="font-size:12px; color:var(--text-faint); margin-top:6px; min-height:16px;"></div>
-      </div>
-      <div class="field-row">
-        <label for="adImageUrl">...yoki rasm URL (video bo'sh bo'lsa ishlatiladi; keng banner, taxminan 4:1 nisbat tavsiya etiladi)</label>
-        <input type="url" id="adImageUrl" placeholder="https://...">
-      </div>
-      <div class="field-row">
-        <label for="adLinkUrl">Havola URL (bosilganda qayerga olib boradi)</label>
-        <input type="url" id="adLinkUrl" placeholder="https://...">
-      </div>
-      <div class="field-row">
-        <label for="adText">Qisqa matn (bitta qisqa jumla, majburiy emas)</label>
-        <input type="text" id="adText" maxlength="80" placeholder="masalan: onlayn matematika kurslari — MS/DTM tayyorgarligi">
+      <div class="ad-fields">
+        <div class="field-row">
+          <label for="adImageUrl">Kompyuter banneri (8:1) — yuklang yoki https:// manzil kiriting</label>
+          <div class="upload-row"><input type="file" id="adImageFile" accept="image/jpeg,image/png,image/webp,image/gif"><button class="btn" type="button" data-upload="image">yuklash</button></div>
+          <input type="url" id="adImageUrl" placeholder="https://... yoki yuklangan fayl">
+          <div class="upload-status" id="adImageStatus"></div>
+        </div>
+        <div class="field-row">
+          <label for="adMobileImageUrl">Telefon banneri (3:1, ixtiyoriy)</label>
+          <div class="upload-row"><input type="file" id="adMobileImageFile" accept="image/jpeg,image/png,image/webp,image/gif"><button class="btn" type="button" data-upload="mobile">yuklash</button></div>
+          <input type="url" id="adMobileImageUrl" placeholder="https://... yoki yuklangan fayl">
+          <div class="upload-status" id="adMobileImageStatus"></div>
+        </div>
+        <div class="field-row">
+          <label for="adVideoUrl">Video (8:1, ixtiyoriy) — bo'lsa rasm o'rniga video ko'rsatiladi; video ochilmasa rasm chiqadi</label>
+          <div class="upload-row"><input type="file" id="adVideoFile" accept="video/mp4,video/webm"><button class="btn" type="button" data-upload="video">yuklash</button></div>
+          <input type="url" id="adVideoUrl" placeholder="https://.../reklama.mp4 yoki yuklangan fayl">
+          <div class="upload-status" id="adVideoStatus"></div>
+        </div>
+        <div class="field-row">
+          <label for="adLinkUrl">Havola (bosilganda ochiladi; https:// bilan boshlansin, bo'sh qolsa reklama bosilmaydi)</label>
+          <input type="url" id="adLinkUrl" placeholder="https://...">
+        </div>
+        <div class="field-row">
+          <label for="adText">Qisqa matn (ixtiyoriy, 120 belgigacha; bo'sh bo'lsa matn qatori ko'rinmaydi)</label>
+          <input type="text" id="adText" maxlength="120" placeholder="masalan: onlayn matematika kurslari — DTM tayyorgarligi">
+        </div>
       </div>
       <button class="btn accent" id="btnSaveAd">saqlash</button>
       <div id="adSaveStatus"></div>
 
-      <h3 style="font-family:var(--font-display); font-size:14px; margin:28px 0 12px; color:var(--text-faint);">ko'rinishi qanday bo'ladi</h3>
-      <a href="#" class="ad-slot" id="adPreview" style="opacity:1; pointer-events:none;">
-        <div class="ad-slot-media-wrap">
-          <img id="adPreviewImg" class="ad-slot-img" alt="" style="display:none;">
-          <video id="adPreviewVideo" class="ad-slot-video" muted loop playsinline style="display:none;"></video>
-          <span class="ad-slot-label">reklama</span>
-        </div>
-        <div class="ad-slot-body">
-          <span id="adPreviewText" class="ad-slot-text"></span>
-        </div>
-      </a>
+      <h3 style="margin:28px 0 12px;">ko'rinishi <span class="muted" id="adPreviewState"></span></h3>
+      <div class="ad-previews">
+        <div><div class="muted" style="margin-bottom:6px;">kompyuter</div><div id="adPreviewDesktop"></div></div>
+        <div class="ad-preview-phone"><div class="muted" style="margin-bottom:6px;">telefon (390 px)</div><div id="adPreviewMobile"></div></div>
+      </div>
     </div>
   </div>
 
@@ -357,9 +367,10 @@
   let dashTimer = null;
   function barsHtml(days, a, b){
     const max = Math.max(1, ...days.map(d=> Math.max(d[a], d[b] || 0)));
+    /* two bars side by side per day, both on the same scale */
     return days.map(d=> '<div class="bar" title="'+escapeHtml(d.d || d.day)+': '+d[a]+(b ? ' / '+d[b] : '')+'">'+
-      (b ? '<i class="su" style="height:'+(d[b]/max*100)+'%"></i>' : '')+
-      '<i style="height:'+(d[a]/max*100)+'%"></i></div>').join('');
+      '<i style="height:'+(d[a]/max*100)+'%"></i>'+
+      (b ? '<i class="su" style="height:'+(d[b]/max*100)+'%"></i>' : '')+'</div>').join('');
   }
   function loadDashboard(){
     clearTimeout(dashTimer);
@@ -525,99 +536,116 @@
       document.getElementById('adKpis').innerHTML =
         '<div class="kpi"><b>'+views+'</b><span>ko’rishlar</span></div><div class="kpi"><b>'+clicks+'</b><span>bosishlar</span></div>'+
         '<div class="kpi"><b>'+(views ? (clicks/views*100).toFixed(1) : '0.0')+'%</b><span>CTR (bosish / ko’rish)</span></div>';
-      document.getElementById('adBars').innerHTML = days.length ? barsHtml(days, 'view', 'click') : '<span class="muted">hali ma’lumot yo’q</span>';
+      document.getElementById('adBars').innerHTML = views ? barsHtml(days, 'view', 'click') : '<span class="muted">hali ma’lumot yo’q</span>';
+      document.getElementById('adBarsX').innerHTML = views ? '<span>'+escapeHtml(days[0].day.slice(5))+'</span><span>'+escapeHtml(days[days.length-1].day.slice(5))+'</span>' : '';
     }).catch((err)=> adminFail(err));
   }
 
-  /* ---- ad tab: file uploads (stored on the server, URL dropped into the matching field) ---- */
-  function uploadAdFile(file, kind, statusEl){
-    if(!file) return Promise.reject(new Error('avval fayl tanlang'));
-    if(statusEl) statusEl.textContent = 'yuklanmoqda...';
-    return adminApi('POST', '/admin/upload', file, true).then((res)=> res.url);
-  }
-  document.getElementById('btnUploadVideo').addEventListener('click', ()=>{
-    const file = document.getElementById('adVideoFile').files[0];
-    const statusEl = document.getElementById('adVideoUploadStatus');
-    statusEl.classList.remove('err');
-    uploadAdFile(file, 'video', statusEl).then((url)=>{
-      document.getElementById('adVideoUrl').value = url;
-      statusEl.textContent = 'yuklandi \u2713 \u2014 endi pastdagi "saqlash" tugmasini bosing';
+  /* ---- ad tab ---- */
+  const AD_FIELDS = { image: 'adImageUrl', mobile: 'adMobileImageUrl', video: 'adVideoUrl' };
+  const AD_FILES = { image: 'adImageFile', mobile: 'adMobileImageFile', video: 'adVideoFile' };
+  const AD_STATUS = { image: 'adImageStatus', mobile: 'adMobileImageStatus', video: 'adVideoStatus' };
+  const val = (id)=> document.getElementById(id).value.trim();
+  function setStatus(id, msg, isErr){ const el = document.getElementById(id); el.textContent = msg; el.classList.toggle('err', !!isErr); }
+
+  /* the upload buttons only take the matching kind of file */
+  document.getElementById('tab-ad').addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-upload]');
+    if(!btn) return;
+    const kind = btn.dataset.upload, file = document.getElementById(AD_FILES[kind]).files[0];
+    if(!file) return setStatus(AD_STATUS[kind], 'avval fayl tanlang', true);
+    const wantVideo = kind === 'video';
+    if(wantVideo ? !/^video\/(mp4|webm)$/.test(file.type) : !/^image\/(jpeg|png|webp|gif)$/.test(file.type))
+      return setStatus(AD_STATUS[kind], wantVideo ? 'bu yerga faqat MP4 yoki WebM video yuklanadi' : 'bu yerga faqat JPG, PNG, WebP yoki GIF rasm yuklanadi', true);
+    if(file.size > 5.5 * 1024 * 1024) return setStatus(AD_STATUS[kind], 'fayl juda katta (5 MB gacha)', true);
+    btn.disabled = true;
+    setStatus(AD_STATUS[kind], 'yuklanmoqda...');
+    adminApi('POST', '/admin/upload', file, true).then((res)=>{
+      document.getElementById(AD_FIELDS[kind]).value = res.url;
+      setStatus(AD_STATUS[kind], 'yuklandi ✓ — endi pastdagi "saqlash" tugmasini bosing');
       updateAdPreview();
-    }).catch((err)=>{
-      statusEl.textContent = 'Xato: ' + (err.code || err.message);
-      statusEl.classList.add('err');
-    });
-  });
-  document.getElementById('btnUploadImage').addEventListener('click', ()=>{
-    const file = document.getElementById('adImageFile').files[0];
-    const statusEl = document.getElementById('adImageUploadStatus');
-    statusEl.classList.remove('err');
-    uploadAdFile(file, 'image', statusEl).then((url)=>{
-      document.getElementById('adImageUrl').value = url;
-      statusEl.textContent = 'yuklandi \u2713 \u2014 endi pastdagi "saqlash" tugmasini bosing';
-      updateAdPreview();
-    }).catch((err)=>{
-      statusEl.textContent = 'Xato: ' + (err.code || err.message);
-      statusEl.classList.add('err');
-    });
+    }).catch((err)=>{ adminFail(err); setStatus(AD_STATUS[kind], 'Xato: ' + err.message, true); })
+      .then(()=>{ btn.disabled = false; });
   });
 
-  function updateAdPreview(){
-    const videoUrl = document.getElementById('adVideoUrl').value.trim();
-    const imgUrl = document.getElementById('adImageUrl').value.trim();
-    const text = document.getElementById('adText').value.trim();
-    const imgEl = document.getElementById('adPreviewImg');
-    const vidEl = document.getElementById('adPreviewVideo');
-    if(videoUrl){
-      vidEl.src = videoUrl;
-      vidEl.style.display = 'block';
-      vidEl.play().catch(()=>{});
-      imgEl.style.display = 'none';
+  /* the preview is built with the same markup and CSS classes as the live slot */
+  function previewSlot(ad, phone){
+    const slot = document.createElement('div');
+    slot.className = 'ad-slot' + (ad.enabled ? '' : ' ad-off') + (phone && ad.mobileImageUrl && !ad.videoUrl ? ' has-mobile' : '');
+    const wrap = document.createElement('div');
+    wrap.className = 'ad-slot-media-wrap';
+    if(ad.videoUrl){
+      const v = document.createElement('video');
+      v.className = 'ad-slot-video'; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true; v.src = ad.videoUrl;
+      if(ad.imageUrl) v.onerror = ()=>{ const i = document.createElement('img'); i.className = 'ad-slot-img'; i.src = ad.imageUrl; v.replaceWith(i); };
+      wrap.appendChild(v);
+    } else if(ad.imageUrl){
+      const i = document.createElement('img');
+      i.className = 'ad-slot-img';
+      i.src = phone && ad.mobileImageUrl ? ad.mobileImageUrl : ad.imageUrl;
+      wrap.appendChild(i);
     } else {
-      vidEl.pause();
-      vidEl.removeAttribute('src');
-      vidEl.style.display = 'none';
-      imgEl.src = imgUrl;
-      imgEl.style.display = imgUrl ? 'block' : 'none';
+      const e = document.createElement('div');
+      e.className = 'muted'; e.style.cssText = 'height:100%; display:flex; align-items:center; justify-content:center;';
+      e.textContent = 'rasm yoki video qo’shilmagan';
+      wrap.appendChild(e);
     }
-    document.getElementById('adPreviewText').textContent = text || '(matn kiritilmagan)';
+    const label = document.createElement('span');
+    label.className = 'ad-slot-label'; label.textContent = 'reklama';
+    wrap.appendChild(label);
+    slot.appendChild(wrap);
+    if(ad.text){
+      const body = document.createElement('div'); body.className = 'ad-slot-body';
+      const tx = document.createElement('span'); tx.className = 'ad-slot-text'; tx.textContent = ad.text;
+      body.appendChild(tx); slot.appendChild(body);
+    }
+    return slot;
   }
-  ['adVideoUrl','adImageUrl','adText'].forEach(id=>{
-    document.getElementById(id).addEventListener('input', updateAdPreview);
+  function currentAdForm(){
+    return {
+      enabled: document.getElementById('adEnabled').checked,
+      imageUrl: val('adImageUrl'), mobileImageUrl: val('adMobileImageUrl'), videoUrl: val('adVideoUrl'),
+      linkUrl: val('adLinkUrl'), text: val('adText'),
+    };
+  }
+  function updateAdPreview(){
+    const ad = currentAdForm();
+    document.getElementById('adPreviewDesktop').replaceChildren(previewSlot(ad, false));
+    document.getElementById('adPreviewMobile').replaceChildren(previewSlot(ad, true));
+    document.getElementById('adPreviewState').textContent = ad.enabled ? '' : '(hozir o’chirilgan — saytda ko’rinmaydi)';
+  }
+  ['adImageUrl', 'adMobileImageUrl', 'adVideoUrl', 'adText', 'adEnabled'].forEach((id)=>{
+    document.getElementById(id).addEventListener(id === 'adEnabled' ? 'change' : 'input', updateAdPreview);
   });
 
   function loadAdSettings(){
-    fetch('/api/settings/ad').then(r=>r.json()).then(({ ad })=>{
+    adminApi('GET', '/admin/ad').then(({ ad })=>{
       ad = ad || {};
       document.getElementById('adEnabled').checked = !!ad.enabled;
-      document.getElementById('adVideoUrl').value = ad.videoUrl || '';
       document.getElementById('adImageUrl').value = ad.imageUrl || '';
+      document.getElementById('adMobileImageUrl').value = ad.mobileImageUrl || '';
+      document.getElementById('adVideoUrl').value = ad.videoUrl || '';
       document.getElementById('adLinkUrl').value = ad.linkUrl || '';
       document.getElementById('adText').value = ad.text || '';
       updateAdPreview();
-    }).catch((err)=>{
-      document.getElementById('adSaveStatus').textContent = 'Yuklashda xato: ' + err.message;
-      document.getElementById('adSaveStatus').classList.add('err');
-    });
+    }).catch((err)=>{ adminFail(err); setStatus('adSaveStatus', 'Yuklashda xato: ' + err.message, true); });
   }
 
+  const SAVE_ERRORS = {
+    'link: must start with https://': 'Havola https:// bilan boshlanishi kerak.',
+    'image: must start with https://': 'Kompyuter banneri manzili https:// bilan boshlanishi kerak (yoki faylni yuklang).',
+    'mobile image: must start with https://': 'Telefon banneri manzili https:// bilan boshlanishi kerak (yoki faylni yuklang).',
+    'video: must start with https://': 'Video manzili https:// bilan boshlanishi kerak (yoki faylni yuklang).',
+    'add an image or a video before switching the ad on': 'Reklamani yoqishdan oldin rasm yoki video qo’shing.',
+  };
   document.getElementById('btnSaveAd').addEventListener('click', ()=>{
-    const status = document.getElementById('adSaveStatus');
-    status.classList.remove('err');
-    status.textContent = 'saqlanmoqda...';
-    const ad = {
-      enabled: document.getElementById('adEnabled').checked,
-      videoUrl: document.getElementById('adVideoUrl').value.trim(),
-      imageUrl: document.getElementById('adImageUrl').value.trim(),
-      linkUrl: document.getElementById('adLinkUrl').value.trim(),
-      text: document.getElementById('adText').value.trim(),
-    };
+    const ad = currentAdForm();
+    if(ad.linkUrl && !/^https?:\/\//i.test(ad.linkUrl)) return setStatus('adSaveStatus', SAVE_ERRORS['link: must start with https://'], true);
+    setStatus('adSaveStatus', 'saqlanmoqda...');
     adminApi('PUT', '/admin/ad', ad).then(()=>{
-      status.textContent = 'saqlandi ✓';
-    }).catch((err)=>{
-      status.textContent = 'Xato: ' + err.message;
-      status.classList.add('err');
-    });
+      setStatus('adSaveStatus', 'saqlandi ✓ (ochiq sahifalarda 10 daqiqa ichida yangilanadi)');
+      loadAdStats();
+    }).catch((err)=>{ adminFail(err); setStatus('adSaveStatus', 'Xato: ' + (SAVE_ERRORS[err.message] || err.message), true); });
   });
 
   try{

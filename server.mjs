@@ -1,4 +1,4 @@
-/* Tezlash as a plain Node.js web server: the static site from keylion/ plus the API at /api/*.
+/* Tezlash as a plain Node.js web server: the static site from public/ plus the API at /api/*.
    Used on hosts without Netlify (Render — see render.yaml — or any VPS), and locally: `npm start`.
    The API itself is the same code Netlify runs (netlify/functions/api.mjs). */
 import http from 'node:http';
@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import handler from './netlify/functions/api.mjs';
 
 const PORT = Number(process.env.PORT) || 8888;
-const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), 'keylion');
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
 const MAX_BODY = 8 * 1024 * 1024;
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -19,10 +19,12 @@ const TYPES = {
 const COMPRESSIBLE = new Set(['.html', '.js', '.css', '.svg', '.json', '.txt']);
 const HOP_BY_HOP = new Set(['connection', 'keep-alive', 'transfer-encoding', 'upgrade', 'expect', 'proxy-connection', 'te', 'trailer']);
 
-/* behind Render's proxy the socket address is the proxy's; the edge puts the visitor's ip in these headers */
+/* behind Render's proxy the socket address is the proxy's. Cloudflare (Render's edge) overwrites
+   cf-connecting-ip, so a visitor can't fake it; x-forwarded-for is only a fallback for other hosts
+   (its first entry can be supplied by the client, so rate limits there are best effort) */
 function clientIp(req) {
   const h = req.headers;
-  return h['cf-connecting-ip'] || h['true-client-ip'] || (h['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
+  return h['cf-connecting-ip'] || (h['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
 }
 
 async function handleApi(req, res) {

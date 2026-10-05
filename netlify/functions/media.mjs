@@ -1,5 +1,6 @@
 /* Uploaded media (ad images/videos, custom backgrounds), stored in the database so the API runs on any
-   host (Netlify, Render, a VPS). Files are split into 512 KB chunks to stay far below per-request limits.
+   host (Netlify, Render, a VPS). Files are split into 512 KB chunks to stay far below per-request limits,
+   and byte ranges read only the chunks they need (Safari streams video with Range requests).
    Files uploaded before this existed live in Netlify Blobs; on Netlify they are still read from there. */
 const CHUNK = 512 * 1024;
 
@@ -16,18 +17,34 @@ export async function putMedia(db, store, key, buf, type) {
   });
 }
 
-/* -> { data: Uint8Array, type } or null */
-export async function getMedia(db, store, key) {
+/* -> { type, size, legacy? } or null; `legacy` holds the whole file when it came from Netlify Blobs */
+export async function headMedia(db, store, key) {
   const head = (await db.execute({ sql: 'SELECT type, size FROM media WHERE store = ? AND key = ?', args: [store, key] })).rows[0];
-  if (!head) return legacyGet(store, key);
-  const size = Number(head.size), count = Math.ceil(size / CHUNK);
-  const parts = await Promise.all(Array.from({ length: count }, (_, idx) =>
-    db.execute({ sql: 'SELECT data FROM media_chunks WHERE store = ? AND key = ? AND idx = ?', args: [store, key, idx] }).then((r) => r.rows[0])));
-  if (parts.some((p) => !p)) return null;
-  const data = new Uint8Array(size);
-  let off = 0;
-  for (const p of parts) { const b = new Uint8Array(p.data); data.set(b, off); off += b.length; }
-  return { data, type: head.type };
+  if (head) return { type: head.type, size: Number(head.size) };
+  const old = await legacyGet(store, key);
+  return old ? { type: old.type, size: old.data.length, legacy: old.data } : null;
+}
+
+/* bytes start..end (inclusive) of a file described by headMedia() */
+export async function readMedia(db, store, key, head, start = 0, end = head.size - 1) {
+  if (head.legacy) return head.legacy.slice(start, end + 1);
+  const first = Math.floor(start / CHUNK), last = Math.floor(end / CHUNK);
+  const parts = await Promise.all(Array.from({ length: last - first + 1 }, (_, i) =>
+    db.execute({ sql: 'SELECT data FROM media_chunks WHERE store = ? AND key = ? AND idx = ?', args: [store, key, first + i] }).then((r) => r.rows[0])));
+  if (parts.some((p) => !p)) throw new Error('media chunk missing: ' + store + '/' + key);
+  const out = new Uint8Array(end - start + 1);
+  let pos = first * CHUNK, off = 0;
+  for (const p of parts) {
+    const b = new Uint8Array(p.data);
+    const from = Math.max(0, start - pos), to = Math.min(b.length, end + 1 - pos);
+    if (to > from) { out.set(b.subarray(from, to), off); off += to - from; }
+    pos += b.length;
+  }
+  return out;
+}
+
+export async function listMedia(db, store) {
+  return (await db.execute({ sql: 'SELECT key, created_at FROM media WHERE store = ?', args: [store] })).rows.map((r) => ({ key: r.key, createdAt: Number(r.created_at) }));
 }
 
 export async function deleteMedia(db, store, key) {
