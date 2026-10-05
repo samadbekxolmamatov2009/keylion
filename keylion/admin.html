@@ -32,6 +32,52 @@
   #adSaveStatus{ font-size:12px; color:var(--success); min-height:16px; margin-top:10px; }
   .err{ color:var(--error) !important; }
   .field-row input[type=file]{ font-size:12px; color:var(--text-faint); }
+  .admin-tabs{ flex-wrap:wrap; }
+  .tab-count{ display:inline-block; min-width:18px; padding:0 5px; margin-left:4px; border-radius:999px; background:var(--error); color:#fff; font-size:10px; line-height:16px; text-align:center; }
+  .tab-count:empty{ display:none; }
+  .kpi-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:12px; margin-bottom:18px; }
+  .kpi{ background:var(--bg-elev); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
+  .kpi b{ display:block; font-family:var(--font-display); font-size:26px; color:var(--accent); }
+  .kpi span{ font-size:11px; color:var(--text-faint); }
+  .kpi.live b::before{ content:''; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--success); margin-right:8px; vertical-align:middle; box-shadow:0 0 8px var(--success); animation: blink 1.6s infinite; }
+  .kpi.alert b{ color:var(--error); }
+  .dash-grid{ display:grid; grid-template-columns: 1.6fr 1fr; gap:16px; }
+  @media (max-width: 860px){ .dash-grid{ grid-template-columns:1fr; } }
+  .bars{ display:flex; align-items:flex-end; gap:3px; height:150px; padding-top:8px; }
+  .bars .bar{ flex:1; display:flex; flex-direction:column; justify-content:flex-end; gap:1px; min-width:0; position:relative; height:100%; }
+  .bars .bar i{ display:block; background:var(--accent); border-radius:2px 2px 0 0; min-height:1px; }
+  .bars .bar i.su{ background:var(--success); }
+  .bars-x{ display:flex; justify-content:space-between; font-size:10px; color:var(--text-faint); margin-top:6px; font-family:var(--font-mono); }
+  .legend{ display:flex; gap:14px; font-size:11px; color:var(--text-faint); margin-top:8px; }
+  .legend i{ display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; background:var(--accent); }
+  .legend i.su{ background:var(--success); }
+  .online-list{ display:flex; flex-direction:column; gap:6px; max-height:260px; overflow:auto; font-size:13px; }
+  .online-list div{ display:flex; justify-content:space-between; gap:10px; }
+  .online-list small{ color:var(--text-faint); }
+  .tag{ display:inline-block; font-size:10px; padding:1px 7px; border-radius:999px; border:1px solid var(--border-strong); color:var(--text-faint); margin-left:6px; vertical-align:1px; }
+  .tag.ban{ border-color:var(--error); color:var(--error); }
+  .tag.flag{ border-color:var(--accent-dim); color:var(--accent); }
+  .tag.ok{ border-color:#3d6b2a; color:var(--success); }
+  .toolbar{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .toolbar input, .toolbar select{ background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; color:var(--text); font-size:13px; font-family:var(--font-body); }
+  .toolbar input{ flex:1; min-width:200px; }
+  .table-wrap{ overflow-x:auto; }
+  tr.clickable{ cursor:pointer; }
+  tr.clickable:hover td{ background:var(--bg-elev-2); }
+  .pager{ display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:12px; font-size:12px; color:var(--text-faint); }
+  .pager .btn{ padding:6px 12px; }
+  .row-actions{ display:flex; gap:6px; }
+  .row-actions .btn{ padding:5px 10px; font-size:12px; }
+  .btn.danger{ border-color:#6b2323; color:#ffb4b4; }
+  .btn.danger:hover{ background:#3a1414; }
+  .user-detail{ margin-bottom:16px; }
+  .user-detail h3{ margin:0 0 6px !important; color:var(--text) !important; font-size:18px !important; text-transform:none !important; }
+  .detail-meta{ font-size:12px; color:var(--text-faint); line-height:1.8; margin-bottom:12px; }
+  .detail-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+  .detail-actions input{ background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; color:var(--text); font-size:13px; width:200px; }
+  .detail-cols{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  @media (max-width: 860px){ .detail-cols{ grid-template-columns:1fr; } }
+  .muted{ color:var(--text-faint); font-size:12px; }
 </style>
 </head>
 <body>
@@ -68,28 +114,95 @@
     <button class="btn accent" id="btnAdminLogin" style="width:100%; justify-content:center;">kirish</button>
     <div id="gateError" style="color:var(--error); font-size:12px; margin-top:10px; min-height:14px;"></div>
   </div>
-  <div id="deniedMsg" style="display:none;" class="warn">
-    Bu hisob admin emas. Faqat <code>xolmamatovsamdbek@gmail.com</code> hisobi bu panelni ko'ra oladi.
-  </div>
-
   <div id="adminBody" style="display:none;">
     <div class="admin-tabs" id="adminTabs">
-      <button data-tab="users" class="active">Foydalanuvchilar</button>
+      <button data-tab="dash" class="active">Dashboard</button>
+      <button data-tab="users">Foydalanuvchilar</button>
+      <button data-tab="mod">Moderatsiya <span class="tab-count" id="flagCount"></span></button>
       <button data-tab="ad">Reklama</button>
+      <button data-tab="log">Jurnal</button>
+    </div>
+
+    <!-- DASHBOARD TAB -->
+    <div class="admin-tab-panel active" id="tab-dash">
+      <div class="kpi-grid" id="kpiGrid"><div class="kpi"><b>…</b><span>yuklanmoqda</span></div></div>
+      <div class="dash-grid">
+        <div class="panel">
+          <h3>so'nggi 30 kun</h3>
+          <div class="bars" id="dailyBars"></div>
+          <div class="bars-x" id="dailyBarsX"></div>
+          <div class="legend"><span><i></i>testlar</span><span><i class="su"></i>yangi foydalanuvchilar</span></div>
+        </div>
+        <div class="panel">
+          <h3>hozir saytda (5 daqiqa)</h3>
+          <div class="online-list" id="onlineList"></div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:10px;">Har 30 soniyada avtomatik yangilanadi.</p>
     </div>
 
     <!-- USERS TAB -->
-    <div class="admin-tab-panel active panel" id="tab-users">
-      <table>
-        <thead><tr>
-          <th>ism</th><th>email</th><th>telefon</th><th>ro'yxatdan o'tgan</th><th>oxirgi kirish</th><th>testlar</th><th>eng yaxshi wpm</th>
-        </tr></thead>
-        <tbody id="usersBody"><tr><td colspan="7">yuklanmoqda...</td></tr></tbody>
-      </table>
+    <div class="admin-tab-panel" id="tab-users">
+      <div class="panel user-detail" id="userDetail" style="display:none;"></div>
+      <div class="panel">
+        <div class="toolbar">
+          <input type="search" id="userSearch" placeholder="ism, email yoki ID bo'yicha qidirish">
+          <select id="userKind">
+            <option value="user">ro'yxatdan o'tganlar</option>
+            <option value="guest">mehmonlar</option>
+            <option value="banned">bloklanganlar</option>
+            <option value="all">hammasi</option>
+          </select>
+          <select id="userSort">
+            <option value="last">oxirgi faollik</option>
+            <option value="created">ro'yxatdan o'tgan sana</option>
+            <option value="best">eng yaxshi wpm</option>
+            <option value="tests">testlar soni</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>ism</th><th>email</th><th>ro'yxatdan o'tgan</th><th>oxirgi faollik</th><th>testlar</th><th>eng yaxshi</th><th>daraja</th>
+            </tr></thead>
+            <tbody id="usersBody"><tr><td colspan="7">yuklanmoqda...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pager"><span id="userPageInfo"></span><button class="btn" id="userPrev">←</button><button class="btn" id="userNext">→</button></div>
+      </div>
+    </div>
+
+    <!-- MODERATION TAB -->
+    <div class="admin-tab-panel panel" id="tab-mod">
+      <p class="note">
+        Server shubhali deb belgilagan natijalar: juda tez (220+ wpm), server vaqtidan tezroq tugatilgan, xom ma'lumotga mos kelmaydigan
+        yoki "robot" ritmidagi yozuv. Ular leaderboard'da <b>ko'rinmaydi</b>, toki siz tasdiqlamaguningizcha.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>o'yinchi</th><th>wpm</th><th>aniqlik</th><th>rejim</th><th>sana</th><th>sabab</th><th></th></tr></thead>
+          <tbody id="flaggedBody"><tr><td colspan="7">yuklanmoqda...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LOG TAB -->
+    <div class="admin-tab-panel panel" id="tab-log">
+      <p class="note">Admin panelda qilingan har bir amal shu yerda yoziladi.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>vaqt</th><th>amal</th><th>kimga</th><th>tafsilot</th></tr></thead>
+          <tbody id="logBody"><tr><td colspan="4">yuklanmoqda...</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- AD TAB -->
     <div class="admin-tab-panel panel" id="tab-ad">
+      <h3>statistika (30 kun)</h3>
+      <div class="kpi-grid" id="adKpis"></div>
+      <div class="bars" id="adBars" style="height:90px;"></div>
+      <div class="legend" style="margin-bottom:24px;"><span><i></i>ko'rishlar</span><span><i class="su"></i>bosishlar</span></div>
       <p class="note">
         Bu yerda sozlangan reklama sayt bosh sahifasida, so'z yozish (typing) maydonining tagida, to'liq eniga
         cho'ziladigan banner sifatida chiqadi, lekin xira/muted uslubda (kichik emas, shunchaki ko'zga tiqilib
@@ -162,9 +275,8 @@
 
   function showAdmin(){
     document.getElementById('gate').style.display = 'none';
-    document.getElementById('deniedMsg').style.display = 'none';
     document.getElementById('adminBody').style.display = 'block';
-    loadUsers();
+    loadDashboard();
     loadAdSettings();
   }
   function showGate(){
@@ -195,28 +307,226 @@
   function fmtDate(ts){
     if(!ts) return '—';
     const d = new Date(ts);
-    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString().slice(0,5);
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   /* ---- tabs ---- */
+  let activeTab = 'dash';
   document.getElementById('adminTabs').addEventListener('click', (e)=>{
     const btn = e.target.closest('button[data-tab]');
     if(!btn) return;
+    activeTab = btn.dataset.tab;
     document.querySelectorAll('#adminTabs button').forEach(b=> b.classList.toggle('active', b===btn));
-    document.querySelectorAll('.admin-tab-panel').forEach(p=> p.classList.toggle('active', p.id==='tab-'+btn.dataset.tab));
+    document.querySelectorAll('.admin-tab-panel').forEach(p=> p.classList.toggle('active', p.id==='tab-'+activeTab));
+    ({ dash: loadDashboard, users: loadUsers, mod: loadFlagged, ad: loadAdStats, log: loadLog })[activeTab]();
   });
 
+  /* any 401/403 means the 1-day admin token expired: back to the login form */
+  function adminFail(err, target, cols){
+    if(err.status === 401 || err.status === 403){
+      adminToken = null;
+      try{ sessionStorage.removeItem('keylion.admin'); }catch(e){}
+      showGate();
+      return;
+    }
+    if(target) document.getElementById(target).innerHTML = '<tr><td colspan="'+cols+'" class="err">Xato: '+escapeHtml(err.message)+'</td></tr>';
+  }
+
+  function fmtAgo(ts){
+    if(!ts) return '—';
+    const s = Math.round((Date.now() - ts) / 1000);
+    if(s < 60) return 'hozir';
+    if(s < 3600) return Math.round(s/60) + ' daq oldin';
+    if(s < 86400) return Math.round(s/3600) + ' soat oldin';
+    return fmtDate(ts);
+  }
+  /* why the server flagged a result (reasons come from validateResult in api.mjs) */
+  const FLAG_REASONS = {
+    'wpm does not match raw counts': "wpm xom ma'lumotga mos emas",
+    'missing timing data': "vaqt ma'lumoti yo'q",
+    'no start stamp': "server start belgisi yo'q",
+    'faster than the server clock': 'server vaqtidan tezroq tugatilgan',
+    'above 220 wpm': '220 wpm dan yuqori',
+    'robotic key rhythm': 'robotga xos bir xil ritm',
+  };
+  const reasonText = (r)=> FLAG_REASONS[r] || r || '?';
+  const TIER_NAMES = [[110,'Usta'],[90,'Olmos'],[70,'Platina'],[50,'Oltin'],[30,'Kumush'],[0,'Bronza']];
+  const tierName = (w)=> (TIER_NAMES.find(([min])=> (w||0) >= min) || TIER_NAMES[5])[1];
+
+  /* ---- dashboard ---- */
+  let dashTimer = null;
+  function barsHtml(days, a, b){
+    const max = Math.max(1, ...days.map(d=> Math.max(d[a], d[b] || 0)));
+    return days.map(d=> '<div class="bar" title="'+escapeHtml(d.d || d.day)+': '+d[a]+(b ? ' / '+d[b] : '')+'">'+
+      (b ? '<i class="su" style="height:'+(d[b]/max*100)+'%"></i>' : '')+
+      '<i style="height:'+(d[a]/max*100)+'%"></i></div>').join('');
+  }
+  function loadDashboard(){
+    clearTimeout(dashTimer);
+    adminApi('GET', '/admin/stats').then((st)=>{
+      const kpis = [
+        ['live', st.online, 'hozir onlayn'],
+        ['', st.users, "ro'yxatdan o'tganlar"],
+        ['', st.guests, 'mehmon sessiyalari'],
+        ['', st.testsToday, 'bugungi testlar'],
+        ['', st.signupsToday, "bugun ro'yxatdan o'tdi"],
+        ['', st.activeRooms, 'faol poyga xonalari'],
+        [st.flagged ? 'alert' : '', st.flagged, 'tekshiruvdagi natijalar'],
+        ['', st.banned, 'bloklanganlar'],
+      ];
+      document.getElementById('kpiGrid').innerHTML = kpis.map(([cls, v, l])=> '<div class="kpi '+cls+'"><b>'+Number(v||0)+'</b><span>'+l+'</span></div>').join('');
+      document.getElementById('flagCount').textContent = st.flagged ? st.flagged : '';
+      document.getElementById('dailyBars').innerHTML = barsHtml(st.days, 'tests', 'signups');
+      document.getElementById('dailyBarsX').innerHTML = '<span>'+escapeHtml(st.days[0].d.slice(5))+'</span><span>'+escapeHtml(st.days[st.days.length-1].d.slice(5))+'</span>';
+      document.getElementById('onlineList').innerHTML = st.onlineUsers.length
+        ? st.onlineUsers.map(u=> '<div><span>'+escapeHtml(u.name)+(u.guest ? '<span class="tag">mehmon</span>' : '')+'</span><small>'+fmtAgo(u.lastSeenAt)+'</small></div>').join('')
+        : '<span class="muted">hozir hech kim yo’q</span>';
+      if(activeTab === 'dash') dashTimer = setTimeout(()=>{ if(activeTab === 'dash' && adminToken) loadDashboard(); }, 30000);
+    }).catch((err)=> adminFail(err));
+  }
+
   /* ---- users tab ---- */
+  const userQuery = { q: '', kind: 'user', sort: 'last', page: 0 };
+  let userSearchTimer = null;
+  document.getElementById('userSearch').addEventListener('input', (e)=>{
+    clearTimeout(userSearchTimer);
+    userSearchTimer = setTimeout(()=>{ userQuery.q = e.target.value.trim(); userQuery.page = 0; loadUsers(); }, 300);
+  });
+  document.getElementById('userKind').addEventListener('change', (e)=>{ userQuery.kind = e.target.value; userQuery.page = 0; loadUsers(); });
+  document.getElementById('userSort').addEventListener('change', (e)=>{ userQuery.sort = e.target.value; userQuery.page = 0; loadUsers(); });
+  document.getElementById('userPrev').addEventListener('click', ()=>{ if(userQuery.page > 0){ userQuery.page--; loadUsers(); } });
+  document.getElementById('userNext').addEventListener('click', ()=>{ userQuery.page++; loadUsers(); });
+
   function loadUsers(){
-    adminApi('GET', '/admin/users').then(({ users })=>{
+    const qs = new URLSearchParams(userQuery);
+    adminApi('GET', '/admin/users?' + qs).then(({ users, total, page, per })=>{
       const body = document.getElementById('usersBody');
       body.innerHTML = users.map(r=>
-        '<tr><td>'+escapeHtml(r.name)+'</td><td>'+escapeHtml(r.email || '—')+'</td><td>—</td><td>'+fmtDate(r.createdAt)+'</td><td>'+fmtDate(r.lastLoginAt)+'</td><td>'+r.testsCount+'</td><td>'+r.bestWpm+'</td></tr>'
-      ).join('') || '<tr><td colspan="7">Hali foydalanuvchi yo\u2019q.</td></tr>';
-    }).catch((err)=>{
-      if(err.status === 403){ adminToken = null; showGate(); return; }
-      document.getElementById('usersBody').innerHTML = '<tr><td colspan="7">Ma\u2019lumot o\u2019qishda xato: '+escapeHtml(err.message)+'</td></tr>';
-    });
+        '<tr class="clickable" data-id="'+escapeHtml(r.id)+'"><td>'+escapeHtml(r.name)+(r.banned ? '<span class="tag ban">bloklangan</span>' : '')+(r.kind==='guest' ? '<span class="tag">mehmon</span>' : '')+'</td>'+
+        '<td>'+escapeHtml(r.email || '—')+'</td><td>'+fmtDate(r.createdAt)+'</td><td>'+fmtAgo(r.lastSeenAt || r.lastLoginAt)+'</td>'+
+        '<td>'+r.testsCount+'</td><td>'+r.bestWpm+'</td><td>'+escapeHtml(tierName(r.ratingWpm))+' <span class="muted">'+r.ratingWpm+'</span></td></tr>'
+      ).join('') || '<tr><td colspan="7">Hech kim topilmadi.</td></tr>';
+      const from = total ? page*per + 1 : 0, to = Math.min(total, (page+1)*per);
+      document.getElementById('userPageInfo').textContent = from + '–' + to + ' / ' + total;
+      document.getElementById('userPrev').disabled = page === 0;
+      document.getElementById('userNext').disabled = to >= total;
+    }).catch((err)=> adminFail(err, 'usersBody', 7));
+  }
+  document.getElementById('usersBody').addEventListener('click', (e)=>{
+    const tr = e.target.closest('tr[data-id]');
+    if(tr) openUser(tr.dataset.id);
+  });
+
+  function openUser(id){
+    const box = document.getElementById('userDetail');
+    box.style.display = 'block';
+    box.innerHTML = '<p class="muted">yuklanmoqda...</p>';
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    adminApi('GET', '/admin/users/' + encodeURIComponent(id)).then(({ user, history, scores })=>{
+      const statusTag = { ok: '<span class="tag ok">reytingda</span>', flagged: '<span class="tag flag">tekshiruvda</span>', hidden: '<span class="tag">yashirilgan</span>' };
+      box.innerHTML =
+        '<div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">'+
+          '<h3>'+escapeHtml(user.name)+(user.banned ? '<span class="tag ban">bloklangan</span>' : '')+(user.kind==='guest' ? '<span class="tag">mehmon</span>' : '')+'</h3>'+
+          '<button class="btn" data-uact="close">yopish ×</button></div>'+
+        '<div class="detail-meta">ID: '+escapeHtml(user.id)+' · '+escapeHtml(user.email || 'email yo’q')+(user.google ? ' · Google' : '')+'<br>'+
+          "ro'yxatdan o'tgan: "+fmtDate(user.createdAt)+' · oxirgi kirish: '+fmtDate(user.lastLoginAt)+' · oxirgi faollik: '+fmtAgo(user.lastSeenAt)+'<br>'+
+          'testlar: '+user.testsCount+' · eng yaxshi: '+user.bestWpm+' wpm · daraja: '+escapeHtml(tierName(user.ratingWpm))+' ('+user.ratingWpm+' wpm) · profil: '+(user.profilePublic ? 'ochiq' : 'yopiq')+'</div>'+
+        '<div class="detail-actions">'+
+          '<input id="renameInput" maxlength="24" value="'+escapeHtml(user.name)+'"><button class="btn" data-uact="rename">ismni o’zgartirish</button>'+
+          '<button class="btn '+(user.banned ? '' : 'danger')+'" data-uact="ban" data-banned="'+(user.banned ? 1 : 0)+'">'+(user.banned ? 'blokdan chiqarish' : 'bloklash')+'</button>'+
+          '<button class="btn danger" data-uact="hide">natijalarini reytingdan olib tashlash</button>'+
+          (user.kind === 'user' ? '<a class="btn" href="index.html#/u/'+encodeURIComponent(user.id)+'" target="_blank" rel="noopener">profilni ochish ↗</a>' : '')+
+        '</div>'+
+        '<div class="detail-cols">'+
+          '<div><h4 class="muted">reyting natijalari</h4><div class="table-wrap"><table><thead><tr><th>wpm</th><th>aniqlik</th><th>rejim</th><th>sana</th><th>holat</th><th></th></tr></thead><tbody>'+
+            (scores.map(sc=> '<tr><td>'+sc.wpm+'</td><td>'+sc.acc+'%</td><td>'+escapeHtml(sc.mode)+'</td><td>'+fmtDate(sc.ts)+'</td><td>'+(statusTag[sc.status] || escapeHtml(sc.status))+(sc.reason ? '<br><span class="muted">'+escapeHtml(reasonText(sc.reason))+'</span>' : '')+'</td>'+
+              '<td class="row-actions">'+(sc.status !== 'ok' ? '<button class="btn" data-score="'+sc.id+'" data-sact="approve">tasdiqlash</button>' : '')+(sc.status !== 'hidden' ? '<button class="btn danger" data-score="'+sc.id+'" data-sact="hide">yashirish</button>' : '')+'</td></tr>').join('')
+              || '<tr><td colspan="6" class="muted">yo’q</td></tr>')+
+          '</tbody></table></div></div>'+
+          '<div><h4 class="muted">so’nggi testlar</h4><div class="table-wrap"><table><thead><tr><th>wpm</th><th>aniqlik</th><th>rejim</th><th>sana</th></tr></thead><tbody>'+
+            (history.map(h=> '<tr><td>'+h.wpm+'</td><td>'+h.acc+'%</td><td>'+escapeHtml(h.mode)+'</td><td>'+fmtDate(h.ts)+'</td></tr>').join('') || '<tr><td colspan="4" class="muted">yo’q</td></tr>')+
+          '</tbody></table></div></div>'+
+        '</div>';
+      box.dataset.id = user.id;
+    }).catch((err)=>{ adminFail(err); box.innerHTML = '<p class="err">Xato: '+escapeHtml(err.message)+'</p>'; });
+  }
+  document.getElementById('userDetail').addEventListener('click', (e)=>{
+    const box = document.getElementById('userDetail');
+    const id = box.dataset.id;
+    const u = e.target.closest('[data-uact]');
+    const sc = e.target.closest('[data-sact]');
+    let p = null;
+    if(u){
+      const act = u.dataset.uact;
+      if(act === 'close'){ box.style.display = 'none'; box.innerHTML = ''; return; }
+      if(act === 'rename'){
+        const name = document.getElementById('renameInput').value.trim();
+        if(!name) return;
+        p = adminApi('PUT', '/admin/users/' + encodeURIComponent(id) + '/name', { name });
+      }
+      if(act === 'ban'){
+        const banning = u.dataset.banned !== '1';
+        if(banning && !confirm('Bu foydalanuvchini bloklaysizmi? U saytga kira olmaydi va reytingdan yo’qoladi.')) return;
+        p = adminApi('POST', '/admin/users/' + encodeURIComponent(id) + '/ban', { banned: banning });
+      }
+      if(act === 'hide'){
+        if(!confirm('Bu foydalanuvchining barcha natijalari reytingdan olib tashlansinmi?')) return;
+        p = adminApi('POST', '/admin/users/' + encodeURIComponent(id) + '/hide-scores');
+      }
+    } else if(sc){
+      p = adminApi('POST', '/admin/scores/' + encodeURIComponent(sc.dataset.score) + '/' + sc.dataset.sact);
+    }
+    if(p) p.then(()=>{ openUser(id); loadUsers(); }).catch((err)=>{ adminFail(err); alert('Xato: ' + err.message); });
+  });
+
+  /* ---- moderation tab ---- */
+  function loadFlagged(){
+    adminApi('GET', '/admin/flagged').then(({ scores })=>{
+      document.getElementById('flagCount').textContent = scores.length ? scores.length : '';
+      document.getElementById('flaggedBody').innerHTML = scores.map(sc=>
+        '<tr><td><a href="#" data-user="'+escapeHtml(sc.userId || '')+'">'+escapeHtml(sc.name || '—')+'</a></td><td><b>'+sc.wpm+'</b></td><td>'+sc.acc+'%</td><td>'+escapeHtml(sc.mode)+'</td><td>'+fmtDate(sc.ts)+'</td>'+
+        '<td><span class="tag flag">'+escapeHtml(reasonText(sc.reason))+'</span></td>'+
+        '<td class="row-actions"><button class="btn" data-score="'+sc.id+'" data-sact="approve">tasdiqlash</button><button class="btn danger" data-score="'+sc.id+'" data-sact="hide">yashirish</button></td></tr>'
+      ).join('') || '<tr><td colspan="7">Tekshiruvni kutayotgan natija yo’q 🎉</td></tr>';
+    }).catch((err)=> adminFail(err, 'flaggedBody', 7));
+  }
+  document.getElementById('flaggedBody').addEventListener('click', (e)=>{
+    const userLink = e.target.closest('[data-user]');
+    if(userLink){
+      e.preventDefault();
+      if(!userLink.dataset.user) return;
+      document.querySelector('#adminTabs button[data-tab="users"]').click();
+      openUser(userLink.dataset.user);
+      return;
+    }
+    const b = e.target.closest('[data-sact]');
+    if(!b) return;
+    b.disabled = true;
+    adminApi('POST', '/admin/scores/' + encodeURIComponent(b.dataset.score) + '/' + b.dataset.sact)
+      .then(loadFlagged)
+      .catch((err)=>{ b.disabled = false; adminFail(err); alert('Xato: ' + err.message); });
+  });
+
+  /* ---- log tab ---- */
+  const ACTION_NAMES = { login: 'kirish', ban: 'bloklash', unban: 'blokdan chiqarish', rename: 'ismni o’zgartirish', 'hide-scores': 'natijalarni yashirish',
+    'approve-score': 'natijani tasdiqlash', 'hide-score': 'natijani yashirish', 'ad-update': 'reklamani o’zgartirish' };
+  function loadLog(){
+    adminApi('GET', '/admin/log').then(({ log })=>{
+      document.getElementById('logBody').innerHTML = log.map(l=>
+        '<tr><td>'+fmtDate(l.ts)+'</td><td>'+escapeHtml(ACTION_NAMES[l.action] || l.action)+'</td><td>'+escapeHtml(l.name || l.target || '—')+'</td><td class="muted">'+escapeHtml(l.detail || '')+'</td></tr>'
+      ).join('') || '<tr><td colspan="4">Hali yozuv yo’q.</td></tr>';
+    }).catch((err)=> adminFail(err, 'logBody', 4));
+  }
+
+  /* ---- ad stats ---- */
+  function loadAdStats(){
+    adminApi('GET', '/admin/ad-stats').then(({ days })=>{
+      const views = days.reduce((a,d)=> a + d.view, 0), clicks = days.reduce((a,d)=> a + d.click, 0);
+      document.getElementById('adKpis').innerHTML =
+        '<div class="kpi"><b>'+views+'</b><span>ko’rishlar</span></div><div class="kpi"><b>'+clicks+'</b><span>bosishlar</span></div>'+
+        '<div class="kpi"><b>'+(views ? (clicks/views*100).toFixed(1) : '0.0')+'%</b><span>CTR (bosish / ko’rish)</span></div>';
+      document.getElementById('adBars').innerHTML = days.length ? barsHtml(days, 'view', 'click') : '<span class="muted">hali ma’lumot yo’q</span>';
+    }).catch((err)=> adminFail(err));
   }
 
   /* ---- ad tab: file uploads (stored on the server, URL dropped into the matching field) ---- */
@@ -308,14 +618,6 @@
       status.textContent = 'Xato: ' + err.message;
       status.classList.add('err');
     });
-  });
-
-  /* ---- tabs ---- */
-  document.getElementById('adminTabs').addEventListener('click', (e)=>{
-    const btn = e.target.closest('button[data-tab]');
-    if(!btn) return;
-    document.querySelectorAll('#adminTabs button').forEach(b=> b.classList.toggle('active', b===btn));
-    document.querySelectorAll('.admin-tab-panel').forEach(p=> p.classList.toggle('active', p.id==='tab-'+btn.dataset.tab));
   });
 
   try{

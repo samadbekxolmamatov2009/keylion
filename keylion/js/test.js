@@ -201,6 +201,7 @@
     if(!state.finished || currentView !== 'test' || document.activeElement === typeInput) return;
     const tag = document.activeElement && document.activeElement.tagName;
     if(tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if(e.key==='Enter' && tag === 'BUTTON') return;   // Enter on a focused result button presses that button
     if(e.key==='Enter' || e.key==='Tab'){ e.preventDefault(); buildTest(); }
   });
 

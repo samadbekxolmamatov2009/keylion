@@ -117,7 +117,7 @@
     const cards = [
       { val: p.bestWpm, lbl: t('stats.card.best'), icon: '⚡', hero: true },
       { val: tot.avgWpm, lbl: t('stats.card.avgWpm'), icon: '📊' },
-      { val: tot.avgAcc + '%', lbl: t('stats.card.avgAcc'), icon: '🎯' },
+      { val: tot.tests ? tot.avgAcc + '%' : '—', lbl: t('stats.card.avgAcc'), icon: '🎯' },
       { val: tot.tests, lbl: t('stats.card.tests'), icon: '✅' },
       { val: fmtDuration(tot.typingMs), lbl: t('pf.card.time'), icon: '⏱', small: true },
       { val: delta, lbl: t('pf.card.week'), icon: '📈', cls: deltaCls },
@@ -230,10 +230,15 @@
   }
 
   /* ---- GitHub-style activity map: last 53 weeks, days in Tashkent time like the server ---- */
-  function monthName(m){
-    try{ return new Date(Date.UTC(2024, m, 1)).toLocaleDateString(currentLang === 'uz' ? 'uz-Latn' : currentLang, { month: 'short', timeZone: 'UTC' }); }
-    catch(e){ return String(m + 1); }
-  }
+  /* own short month names: browsers often lack Uzbek / Kazakh / Kyrgyz calendar data and print "M05" */
+  const MONTHS = {
+    uz: ['yan','fev','mar','apr','may','iyn','iyl','avg','sen','okt','noy','dek'],
+    ru: ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'],
+    en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    kk: ['қаң','ақп','нау','сәу','мам','мау','шіл','там','қыр','қаз','қар','жел'],
+    ky: ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'],
+  };
+  function monthName(m){ return (MONTHS[currentLang] || MONTHS.en)[m]; }
   function drawHeatmap(wrap, activity){
     if(!wrap) return;
     const DAY = 86400000, TZ = 5 * 3600000, WEEKS = 53;

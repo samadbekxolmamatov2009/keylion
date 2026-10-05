@@ -74,4 +74,15 @@ export const MIGRATIONS = [
   `CREATE INDEX IF NOT EXISTS idx_scores_user ON scores (user_id, wpm DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_scores_ts ON scores (ts)`,
   `CREATE INDEX IF NOT EXISTS idx_users_seen ON users (last_seen_at)`,
+  /* one-off backfills (safe to re-run): players imported from Firebase only have history — their scores
+     came over without a user link — so give each registered player without any score row their best
+     plausible test, and compute the tier rating from history */
+  `INSERT INTO scores (user_id, name, mode, wpm, acc, ts, status)
+   SELECT h.user_id, u.name, h.mode, h.wpm, h.acc, h.ts, 'ok' FROM history h JOIN users u ON u.id = h.user_id
+   WHERE u.kind = 'user' AND NOT EXISTS (SELECT 1 FROM scores s WHERE s.user_id = h.user_id)
+     AND h.id = (SELECT h2.id FROM history h2 WHERE h2.user_id = h.user_id AND h2.acc >= 90 AND h2.wpm BETWEEN 1 AND 220
+                 ORDER BY h2.wpm DESC, h2.ts ASC LIMIT 1)`,
+  `UPDATE users SET rating_wpm = COALESCE((SELECT CAST(ROUND(AVG(wpm)) AS INTEGER) FROM
+     (SELECT wpm FROM history WHERE user_id = users.id AND wpm <= 220 ORDER BY ts DESC LIMIT 10)), 0)
+   WHERE rating_wpm = 0 AND kind = 'user'`,
 ];

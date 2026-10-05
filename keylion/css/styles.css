@@ -430,6 +430,10 @@
   html.has-bg body{ background: transparent; }
   html.has-bg header{ background: rgba(8,8,11,.45); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom-color: rgba(255,255,255,.06); }
   html.has-bg .type-wrap:not(.demo-wrap){ background: rgba(8,8,11,.74); border-radius:16px; padding:18px 24px; }
+  /* text that sits directly on the picture */
+  html.has-bg .view-title, html.has-bg .view-sub, html.has-bg .lb-rules, html.has-bg .daily-note,
+  html.has-bg .stats-row, html.has-bg .footer-tip, html.has-bg .results .lbl, html.has-bg .res-note{ text-shadow: 0 1px 10px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.6); }
+  html.has-bg .view-sub, html.has-bg .lb-rules{ color: #c9c6bf; }
   html.has-bg.glass{
     --bg-elev: rgba(22,22,27,.58); --bg-elev-2: rgba(36,36,42,.62);
     --border: rgba(255,255,255,.09); --border-strong: rgba(255,255,255,.17);
@@ -704,3 +708,24 @@
   .demo-text{ font-size:24px !important; max-height: calc(1.55em * 2) !important; cursor:default; }
   .set-footer{ text-align:center; margin-top:6px; }
   .set-footer .btn{ display:inline-flex; }
+
+  /* =====================================================================
+     phones: header wraps into two rows (logo + profile, then the nav), nothing overflows sideways
+     ===================================================================== */
+  @media (max-width: 760px){
+    header{ flex-wrap: wrap; padding: 10px 14px; gap: 10px; }
+    .logo-mark{ width:34px; height:34px; }
+    .logo-wordmark{ font-size:17px; }
+    .profile{ margin-left:auto; gap:8px; }
+    nav{ order:3; width:100%; justify-content:space-between; }
+    nav button{ flex:1; justify-content:center; padding:7px 4px; font-size:12px; gap:5px; white-space:nowrap; }
+    main{ padding: 28px 14px 40px; }
+    .view-title{ font-size:22px; }
+  }
+  @media (max-width: 440px){
+    nav button .icon{ display:none; }
+    #playerNameDisplay{ display:none; }
+    .profile-pill{ padding:3px; }
+    #langSwitcher button{ padding:3px 5px !important; }
+    .fb-status{ display:none; }
+  }

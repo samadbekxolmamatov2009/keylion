@@ -337,7 +337,7 @@ route('DELETE', '/me/background/:key', async (req, ctx) => {
 route('GET', '/bg/:key', async (req, ctx) => {
   const got = await getStore('backgrounds').getWithMetadata(ctx.key, { type: 'arrayBuffer' });
   if (!got) throw new HttpError(404, 'not found');
-  return new Response(got.data, { headers: { 'content-type': got.metadata?.type || 'image/webp', 'cache-control': 'public, max-age=31536000, immutable' } });
+  return new Response(got.data, { headers: { 'content-type': got.metadata?.type || 'image/webp', 'cache-control': 'public, max-age=31536000, immutable', 'x-content-type-options': 'nosniff' } });
 });
 
 /* ---------- test results ---------- */
@@ -792,7 +792,7 @@ route('POST', '/admin/upload', async (req) => {
 route('GET', '/media/:key', async (req, ctx) => {
   const got = await getStore('ads').getWithMetadata(ctx.key, { type: 'arrayBuffer' });
   if (!got) throw new HttpError(404, 'not found');
-  return new Response(got.data, { headers: { 'content-type': got.metadata?.type || 'application/octet-stream', 'cache-control': 'public, max-age=86400' } });
+  return new Response(got.data, { headers: { 'content-type': got.metadata?.type || 'application/octet-stream', 'cache-control': 'public, max-age=86400', 'x-content-type-options': 'nosniff' } });
 });
 
 /* ---------- AI coach (server-side Groq call, OpenAI-compatible API) ---------- */
