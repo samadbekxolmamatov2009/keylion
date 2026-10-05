@@ -49,4 +49,29 @@ export const SCHEMA = [
     PRIMARY KEY (code, user_id)
   )`,
   `CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`,
+  /* fixed-window rate limit counters, shared by every function instance */
+  `CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, window_start INTEGER NOT NULL, count INTEGER NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS admin_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, action TEXT NOT NULL, target TEXT, detail TEXT
+  )`,
+  /* ad impressions/clicks per day */
+  `CREATE TABLE IF NOT EXISTS ad_stats (day TEXT NOT NULL, kind TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, kind))`,
+];
+
+/* Columns added after the first release. SQLite has no "ADD COLUMN IF NOT EXISTS", so each one is
+   applied separately and a "duplicate column" error just means it is already there. */
+export const MIGRATIONS = [
+  `ALTER TABLE users ADD COLUMN banned INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE users ADD COLUMN last_seen_at INTEGER`,
+  `ALTER TABLE users ADD COLUMN profile_public INTEGER NOT NULL DEFAULT 1`,
+  `ALTER TABLE users ADD COLUMN settings TEXT`,
+  `ALTER TABLE users ADD COLUMN rating_wpm INTEGER NOT NULL DEFAULT 0`,   // avg of the last 10 tests, drives the tier
+  `ALTER TABLE history ADD COLUMN duration_ms INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE scores ADD COLUMN kind TEXT`,                              // words | time | code | daily | race
+  `ALTER TABLE scores ADD COLUMN text_lang TEXT`,
+  `ALTER TABLE scores ADD COLUMN status TEXT NOT NULL DEFAULT 'ok'`,      // ok | flagged | hidden
+  `ALTER TABLE scores ADD COLUMN flag_reason TEXT`,
+  `CREATE INDEX IF NOT EXISTS idx_scores_user ON scores (user_id, wpm DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_scores_ts ON scores (ts)`,
+  `CREATE INDEX IF NOT EXISTS idx_users_seen ON users (last_seen_at)`,
 ];
