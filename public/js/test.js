@@ -191,13 +191,13 @@
         startTimerIfNeeded();
         state.keyTimes.push(Date.now());
         const expected = state.text[state.typed.length];
-        const ok = expected === undefined || typedAs(expected, ch) === expected;
+        const ok = expected === undefined || typedAs(expected, ch, state.mode === 'code') === expected;
         if(!ok){
           missedChars[expected] = (missedChars[expected]||0) + 1;
           currentTestMissed[expected] = (currentTestMissed[expected]||0) + 1;
         }
         typingFeedback(ok, document.getElementById('typeWrap'));
-        state.typed = applyChar(state.text, state.typed, ch);
+        state.typed = applyChar(state.text, state.typed, ch, state.mode === 'code');
       }
     }
     typeInput.value = '';

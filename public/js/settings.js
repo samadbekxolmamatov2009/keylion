@@ -5,12 +5,18 @@
      synced to the server (PUT /api/me/settings) so it follows them to other devices. */
   /* one-off: move this browser's data from the old storage keys (before the rename) to the new ones */
   try{
-    for(let i = localStorage.length - 1; i >= 0; i--){
-      const k = localStorage.key(i), m = /^(kl_|keylion\.)(.*)$/.exec(k || '');
+    const keys = [];
+    for(let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));   // snapshot: the loop below changes the list
+    for(const k of keys){
+      const m = /^(kl_|keylion\.)(.*)$/.exec(k || '');
       if(!m) continue;
       const nk = (m[1] === 'kl_' ? 'tz_' : 'tezlash.') + m[2];
-      if(localStorage.getItem(nk) === null) localStorage.setItem(nk, localStorage.getItem(k));
-      localStorage.removeItem(k);
+      let v = null;
+      try{
+        v = localStorage.getItem(k);
+        localStorage.removeItem(k);   // free the space first: a large guest background would not fit twice
+        if(v !== null && localStorage.getItem(nk) === null) localStorage.setItem(nk, v);
+      }catch(e){ try{ if(v !== null) localStorage.setItem(k, v); }catch(e2){} }
     }
   }catch(e){}
 

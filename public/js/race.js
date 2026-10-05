@@ -157,8 +157,8 @@
           document.getElementById('raceStatus').textContent = t('race.status.inProgress');
         }
         const expected = raceState.text[raceState.typed.length];
-        typingFeedback(expected === undefined || typedAs(expected, ch) === expected, document.getElementById('raceTypeWrap'));
-        raceState.typed = applyChar(raceState.text, raceState.typed, ch);
+        typingFeedback(expected === undefined || typedAs(expected, ch, raceState.roomType === 'code') === expected, document.getElementById('raceTypeWrap'));
+        raceState.typed = applyChar(raceState.text, raceState.typed, ch, raceState.roomType === 'code');
       }
     }
     raceInput.value = '';

@@ -85,9 +85,9 @@
   .upload-row{ display:flex; gap:8px; align-items:center; margin-bottom:6px; flex-wrap:wrap; }
   .upload-row .btn{ padding:6px 12px; }
   .upload-status{ font-size:12px; color:var(--text-faint); margin-top:6px; min-height:16px; }
-  .ad-previews{ display:grid; grid-template-columns: 1fr 390px; gap:18px; align-items:start; }
-  .ad-preview-phone{ width:390px; max-width:100%; }
-  @media (max-width: 900px){ .ad-previews{ grid-template-columns:1fr; } }
+  .ad-previews{ display:grid; grid-template-columns: minmax(0,1fr) minmax(0,390px); gap:18px; align-items:start; }
+  .ad-preview-phone{ width:100%; max-width:390px; }
+  @media (max-width: 900px){ .ad-previews{ grid-template-columns: minmax(0,1fr); } }
   .ad-previews .ad-slot{ margin:0; max-width:none; }
   .ad-preview-phone .ad-slot.has-mobile .ad-slot-media-wrap{ aspect-ratio: 3 / 1; }
   .ad-off{ opacity:.45; }
@@ -637,6 +637,9 @@
     'mobile image: must start with https://': 'Telefon banneri manzili https:// bilan boshlanishi kerak (yoki faylni yuklang).',
     'video: must start with https://': 'Video manzili https:// bilan boshlanishi kerak (yoki faylni yuklang).',
     'add an image or a video before switching the ad on': 'Reklamani yoqishdan oldin rasm yoki video qo’shing.',
+    'image: uploaded file not found': 'Kompyuter banneri fayli topilmadi — qaytadan yuklang.',
+    'mobile image: uploaded file not found': 'Telefon banneri fayli topilmadi — qaytadan yuklang.',
+    'video: uploaded file not found': 'Video fayli topilmadi — qaytadan yuklang.',
   };
   document.getElementById('btnSaveAd').addEventListener('click', ()=>{
     const ad = currentAdForm();

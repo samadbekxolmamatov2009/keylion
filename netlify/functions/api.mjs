@@ -60,7 +60,10 @@ function periodStart(period) {
 }
 
 /* JWT_SECRET is optional: without it the signing key is derived from the (secret) Turso token */
-const jwtKey = () => process.env.JWT_SECRET || crypto.createHash('sha256').update('tezlash-jwt:' + (process.env.TURSO_AUTH_TOKEN || '') + (process.env.TURSO_DATABASE_URL || '')).digest('hex');
+const derivedKey = (salt) => crypto.createHash('sha256').update(salt + (process.env.TURSO_AUTH_TOKEN || '') + (process.env.TURSO_DATABASE_URL || '')).digest('hex');
+const jwtKey = () => process.env.JWT_SECRET || derivedKey('tezlash-jwt:');
+/* without JWT_SECRET, tokens issued before the rename (old salt) stay valid, so nobody is signed out */
+const jwtVerifyKeys = () => process.env.JWT_SECRET ? [process.env.JWT_SECRET] : [jwtKey(), derivedKey('keylion-jwt:')];
 const b64u = (b) => Buffer.from(b).toString('base64url');
 function sign(payload, days = 90) {
   const body = b64u(JSON.stringify({ ...payload, exp: Math.floor(now() / 1000 + days * 86400) }));
@@ -71,9 +74,12 @@ function verify(token) {
   if (!token) return null;
   const [body, sig] = token.split('.');
   if (!body || !sig) return null;
-  const exp = crypto.createHmac('sha256', jwtKey()).update(body).digest('base64url');
-  const a = Buffer.from(sig), b = Buffer.from(exp);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  const a = Buffer.from(sig);
+  const ok = jwtVerifyKeys().some((key) => {
+    const b = Buffer.from(crypto.createHmac('sha256', key).update(body).digest('base64url'));
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  });
+  if (!ok) return null;
   try {
     const p = JSON.parse(Buffer.from(body, 'base64url').toString());
     return p.exp > now() / 1000 ? p : null;
@@ -655,8 +661,9 @@ const dayKey = (t = now()) => new Date(t + TZ_MS).toISOString().slice(0, 10);
 route('POST', '/ad/event', async (req, ctx, body, ip) => {
   const kind = pick(body.kind, ['view', 'click'], null);
   if (!kind) throw new HttpError(400, 'bad kind');
-  /* the page sends one view per visitor per day and at most one click per page view */
-  await limit('ad:' + kind + ':' + ip, kind === 'view' ? 30 : 20, 3600e3);
+  /* the page itself sends one view per visitor per day and at most one click per page view; this per-IP limit
+     is only a flood guard, generous because classrooms and mobile carriers put many people behind one IP */
+  await limit('ad:' + kind + ':' + ip, kind === 'view' ? 300 : 120, 3600e3);
   await q('INSERT INTO ad_stats (day, kind, count) VALUES (?, ?, 1) ON CONFLICT(day, kind) DO UPDATE SET count = count + 1', [dayKey(), kind]);
   return json({ ok: true });
 });
@@ -793,7 +800,7 @@ route('GET', '/admin/ad-stats', async (req) => {
 
 /* link: absolute http(s) only. media: an uploaded file (/api/media/<key>) or an absolute http(s) URL */
 const MEDIA_PATH = /^\/api\/media\/[A-Za-z0-9._-]+$/;
-function adUrl(v, field, { media }) {
+function adUrl(v, field, { media, host }) {
   const s = String(v ?? '').trim();
   if (!s) return '';
   if (s.length > 500) throw new HttpError(400, field + ': too long');
@@ -801,23 +808,29 @@ function adUrl(v, field, { media }) {
   let u;
   try { u = new URL(s); } catch { throw new HttpError(400, field + ': must start with https://'); }
   if (u.protocol !== 'https:' && u.protocol !== 'http:') throw new HttpError(400, field + ': must start with https://');
+  /* a link to one of our own uploads is stored as /api/media/<key>, so cleanup recognises it */
+  if (media && host && u.host === host && MEDIA_PATH.test(u.pathname)) return u.pathname;
   return u.href;
 }
 route('PUT', '/admin/ad', async (req, ctx, body) => {
   requireAdmin(req);
+  const host = new URL(req.url).host;
   const ad = {
     enabled: !!body.enabled,
-    imageUrl: adUrl(body.imageUrl, 'image', { media: true }),
-    mobileImageUrl: adUrl(body.mobileImageUrl, 'mobile image', { media: true }),
-    videoUrl: adUrl(body.videoUrl, 'video', { media: true }),
+    imageUrl: adUrl(body.imageUrl, 'image', { media: true, host }),
+    mobileImageUrl: adUrl(body.mobileImageUrl, 'mobile image', { media: true, host }),
+    videoUrl: adUrl(body.videoUrl, 'video', { media: true, host }),
     linkUrl: adUrl(body.linkUrl, 'link', { media: false }),
     text: clean(body.text, 120),
   };
   if (ad.enabled && !ad.imageUrl && !ad.videoUrl) throw new HttpError(400, 'add an image or a video before switching the ad on');
+  for (const [field, u] of [['image', ad.imageUrl], ['mobile image', ad.mobileImageUrl], ['video', ad.videoUrl]]) {
+    if (MEDIA_PATH.test(u) && !(await headMedia(db(), 'ads', u.slice('/api/media/'.length)))) throw new HttpError(400, field + ': uploaded file not found');
+  }
   await q("INSERT INTO settings (key, value) VALUES ('ad', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", [JSON.stringify(ad)]);
-  /* uploads that the saved ad no longer uses (older than an hour, so a file uploaded but not yet saved survives) */
+  /* uploads that the saved ad no longer uses; a day's grace so a file uploaded in another tab but not saved yet survives */
   const used = new Set([ad.imageUrl, ad.mobileImageUrl, ad.videoUrl].filter((u) => MEDIA_PATH.test(u)).map((u) => u.slice('/api/media/'.length)));
-  const stale = (await listMedia(db(), 'ads')).filter((m) => !used.has(m.key) && m.createdAt < now() - 3600e3);
+  const stale = (await listMedia(db(), 'ads')).filter((m) => !used.has(m.key) && m.createdAt < now() - 86400e3);
   for (const m of stale) await deleteMedia(db(), 'ads', m.key);
   await adminLog('ad-update', null, (ad.enabled ? 'enabled' : 'disabled') + (stale.length ? ', removed ' + stale.length + ' old file(s)' : ''));
   return json({ ok: true, ad });

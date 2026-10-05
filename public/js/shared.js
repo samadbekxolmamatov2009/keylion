@@ -22,15 +22,17 @@
     map['\u00A0'] = ' \u00A0';
     return map;
   })();
-  /* the character to record for key `ch` when `expected` is next in the text */
-  function typedAs(expected, ch){
+  /* the character to record for key `ch` when `expected` is next in the text. In code (`code` true) two
+     plain-keyboard characters are never interchangeable: ` and ' are different tokens there */
+  function typedAs(expected, ch, code){
     if(expected === undefined || ch === expected) return ch;
+    if(code && expected < '\u0080' && ch < '\u0080') return ch;
     const ok = CHAR_ALIASES[expected];
     return ok && ok.includes(ch) ? expected : ch;
   }
-  function applyChar(text, typed, ch){
+  function applyChar(text, typed, ch, code){
     if(typed.length >= text.length) return typed;
-    typed += typedAs(text[typed.length], ch);
+    typed += typedAs(text[typed.length], ch, code);
     while(text[typed.length] === '\n') typed += '\n';
     return typed;
   }

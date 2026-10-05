@@ -91,7 +91,7 @@
     "poyezd metro samolyot kema velosiped maydon bino kvartira xona oshxona hammom hojatxona yotoqxona "+
     "mehmonxona balkon zina tom devor hovli ob-havo qor shamol tuman bulut chaqmoq kamalak issiqlik erta kech "+
     "ovoz uzoq yaqin kam kamroq yaxshiroq yomonroq yangi eski yosh keksa chiroyli xunuk aqlli mehribon yovuz "+
-    "kuchli ojiz boy toza iflos bosh yengil shirin achchiq shor nordon mazali mazasiz yo'q do'st o'qituvchi "+
+    "kuchli ojiz boy toza iflos bosh yengil shirin achchiq sho'r nordon mazali mazasiz yo'q do'st o'qituvchi "+
     "yo'l do'kon ko'k tog' o'rmon go'sht o'ylamoq ko'rmoq bo'lmaydi o'qimoq o'ynamoq o'rganmoq to'lamoq "+
     "yo'qotmoq o'zgartirmoq bo'lmoq ko'rinmoq g'amgin qo'rqmoq yig'lamoq o'chirmoq ko'tarmoq ko'cha ko'prik "+
     "bog' yomg'ir yorug' qorong'i ko'p ko'proq kambag'al to'liq og'ir o'tkir o'tmas bir ikki uch to'rt besh "+

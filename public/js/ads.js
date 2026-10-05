@@ -17,13 +17,14 @@
   };
   const AD_REFRESH_MS = 10 * 60 * 1000;
   let adCfg = null, adSig = '', adLoadedAt = 0, adClickSent = false, adShowingVideo = false, adTyping = false;
-  let adObserver = null, adViewTimer = null;
+  let adObserver = null, adViewTimer = null, adInView = false;
   const adReducedMotion = ()=> !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   function hideAd(){
     adEls.slot.hidden = true;
     if(adObserver){ adObserver.disconnect(); adObserver = null; }
     clearTimeout(adViewTimer);
+    adInView = false;
   }
   function resetAdMedia(){
     hideAd();
@@ -103,7 +104,10 @@
     else vid.play().catch(()=>{});
   }
   function setAdTyping(typing){
+    const was = adTyping;
     adTyping = !!typing;
+    if(adTyping) clearTimeout(adViewTimer);
+    else if(was && adObserver && adInView) armAdView();   // typing stopped while the ad is on screen
     syncAdPlayback();
   }
   adEls.slot.addEventListener('mouseenter', ()=>{ if(adShowingVideo && adReducedMotion() && !adTyping) adEls.vid.play().catch(()=>{}); });
@@ -124,15 +128,28 @@
     try{ localStorage.setItem('tz_ad_view', stamp); }catch(e){}
     adEvent('view');
   }
+  /* the ad's centre is not covered by a modal (e.g. the first-visit name prompt) */
+  function adOnTop(){
+    const r = adEls.slot.getBoundingClientRect();
+    const x = Math.min(innerWidth - 1, Math.max(0, r.left + r.width / 2)), y = Math.min(innerHeight - 1, Math.max(0, r.top + r.height / 2));
+    const el = document.elementFromPoint(x, y);
+    return !!el && adEls.slot.contains(el);
+  }
+  function armAdView(){
+    clearTimeout(adViewTimer);
+    adViewTimer = setTimeout(()=>{
+      if(adTyping || !adInView || adEls.slot.hidden) return;
+      if(adOnTop()) countAdView();
+      else armAdView();   // covered right now: look again in a second
+    }, 1000);
+  }
   function observeAdView(){
     if(adObserver) adObserver.disconnect();
     if(!('IntersectionObserver' in window)){ countAdView(); return; }
     adObserver = new IntersectionObserver((entries)=>{
       const e = entries[entries.length - 1];
-      clearTimeout(adViewTimer);
-      if(e.isIntersecting && e.intersectionRatio >= 0.5){
-        adViewTimer = setTimeout(()=>{ if(!adTyping && !adEls.slot.hidden) countAdView(); }, 1000);
-      }
+      adInView = e.isIntersecting && e.intersectionRatio >= 0.5;
+      if(adInView && !adTyping) armAdView(); else clearTimeout(adViewTimer);
     }, { threshold: [0, 0.5, 1] });
     adObserver.observe(adEls.slot);
   }
