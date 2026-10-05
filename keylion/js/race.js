@@ -12,7 +12,7 @@
   let raceTimerInterval = null, lastSync = 0;
   let roomPlayersCache = {};
 
-  const raceOpts = { type: 'words', lang: 'python', textLang: 'en', wordLen: 25, timeLen: 30 };
+  const raceOpts = { type: 'words', lang: 'python', textLang: 'uz', wordLen: 25, timeLen: 30 };
 
   function renderRaceLenSeg(){
     const wrap = document.getElementById('raceLenSeg');
@@ -157,7 +157,7 @@
           document.getElementById('raceStatus').textContent = t('race.status.inProgress');
         }
         const expected = raceState.text[raceState.typed.length];
-        typingFeedback(expected === undefined || ch === expected, document.getElementById('raceTypeWrap'));
+        typingFeedback(expected === undefined || typedAs(expected, ch) === expected, document.getElementById('raceTypeWrap'));
         raceState.typed = applyChar(raceState.text, raceState.typed, ch);
       }
     }

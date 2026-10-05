@@ -741,9 +741,10 @@ const I18N = {
   /* all 5 languages below have full, parallel UI-chrome translations, so the switcher exposes
      all of them \u2014 the same 5-language set (ru/uz/en/kk/ky) also controls the TYPING CONTENT
      language (words/time mode word banks), independently of this UI-chrome setting */
-  const LANG_LABELS = { en: "EN", uz: "O'Z", ru: "RU", kk: "KZ", ky: "KG" };
-  let currentLang = localStorage.getItem('kl_lang') || 'en';
-  if(!LANG_LABELS[currentLang]) currentLang = 'en';
+  const LANG_LABELS = { uz: "O'Z", ru: "RU", en: "EN", kk: "KZ", ky: "KG" };
+  /* the site is made for Uzbek speakers: Uzbek unless the visitor picked another language */
+  let currentLang = localStorage.getItem('tz_lang') || 'uz';
+  if(!LANG_LABELS[currentLang]) currentLang = 'uz';
 
   function t(key, vars){
     let str = (I18N[currentLang] && I18N[currentLang][key])
@@ -777,7 +778,7 @@ const I18N = {
   function setLang(lang){
     if(!LANG_LABELS[lang]) return;
     currentLang = lang;
-    localStorage.setItem('kl_lang', lang);
+    localStorage.setItem('tz_lang', lang);
     applyI18n();
   }
 

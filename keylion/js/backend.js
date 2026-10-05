@@ -7,7 +7,7 @@
   let playerName = "o'yinchi" + Math.floor(100 + Math.random()*900);
   let cachedProfile = null;
   let googleClientId = null;
-  const TOKEN_KEY = 'keylion.token';
+  const TOKEN_KEY = 'tezlash.token';
 
   /* ---- on-screen debug log (tap the status dot to open) ---- */
   const debugLines = [];
@@ -20,7 +20,7 @@
       panel.innerHTML = debugLines.map(l=>'<div>'+escapeHtml(l)+'</div>').join('');
       panel.scrollTop = panel.scrollHeight;
     }
-    console.log('[keylion]', msg);
+    console.log('[tezlash]', msg);
   }
   document.getElementById('fbStatus').addEventListener('click', ()=>{
     const panel = document.getElementById('debugPanel');

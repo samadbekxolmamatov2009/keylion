@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KeyLion — Admin</title>
+<title>Tezlash — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="icon"  type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -291,7 +291,7 @@
     errEl.textContent = '';
     adminApi('POST', '/admin/login', { email, password }).then((res)=>{
       adminToken = res.token;
-      try{ sessionStorage.setItem('keylion.admin', adminToken); }catch(e){}
+      try{ sessionStorage.setItem('tezlash.admin', adminToken); }catch(e){}
       showAdmin();
     }).catch((err)=>{
       errEl.textContent = err.status === 401 ? 'Email yoki parol noto\'g\'ri.' : 'Xato: ' + err.message;
@@ -325,7 +325,7 @@
   function adminFail(err, target, cols){
     if(err.status === 401 || err.status === 403){
       adminToken = null;
-      try{ sessionStorage.removeItem('keylion.admin'); }catch(e){}
+      try{ sessionStorage.removeItem('tezlash.admin'); }catch(e){}
       showGate();
       return;
     }
@@ -621,7 +621,7 @@
   });
 
   try{
-    const saved = sessionStorage.getItem('keylion.admin');
+    const saved = sessionStorage.getItem('tezlash.admin');
     if(saved){ adminToken = saved; showAdmin(); }
   }catch(e){}
 </script>

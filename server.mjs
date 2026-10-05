@@ -1,4 +1,4 @@
-/* KeyLion as a plain Node.js web server: the static site from keylion/ plus the API at /api/*.
+/* Tezlash as a plain Node.js web server: the static site from keylion/ plus the API at /api/*.
    Used on hosts without Netlify (Render — see render.yaml — or any VPS), and locally: `npm start`.
    The API itself is the same code Netlify runs (netlify/functions/api.mjs). */
 import http from 'node:http';
@@ -53,7 +53,7 @@ function serveStatic(req, res) {
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) {
       res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
-      res.end('<!doctype html><meta charset="utf-8"><title>404</title><p style="font-family:sans-serif">Sahifa topilmadi. <a href="/">KeyLion</a></p>');
+      res.end('<!doctype html><meta charset="utf-8"><title>404</title><p style="font-family:sans-serif">Sahifa topilmadi. <a href="/">Tezlash</a></p>');
       return;
     }
     const ext = path.extname(file).toLowerCase();
@@ -94,4 +94,4 @@ http.createServer(async (req, res) => {
     if (!res.headersSent) res.writeHead(500, { 'content-type': 'application/json' });
     res.end('{"error":"server error"}');
   }
-}).listen(PORT, () => console.log('KeyLion listening on port ' + PORT));
+}).listen(PORT, () => console.log('Tezlash listening on port ' + PORT));

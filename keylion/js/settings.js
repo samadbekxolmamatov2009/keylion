@@ -3,6 +3,17 @@
      Everything that needs the DOM, t() or the backend is only called later, from the profile view.
      Storage: localStorage for instant apply on this device; for signed-in users the same object is
      synced to the server (PUT /api/me/settings) so it follows them to other devices. */
+  /* one-off: move this browser's data from the old storage keys (before the rename) to the new ones */
+  try{
+    for(let i = localStorage.length - 1; i >= 0; i--){
+      const k = localStorage.key(i), m = /^(kl_|keylion\.)(.*)$/.exec(k || '');
+      if(!m) continue;
+      const nk = (m[1] === 'kl_' ? 'tz_' : 'tezlash.') + m[2];
+      if(localStorage.getItem(nk) === null) localStorage.setItem(nk, localStorage.getItem(k));
+      localStorage.removeItem(k);
+    }
+  }catch(e){}
+
   const PREF_DEFAULTS = {
     bg: 'none', bgX: 50, bgY: 50, dim: 45, blur: 0, glass: true, accent: 'auto',
     caret: 'line', caretMotion: 'smooth', caretBlink: true,
@@ -17,7 +28,7 @@
     { id: 'aurora',    accent: '#4ff0a8' },
   ];
   const ACCENT_SWATCHES = ['#e0a940', '#f2a65a', '#f05252', '#ff8ad8', '#b794ff', '#5b9dea', '#4fd1d9', '#4ff0a8', '#86d9ae'];
-  const PREFS_KEY = 'kl_prefs', LOCAL_BG_KEY = 'kl_bg_local', ACCENT_CACHE = 'kl_accent:';
+  const PREFS_KEY = 'tz_prefs', LOCAL_BG_KEY = 'tz_bg_local', ACCENT_CACHE = 'tz_accent:';
   const lsGet = (k)=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
   const lsSet = (k, v)=>{ try{ localStorage.setItem(k, v); return true; }catch(e){ return false; } };
 

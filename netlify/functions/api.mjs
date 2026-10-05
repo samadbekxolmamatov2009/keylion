@@ -1,4 +1,4 @@
-/* KeyLion API — single Netlify Function (served at /api/*), backed by Turso (libSQL).
+/* Tezlash API — single Netlify Function (served at /api/*), backed by Turso (libSQL).
    Env vars (Netlify → Site settings → Environment variables):
      TURSO_DATABASE_URL, TURSO_AUTH_TOKEN   database
      JWT_SECRET                             optional; signs login tokens (derived from the Turso token if unset)
@@ -60,7 +60,7 @@ function periodStart(period) {
 }
 
 /* JWT_SECRET is optional: without it the signing key is derived from the (secret) Turso token */
-const jwtKey = () => process.env.JWT_SECRET || crypto.createHash('sha256').update('keylion-jwt:' + (process.env.TURSO_AUTH_TOKEN || '') + (process.env.TURSO_DATABASE_URL || '')).digest('hex');
+const jwtKey = () => process.env.JWT_SECRET || crypto.createHash('sha256').update('tezlash-jwt:' + (process.env.TURSO_AUTH_TOKEN || '') + (process.env.TURSO_DATABASE_URL || '')).digest('hex');
 const b64u = (b) => Buffer.from(b).toString('base64url');
 function sign(payload, days = 90) {
   const body = b64u(JSON.stringify({ ...payload, exp: Math.floor(now() / 1000 + days * 86400) }));

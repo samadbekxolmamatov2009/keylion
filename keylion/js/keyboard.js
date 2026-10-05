@@ -8,10 +8,10 @@
   ];
 
   function keyboardEnabled(){
-    return localStorage.getItem('kl_keyboard') !== 'off';
+    return localStorage.getItem('tz_keyboard') !== 'off';
   }
   function setKeyboardEnabled(on){
-    localStorage.setItem('kl_keyboard', on ? 'on' : 'off');
+    localStorage.setItem('tz_keyboard', on ? 'on' : 'off');
     document.querySelectorAll('.kb-wrap').forEach(el=> el.style.display = on ? '' : 'none');
   }
 

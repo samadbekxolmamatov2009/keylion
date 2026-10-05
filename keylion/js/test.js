@@ -1,9 +1,17 @@
   const state = {
-    mode: 'words', lang: 'python', textLang: 'en', wordLen: 25, timeLen: 30,
+    mode: 'words', lang: 'python', textLang: 'uz', wordLen: 25, timeLen: 30,
     text: '', typed: '', startTime: null, timerId: null, timeLeft: 30, finished: false, syntaxMap: null,
     testSeq: 0, tokenPromise: null, keyTimes: [],
   };
   const DAILY_WORDS = 30;
+  /* the typing language picked last time */
+  try{
+    const savedTextLang = localStorage.getItem('tz_textlang');
+    if(['uz','ru','en','kk','ky'].includes(savedTextLang)){
+      state.textLang = savedTextLang;
+      document.querySelectorAll('#textLangRow button').forEach(x=> x.classList.toggle('active', x.dataset.textlang === savedTextLang));
+    }
+  }catch(e){}
   const missedChars = {};
   let currentTestMissed = {};
 
@@ -70,6 +78,7 @@
     const b = e.target.closest('button[data-textlang]');
     if(!b) return;
     state.textLang = b.dataset.textlang;
+    try{ localStorage.setItem('tz_textlang', state.textLang); }catch(e){}
     document.querySelectorAll('#textLangRow button').forEach(x=>x.classList.toggle('active', x===b));
     buildTest();
   });
@@ -181,7 +190,7 @@
         startTimerIfNeeded();
         state.keyTimes.push(Date.now());
         const expected = state.text[state.typed.length];
-        const ok = expected === undefined || ch === expected;
+        const ok = expected === undefined || typedAs(expected, ch) === expected;
         if(!ok){
           missedChars[expected] = (missedChars[expected]||0) + 1;
           currentTestMissed[expected] = (currentTestMissed[expected]||0) + 1;

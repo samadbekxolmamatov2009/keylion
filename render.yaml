@@ -1,10 +1,10 @@
 # Render Blueprint: one free web service running server.mjs (static site + API).
 # Deploy: https://render.com/deploy?repo=https://github.com/samadbekxolmamatov2009/keylion
 # Optional variables (GOOGLE_CLIENT_ID, GROQ_API_KEY, GROQ_MODEL) can be added later under
-# Dashboard → keylion → Environment.
+# Dashboard → tezlash → Environment.
 services:
   - type: web
-    name: keylion
+    name: tezlash
     runtime: node
     plan: free
     region: frankfurt
