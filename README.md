@@ -1,9 +1,27 @@
 # KeyLion
 
 Typing-speed site: tests, multiplayer race, leaderboard, AI coach, profile & achievements.
-Static frontend in `keylion/`, backend = one Netlify Function (`netlify/functions/api.mjs`) on **Turso** (libSQL).
+Static frontend in `keylion/`, backend = one API module (`netlify/functions/api.mjs`) on **Turso** (libSQL),
+run either as a Netlify Function or by `server.mjs` on any Node.js host (Render, a VPS, locally).
 
-## Setup
+## Deploy on Render (no Netlify needed)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/samadbekxolmamatov2009/keylion)
+
+`server.mjs` serves the site and the API from one Node.js process; `render.yaml` describes the service.
+1. Create the database first (Turso step 1 below) and keep its URL and token at hand.
+2. Click the button (or Render → **New → Blueprint** → pick this repo; the button reads `render.yaml`
+   from the default branch). Sign in with GitHub, fill in `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`,
+   `ADMIN_EMAIL`, `ADMIN_PASSWORD` (`JWT_SECRET` is generated), then **Apply**.
+3. After ~3 minutes the site is at `https://keylion-xxxx.onrender.com`; every push to the branch redeploys it.
+4. Optional, under the service's **Environment** tab: `GROQ_API_KEY` (AI coach), `GOOGLE_CLIENT_ID`
+   (also add the new site URL to the OAuth client's *Authorized JavaScript origins*).
+
+The free plan sleeps after 15 minutes without visitors, so the first visit after a pause takes ~30–60 s.
+Uploaded files (ads, backgrounds) are stored in the database, so nothing is lost on redeploys.
+Run the same server locally with `npm install && npm start` (http://localhost:8888, variables from your shell).
+
+## Setup (Netlify)
 
 1. **Turso**: `turso db create keylion` → `turso db show keylion --url` and `turso db tokens create keylion`.
    Tables are created automatically on the first request (`netlify/functions/schema.mjs`).
@@ -64,4 +82,5 @@ hide scores, moderation queue for flagged results, ad view/click stats, and an a
 - Rate limits live in the database (`rate_limits` table), so they hold across function instances.
 - Schema changes are applied once per schema version on a cold start (`netlify/functions/schema.mjs`).
 - Setting `JWT_SECRET` is recommended: without it, rotating the Turso token signs everyone out.
-- Ad images/videos uploaded in the admin panel go to Netlify Blobs (about 5 MB limit); larger files can still be linked by URL.
+- Ad images/videos uploaded in the admin panel are stored in the database (`media` tables, ~5 MB per file);
+  larger files can still be linked by URL. Files uploaded earlier to Netlify Blobs are still served on Netlify.

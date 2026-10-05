@@ -6,7 +6,7 @@
      ADMIN_EMAIL, ADMIN_PASSWORD            credentials for /admin.html
      GROQ_API_KEY                           AI coach (key never reaches the browser); optional GROQ_MODEL */
 import { createClient } from '@libsql/client';
-import { getStore } from '@netlify/blobs';
+import { putMedia, getMedia, deleteMedia } from './media.mjs';
 import crypto from 'node:crypto';
 import { SCHEMA, MIGRATIONS } from './schema.mjs';
 
@@ -300,7 +300,7 @@ route('PUT', '/me/settings', async (req, ctx, body) => {
   return json({ prefs, profilePublic: pub === 1 });
 });
 
-/* custom backgrounds: already resized/compressed to WebP in the browser, stored in Netlify Blobs */
+/* custom backgrounds: already resized/compressed to WebP in the browser, stored in the database (media.mjs) */
 const BG_TYPES = { 'image/webp': '.webp', 'image/jpeg': '.jpg', 'image/png': '.png' };
 const MAX_UPLOADS = 3;
 route('POST', '/me/background', async (req) => {
@@ -315,7 +315,7 @@ route('POST', '/me/background', async (req) => {
   const uploads = Array.isArray(s.uploads) ? s.uploads : [];
   if (uploads.length >= MAX_UPLOADS) throw new HttpError(409, 'upload limit');
   const key = u.id + '_' + now() + BG_TYPES[type];
-  await getStore('backgrounds').set(key, buf, { metadata: { type } });
+  await putMedia(db(), 'backgrounds', key, buf, type);
   uploads.push(key);
   await q('UPDATE users SET settings = ? WHERE id = ?', [JSON.stringify({ prefs: s.prefs || {}, uploads }), u.id]);
   return json({ key, url: '/api/bg/' + key });
@@ -326,7 +326,7 @@ route('DELETE', '/me/background/:key', async (req, ctx) => {
   const s = parseSettings(u);
   const uploads = (Array.isArray(s.uploads) ? s.uploads : []);
   if (!uploads.includes(ctx.key)) throw new HttpError(404, 'not found');
-  await getStore('backgrounds').delete(ctx.key);
+  await deleteMedia(db(), 'backgrounds', ctx.key);
   const left = uploads.filter((k) => k !== ctx.key);
   const prefs = s.prefs || {};
   if (prefs.bg === 'custom:' + ctx.key) prefs.bg = 'none';
@@ -335,9 +335,9 @@ route('DELETE', '/me/background/:key', async (req, ctx) => {
 });
 
 route('GET', '/bg/:key', async (req, ctx) => {
-  const got = await getStore('backgrounds').getWithMetadata(ctx.key, { type: 'arrayBuffer' });
+  const got = await getMedia(db(), 'backgrounds', ctx.key);
   if (!got) throw new HttpError(404, 'not found');
-  return new Response(got.data, { headers: { 'content-type': got.metadata?.type || 'image/webp', 'cache-control': 'public, max-age=31536000, immutable', 'x-content-type-options': 'nosniff' } });
+  return new Response(got.data, { headers: { 'content-type': got.type || 'image/webp', 'cache-control': 'public, max-age=31536000, immutable', 'x-content-type-options': 'nosniff' } });
 });
 
 /* ---------- test results ---------- */
@@ -776,7 +776,7 @@ route('PUT', '/admin/ad', async (req, ctx, body) => {
   return json({ ok: true });
 });
 
-/* ad media: stored in Netlify Blobs, served from /api/media/<key>. Netlify limits request bodies to ~6 MB. */
+/* ad media: stored in the database (media.mjs), served from /api/media/<key>. Netlify limits request bodies to ~6 MB. */
 const MEDIA_TYPES = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif', 'video/mp4': '.mp4', 'video/webm': '.webm' };
 route('POST', '/admin/upload', async (req) => {
   requireAdmin(req);
@@ -785,14 +785,14 @@ route('POST', '/admin/upload', async (req) => {
   const buf = await req.arrayBuffer();
   if (buf.byteLength > 5.5 * 1024 * 1024) throw new HttpError(413, 'file too large (max ~5 MB)');
   const key = now() + '_' + uid().slice(0, 6) + MEDIA_TYPES[type];
-  await getStore('ads').set(key, buf, { metadata: { type } });
+  await putMedia(db(), 'ads', key, buf, type);
   return json({ url: '/api/media/' + key });
 });
 
 route('GET', '/media/:key', async (req, ctx) => {
-  const got = await getStore('ads').getWithMetadata(ctx.key, { type: 'arrayBuffer' });
+  const got = await getMedia(db(), 'ads', ctx.key);
   if (!got) throw new HttpError(404, 'not found');
-  return new Response(got.data, { headers: { 'content-type': got.metadata?.type || 'application/octet-stream', 'cache-control': 'public, max-age=86400', 'x-content-type-options': 'nosniff' } });
+  return new Response(got.data, { headers: { 'content-type': got.type || 'application/octet-stream', 'cache-control': 'public, max-age=86400', 'x-content-type-options': 'nosniff' } });
 });
 
 /* ---------- AI coach (server-side Groq call, OpenAI-compatible API) ---------- */
@@ -894,6 +894,7 @@ export default async (req, context) => {
     await ensureSchema();
     const url = new URL(req.url);
     const path = url.pathname.replace(/^\/(\.netlify\/functions\/api|api)/, '') || '/';
+    /* Netlify passes the client ip in context; server.mjs (Render / any Node host) does the same */
     const ip = context?.ip || req.headers.get('x-nf-client-connection-ip') || 'unknown';
     for (const r of routes) {
       if (r.method !== req.method) continue;

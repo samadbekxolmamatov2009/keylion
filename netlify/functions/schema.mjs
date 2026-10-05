@@ -54,6 +54,9 @@ export const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS admin_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, action TEXT NOT NULL, target TEXT, detail TEXT
   )`,
+  /* uploaded files (ads, custom backgrounds) in 512 KB chunks, see media.mjs */
+  `CREATE TABLE IF NOT EXISTS media (store TEXT NOT NULL, key TEXT NOT NULL, type TEXT, size INTEGER NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (store, key))`,
+  `CREATE TABLE IF NOT EXISTS media_chunks (store TEXT NOT NULL, key TEXT NOT NULL, idx INTEGER NOT NULL, data BLOB NOT NULL, PRIMARY KEY (store, key, idx))`,
   /* ad impressions/clicks per day */
   `CREATE TABLE IF NOT EXISTS ad_stats (day TEXT NOT NULL, kind TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, kind))`,
 ];
