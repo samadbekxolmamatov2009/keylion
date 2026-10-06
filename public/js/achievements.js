@@ -29,6 +29,18 @@
     { id:'racer_win', icon:'🏆', labelKey:'achv.racerWin.label', check:()=> false }, // unlocked directly from race.js, never via profile check
   ];
 
+  /* [current, target] towards a locked achievement, shown as a progress bar on the profile */
+  function achievementProgress(id, p){
+    const streak = (p.streak && p.streak.current) || 0;
+    const goals = {
+      first_test: [p.testsCount||0, 1], tests_10: [p.testsCount||0, 10], tests_50: [p.testsCount||0, 50], tests_100: [p.testsCount||0, 100],
+      speed_50: [p.bestWpm||0, 50], speed_80: [p.bestWpm||0, 80], speed_100: [p.bestWpm||0, 100],
+      streak_3: [streak, 3], streak_7: [streak, 7], streak_30: [streak, 30],
+      polyglot: [Object.keys(p.langsUsed||{}).length, 5], coder: [Object.keys(p.codeLangsUsed||{}).length, 6],
+    };
+    return goals[id] || null;
+  }
+
   /* returns achievement defs not yet in profile.achievements whose check() passes against
      the profile as it will look right after this test (see updateUserStats in backend.js) */
   function checkNewAchievements(profile, lastTest){

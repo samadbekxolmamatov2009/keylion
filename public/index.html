@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KeyLion</title>
+<title>Tezlash — tez yozish testi, poyga va reyting</title>
+<meta name="description" content="Tezlash: o'zbek, rus, ingliz, qozoq va qirg'iz tillarida tez yozish (typing) testi. Do'stlar bilan poyga, haqiqiy reyting, AI murabbiy va shaxsiy profil.">
+<meta name="theme-color" content="#0a0a0c">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tezlash">
+<meta property="og:title" content="Tezlash — tez yozish testi, poyga va reyting">
+<meta property="og:description" content="Yozish tezligingizni tekshiring, do'stlaringiz bilan poygaga chiqing va reytingda yuqoriga ko'tariling.">
+<meta name="twitter:card" content="summary">
+<script src="js/settings.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,18 +20,15 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+<!-- personal background (Profile → Settings); empty unless the player picked one -->
+<div id="bgLayer" aria-hidden="true"><div class="bg-img"></div><div class="bg-dim"></div></div>
 
 <header id="siteHeader">
-  <a href="https://keylion.netlify.app/" class="logo" style="text-decoration:none;">
+  <a href="/" class="logo" style="text-decoration:none;">
     <div class="logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M7 4 V20"/>
-        <path d="M7 12 L17 5"/>
-        <path d="M7 12 L17 19"/>
-        <path d="M7 20 H13"/> 
-      </svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g transform="matrix(1 0 -0.2126 1 4.851 0)"><rect x="7.2" y="6" width="5.2" height="14.5" rx="1.3"/><rect x="7.2" y="3.5" width="12.2" height="6.6" rx="1.3"/><rect x="0" y="3.5" width="9" height="2.6" rx="1.3"/><rect x="3" y="7.5" width="6" height="2.6" rx="1.3"/></g></svg>
     </div>
-    <span class="logo-wordmark">Key<span>Lion</span></span>
+    <span class="logo-wordmark">Tez<span>lash</span></span>
   </a>
   <nav id="mainNav">
     <button data-view="test" class="active">
@@ -57,61 +62,11 @@
   </div>
 </header>
 
-<!-- PROFILE MODAL (profile info, edit name, login/logout, stats, achievements) -->
-<div id="profileModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:55; align-items:center; justify-content:center; padding:24px;">
-  <div class="panel profile-panel">
-    <button id="profileModalClose" class="modal-close-btn" aria-label="yopish">&times;</button>
-    <div class="profile-modal-head">
-      <div class="avatar avatar-lg" id="profileModalAvatar">O'</div>
-      <div class="profile-modal-idbox">
-        <div class="profile-name-row">
-          <input id="profileNameInput" class="profile-name-input" maxlength="24" spellcheck="false" data-i18n-placeholder="welcome.placeholder">
-          <button class="btn" id="btnSaveProfileName" data-i18n="profile.save">saqlash</button>
-        </div>
-        <div class="profile-meta-row">
-          <span id="profileModalLevel"></span>
-          <div class="level-bar" id="levelBarWrap" style="display:none;" title="">
-            <div class="level-bar-fill" id="levelBarFill"></div>
-          </div>
-          <span class="level-next" id="levelNextLabel"></span>
-        </div>
-      </div>
-    </div>
-    <div class="profile-auth-actions">
-      <div class="profile-auth-hint" id="profileGuestHint" data-i18n="stats.guestNote">Sign in to save your stats.</div>
-      <button class="btn accent" id="btnOpenAuth" data-i18n="nav.login">kirish</button>
-      <button class="btn" id="btnLogout" style="display:none;" data-i18n="nav.logout">chiqish</button>
-    </div>
-    <div class="stat-cards" id="statsCardsWrap"></div>
-    <div class="panel ai-panel" id="aiPanel">
-      <div class="ai-head">
-        <h3 class="icon-ai" data-i18n="ai.title">AI tahlil</h3>
-        <button class="btn accent" id="btnAiAnalyze" data-i18n="ai.btn">tahlil qilish</button>
-      </div>
-      <div id="aiResult"><p class="empty-note" data-i18n="ai.hint">AI so'nggi testlaringizni tahlil qilib, asosiy kamchiliklaringizni aytadi.</p></div>
-    </div>
-    <div class="panel" style="margin:16px 0;">
-      <h3 class="icon-chart" data-i18n="stats.section.chart">wpm dinamikasi</h3>
-      <div id="statsWpmChartWrap"></div>
-    </div>
-    <div class="stats-grid">
-      <div class="panel">
-        <h3 class="icon-history" data-i18n="stats.section.history">so'nggi testlar</h3>
-        <div id="statsTableWrap"></div>
-      </div>
-      <div class="panel">
-        <h3 class="icon-trophy" data-i18n="stats.section.achievements">yutuqlar</h3>
-        <div class="achv-grid" id="statsAchvWrap"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- WELCOME / NAME MODAL -->
 <div id="welcomeModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.72); backdrop-filter:blur(4px); z-index:60; align-items:center; justify-content:center; padding:16px;">
   <div class="panel welcome-panel">
     <div class="welcome-logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 V20"/><path d="M7 12 L17 5"/><path d="M7 12 L17 19"/><path d="M7 20 H13"/></svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g transform="matrix(1 0 -0.2126 1 4.851 0)"><rect x="7.2" y="6" width="5.2" height="14.5" rx="1.3"/><rect x="7.2" y="3.5" width="12.2" height="6.6" rx="1.3"/><rect x="0" y="3.5" width="9" height="2.6" rx="1.3"/><rect x="3" y="7.5" width="6" height="2.6" rx="1.3"/></g></svg>
     </div>
     <h3 class="welcome-title" data-i18n="welcome.title">Xush kelibsiz!</h3>
     <p class="welcome-desc" data-i18n="welcome.desc">Ismingizni kiriting — u doimiy saqlanadi va leaderboard'da shu ism ko'rinadi.</p>
@@ -154,6 +109,7 @@
         <button data-mode="words" class="active" data-i18n="test.mode.words">words</button>
         <button data-mode="time" data-i18n="test.mode.time">time</button>
         <button data-mode="code" data-i18n="test.mode.code">code</button>
+        <button data-mode="daily" data-i18n="test.mode.daily">daily</button>
       </div>
       <div class="seg" id="lenSeg"></div>
       <div class="lang-row" id="langRow" style="display:none; flex-wrap:wrap;">
@@ -165,13 +121,15 @@
         <button data-lang="c">c</button>
       </div>
       <div class="lang-row" id="textLangRow" style="flex-wrap:wrap;">
-        <button data-textlang="en" class="active">EN</button>
+        <button data-textlang="uz" class="active">UZ</button>
         <button data-textlang="ru">RU</button>
-        <button data-textlang="uz">UZ</button>
+        <button data-textlang="en">EN</button>
         <button data-textlang="kk">KZ</button>
         <button data-textlang="ky">KG</button>
       </div>
     </div>
+
+    <div class="daily-note" id="dailyNote" style="display:none;" data-i18n="test.dailyNote"></div>
 
     <div id="typingScreen">
       <div class="stats-row" id="statsRow">
@@ -185,24 +143,13 @@
       </div>
     </div>
 
-    <!-- unobtrusive ad slot: hidden unless admin has configured+enabled an ad; dims/hides while typing -->
-    <a href="#" target="_blank" rel="noopener sponsored nofollow" class="ad-slot" id="adSlot" style="display:none;">
-      <div class="ad-slot-media-wrap">
-        <img id="adSlotImg" class="ad-slot-img" alt="" style="display:none;">
-        <video id="adSlotVideo" class="ad-slot-video" autoplay muted loop playsinline style="display:none;"></video>
-        <span class="ad-slot-label">reklama</span>
-      </div>
-      <div class="ad-slot-body">
-        <span id="adSlotText" class="ad-slot-text"></span>
-      </div>
-    </a>
-
     <div class="results" id="resultsScreen" style="display:none;">
       <div class="big-row">
         <div><div class="big" id="resWpm">0</div><div class="lbl" data-i18n="test.result.wpm">wpm</div></div>
         <div><div class="big" id="resAcc">0%</div><div class="lbl" data-i18n="test.result.acc">aniqlik</div></div>
       </div>
       <div id="resNewBest" class="new-best-badge" style="display:none;" data-i18n="stats.newBest">🎉 yangi rekord!</div>
+      <div id="resRankNote" class="res-note"></div>
       <div class="btn-row">
         <button class="btn accent" id="btnRestart">
           <svg class="icon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.5 15a9 9 0 1 0 2-9.5L1 10"/></svg>
@@ -218,6 +165,20 @@
         </button>
       </div>
     </div>
+
+    <!-- ad slot (admin panel → Reklama): hidden unless an ad is switched on; sits under the typing area and the
+         results, fades out while the player types. Desktop banner 8:1, optional phone banner 3:1 (see ads.js). -->
+    <a class="ad-slot" id="adSlot" hidden>
+      <div class="ad-slot-media-wrap">
+        <picture id="adSlotPicture" hidden>
+          <source id="adSlotMobileSrc" media="(max-width: 600px)">
+          <img id="adSlotImg" class="ad-slot-img" alt="">
+        </picture>
+        <video id="adSlotVideo" class="ad-slot-video" muted loop playsinline preload="metadata" hidden></video>
+        <span class="ad-slot-label" data-i18n="ad.label">reklama</span>
+      </div>
+      <div class="ad-slot-body" id="adSlotBody"><span id="adSlotText" class="ad-slot-text"></span></div>
+    </a>
 
     <div class="footer-tip" id="footerTip">
       <kbd>Tab</kbd> — <span data-i18n="test.footerTip">testni qayta boshlash</span>
@@ -249,9 +210,9 @@
         </div>
         <div class="lang-row" id="raceTextLangRow">
           <div class="seg" id="raceTextLangSeg">
-            <button data-textlang="en" class="active">EN</button>
+            <button data-textlang="uz" class="active">UZ</button>
             <button data-textlang="ru">RU</button>
-            <button data-textlang="uz">UZ</button>
+            <button data-textlang="en">EN</button>
             <button data-textlang="kk">KZ</button>
             <button data-textlang="ky">KG</button>
           </div>
@@ -329,25 +290,44 @@
   <!-- LEADERBOARD VIEW -->
   <section class="view" id="view-leaderboard">
     <h2 class="view-title" data-i18n="leaderboard.title">Leaderboard</h2>
-    <p class="view-sub" data-i18n="leaderboard.subtitle">Barcha o'yinchilarning haqiqiy natijalari</p>
-    <div class="mode-bar" style="margin-bottom:22px;">
-      <div class="seg" id="lbFilterSeg">
-        <button data-filter="all" class="active" data-i18n="leaderboard.filter.all">hammasi</button>
-        <button data-filter="words" data-i18n="leaderboard.filter.words">so'zlar</button>
-        <button data-filter="time" data-i18n="leaderboard.filter.time">vaqt</button>
-        <button data-filter="code" data-i18n="leaderboard.filter.code">kod</button>
+    <p class="view-sub" data-i18n="lb.subtitle">Har bir o'yinchi eng yaxshi natijasi bilan bir marta</p>
+    <div class="lb-champion" id="lbChampion" style="display:none;"></div>
+    <div class="lb-filters">
+      <div class="seg" id="lbPeriodSeg">
+        <button data-v="day" data-i18n="lb.period.day">bugun</button>
+        <button data-v="week" data-i18n="lb.period.week">hafta</button>
+        <button data-v="month" data-i18n="lb.period.month">oy</button>
+        <button data-v="all" class="active" data-i18n="lb.period.all">hamma vaqt</button>
+      </div>
+      <div class="seg" id="lbModeSeg">
+        <button data-v="all" class="active" data-i18n="leaderboard.filter.all">hammasi</button>
+        <button data-v="words" data-i18n="leaderboard.filter.words">so'zlar</button>
+        <button data-v="time" data-i18n="leaderboard.filter.time">vaqt</button>
+        <button data-v="code" data-i18n="leaderboard.filter.code">kod</button>
+        <button data-v="daily" data-i18n="test.mode.daily">kunlik</button>
+      </div>
+      <div class="seg" id="lbLangSeg">
+        <button data-v="all" class="active" data-i18n="lb.lang.all">barcha tillar</button>
+        <button data-v="uz">UZ</button>
+        <button data-v="ru">RU</button>
+        <button data-v="en">EN</button>
+        <button data-v="kk">KZ</button>
+        <button data-v="ky">KG</button>
       </div>
     </div>
-    <div class="panel">
-      <table class="lb-table">
+    <div class="lb-podium" id="lbPodium"></div>
+    <div class="panel" id="lbTableWrap">
+      <table class="lb-table lb-main">
         <thead><tr>
-          <th>#</th><th data-i18n="leaderboard.col.user">foydalanuvchi</th><th data-i18n="leaderboard.col.mode">rejim</th>
-          <th class="lb-sort" data-sort="wpm" style="cursor:pointer;"><span data-i18n="leaderboard.col.wpm">wpm</span> <span class="sort-arrow"></span></th>
-          <th class="lb-sort" data-sort="acc" style="cursor:pointer;"><span data-i18n="leaderboard.col.acc">aniqlik</span> <span class="sort-arrow"></span></th>
+          <th>#</th><th data-i18n="leaderboard.col.user">foydalanuvchi</th>
+          <th data-i18n="leaderboard.col.wpm">wpm</th><th data-i18n="leaderboard.col.acc">aniqlik</th>
+          <th class="mode-col" data-i18n="leaderboard.col.mode">rejim</th><th class="date-col" data-i18n="stats.table.date">sana</th>
         </tr></thead>
         <tbody id="lbBody"></tbody>
       </table>
     </div>
+    <div class="lb-me" id="lbMe" style="display:none;"></div>
+    <p class="lb-rules" data-i18n="lb.rules"></p>
   </section>
 
   <!-- COACH VIEW -->
@@ -371,6 +351,15 @@
     </div>
   </section>
 
+  <!-- PROFILE VIEW (own profile + settings, and public profiles at #/u/<id>) -->
+  <section class="view" id="view-profile">
+    <div class="seg pf-tabs" id="profileTabs">
+      <button data-ptab="overview" class="active" data-i18n="pf.tab.overview">profil</button>
+      <button data-ptab="settings" data-i18n="pf.tab.settings">sozlamalar</button>
+    </div>
+    <div id="profileOverview"></div>
+    <div id="profileSettings" style="display:none;"></div>
+  </section>
 
 </main>
 
@@ -378,10 +367,12 @@
 <script src="js/data.js"></script>
 <script src="js/shared.js"></script>
 <script src="js/i18n.js"></script>
+<script src="js/i18n-extra.js"></script>
+<script src="js/levels.js"></script>
 <script src="js/achievements.js"></script>
 <script src="js/backend.js"></script>
 <script src="js/leaderboard.js"></script>
-<script src="js/stats.js"></script>
+<script src="js/profile.js"></script>
 <script src="js/test.js"></script>
 <script src="js/coach.js"></script>
 <script src="js/race.js"></script>

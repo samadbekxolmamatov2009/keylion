@@ -1,7 +1,17 @@
   const state = {
-    mode: 'words', lang: 'python', textLang: 'en', wordLen: 25, timeLen: 30,
+    mode: 'words', lang: 'python', textLang: 'uz', wordLen: 25, timeLen: 30,
     text: '', typed: '', startTime: null, timerId: null, timeLeft: 30, finished: false, syntaxMap: null,
+    testSeq: 0, tokenPromise: null, keyTimes: [],
   };
+  const DAILY_WORDS = 30;
+  /* the typing language picked last time */
+  try{
+    const savedTextLang = localStorage.getItem('tz_textlang');
+    if(['uz','ru','en','kk','ky'].includes(savedTextLang)){
+      state.textLang = savedTextLang;
+      document.querySelectorAll('#textLangRow button').forEach(x=> x.classList.toggle('active', x.dataset.textlang === savedTextLang));
+    }
+  }catch(e){}
   const missedChars = {};
   let currentTestMissed = {};
 
@@ -24,17 +34,39 @@
     wrap.style.display = opts.length ? 'flex' : 'none';
   }
 
+  /* switches the mode bar + visible controls; callers decide when to build the next text */
+  function setTestMode(mode){
+    state.mode = mode;
+    document.querySelectorAll('#typeSeg button').forEach(x=>x.classList.toggle('active', x.dataset.mode===mode));
+    document.getElementById('langRow').style.display = mode==='code' ? 'flex' : 'none';
+    document.getElementById('textLangRow').style.display = mode==='code' ? 'none' : 'flex';
+    document.getElementById('timeLeftWrap').style.display = mode==='time' ? 'block' : 'none';
+    document.getElementById('dailyNote').style.display = mode==='daily' ? 'block' : 'none';
+    renderLenSeg();
+  }
   document.getElementById('typeSeg').addEventListener('click', (e)=>{
     const b = e.target.closest('button[data-mode]');
     if(!b) return;
-    state.mode = b.dataset.mode;
-    document.querySelectorAll('#typeSeg button').forEach(x=>x.classList.toggle('active', x===b));
-    document.getElementById('langRow').style.display = state.mode==='code' ? 'flex' : 'none';
-    document.getElementById('textLangRow').style.display = state.mode==='code' ? 'none' : 'flex';
-    document.getElementById('timeLeftWrap').style.display = state.mode==='time' ? 'block' : 'none';
-    renderLenSeg();
+    setTestMode(b.dataset.mode);
     buildTest();
   });
+
+  /* daily challenge: everyone gets the same words for a given (Tashkent) date and language */
+  function dailyText(lang){
+    const key = new Date(Date.now() + 5*3600000).toISOString().slice(0,10) + ':' + lang;
+    let seed = 2166136261;
+    for(const ch of key){ seed ^= ch.charCodeAt(0); seed = Math.imul(seed, 16777619); }
+    seed >>>= 0;
+    const rnd = ()=>{
+      seed = (seed + 0x6D2B79F5) >>> 0;
+      let x = seed;
+      x = Math.imul(x ^ x >>> 15, x | 1);
+      x ^= x + Math.imul(x ^ x >>> 7, x | 61);
+      return ((x ^ x >>> 14) >>> 0) / 4294967296;
+    };
+    const bank = wordBanks[lang] || wordBanks.en;
+    return Array.from({ length: DAILY_WORDS }, ()=> bank[Math.floor(rnd() * bank.length)]).join(' ');
+  }
   document.getElementById('langRow').addEventListener('click', (e)=>{
     const b = e.target.closest('button[data-lang]');
     if(!b) return;
@@ -46,6 +78,7 @@
     const b = e.target.closest('button[data-textlang]');
     if(!b) return;
     state.textLang = b.dataset.textlang;
+    try{ localStorage.setItem('tz_textlang', state.textLang); }catch(e){}
     document.querySelectorAll('#textLangRow button').forEach(x=>x.classList.toggle('active', x===b));
     buildTest();
   });
@@ -57,12 +90,17 @@
   function buildTest(customText){
     if(state.timerId){ clearInterval(state.timerId); state.timerId = null; }
     state.finished = false;
+    state.testSeq++;
+    state.tokenPromise = null;
+    state.keyTimes = [];
     currentTestMissed = {};
+    document.getElementById('resRankNote').textContent = '';
     document.getElementById('resultsScreen').style.display = 'none';
     document.getElementById('typingScreen').style.display = 'block';
 
     if(customText) state.text = customText;
     else if(state.mode==='code') state.text = randomCode(state.lang);
+    else if(state.mode==='daily') state.text = dailyText(state.textLang);
     else if(state.mode==='time') state.text = randomWords(80, state.textLang);
     else state.text = randomWords(state.wordLen, state.textLang);
     state.syntaxMap = state.mode==='code' ? tokenizeSyntax(state.text, state.lang) : null;
@@ -86,20 +124,38 @@
     document.getElementById('siteHeader').classList.toggle('dim', started);
     const adSlot = document.getElementById('adSlot');
     if(adSlot) adSlot.classList.toggle('dim', started);
+    if(typeof setAdTyping === 'function') setAdTyping(started);   // pauses a video ad while typing
   }
 
-  function computeStats(){
+  function computeStats(endTime){
     let correct = 0;
     for(let i=0;i<state.typed.length;i++) if(state.typed[i]===state.text[i]) correct++;
-    const elapsedMin = state.startTime ? (Date.now()-state.startTime)/60000 : 0;
+    const durationMs = state.startTime ? (endTime || Date.now()) - state.startTime : 0;
+    const elapsedMin = durationMs/60000;
     const wpm = elapsedMin>0 ? Math.round((correct/5)/elapsedMin) : 0;
     const acc = state.typed.length>0 ? Math.round((correct/state.typed.length)*100) : 100;
-    return {wpm, acc, correct};
+    return {wpm, acc, correct, typed: state.typed.length, durationMs};
+  }
+
+  /* rhythm summary of the gaps between key presses (pauses over 2 s ignored): sent with the result
+     so the server can spot scripted input, which types with near-identical gaps */
+  function keyRhythm(times){
+    const gaps = [];
+    for(let i=1;i<times.length;i++){ const g = times[i]-times[i-1]; if(g > 0 && g < 2000) gaps.push(g); }
+    if(gaps.length < 2) return { n: gaps.length, median: 0, cv: 0 };
+    const sorted = gaps.slice().sort((a,b)=> a-b);
+    const mean = gaps.reduce((a,b)=> a+b, 0) / gaps.length;
+    const sd = Math.sqrt(gaps.reduce((a,g)=> a + (g-mean)*(g-mean), 0) / gaps.length);
+    return { n: gaps.length, median: sorted[Math.floor(sorted.length/2)], cv: mean ? +(sd/mean).toFixed(3) : 0 };
   }
 
   function startTimerIfNeeded(){
     if(state.startTime) return;
     state.startTime = Date.now();
+    /* server-signed start stamp: proves to the server that at least this much real time passed */
+    if(fbReady && !isGuest){
+      state.tokenPromise = api('POST', '/tests/start').then((r)=> r.token).catch(()=> null);
+    }
     if(state.mode==='time'){
       state.timerId = setInterval(()=>{
         state.timeLeft -= 1;
@@ -112,7 +168,7 @@
   function refreshTestUI(){
     renderTyped(typeText, state.text, state.typed, state.syntaxMap);
     const s = computeStats();
-    document.getElementById('liveWpm').textContent = s.wpm;
+    document.getElementById('liveWpm').textContent = s.durationMs < 1000 ? 0 : s.wpm;   // the first keystrokes give absurd numbers
     document.getElementById('liveAcc').textContent = s.acc + '%';
     updateDimming();
   }
@@ -133,13 +189,15 @@
       for(const ch of e.data){
         if(state.typed.length >= state.text.length) break;
         startTimerIfNeeded();
+        state.keyTimes.push(Date.now());
         const expected = state.text[state.typed.length];
-        if(expected !== undefined && ch !== expected){
+        const ok = expected === undefined || typedAs(expected, ch, state.mode === 'code') === expected;
+        if(!ok){
           missedChars[expected] = (missedChars[expected]||0) + 1;
           currentTestMissed[expected] = (currentTestMissed[expected]||0) + 1;
-          playErrorTick();
         }
-        state.typed = applyChar(state.text, state.typed, ch);
+        typingFeedback(ok, document.getElementById('typeWrap'));
+        state.typed = applyChar(state.text, state.typed, ch, state.mode === 'code');
       }
     }
     typeInput.value = '';
@@ -147,8 +205,14 @@
     if(state.mode!=='time' && state.typed.length >= state.text.length) finishTest();
   });
 
+  /* on the results screen the hidden input can't hold focus, so Enter / Tab restart from here
+     (otherwise Tab would walk the focus into the nav and the next space would "click" it) */
   document.addEventListener('keydown', (e)=>{
-    if(state.finished && e.key==='Enter'){ buildTest(); }
+    if(!state.finished || currentView !== 'test' || document.activeElement === typeInput) return;
+    const tag = document.activeElement && document.activeElement.tagName;
+    if(tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if(e.key==='Enter' && tag === 'BUTTON') return;   // Enter on a focused result button presses that button
+    if(e.key==='Enter' || e.key==='Tab'){ e.preventDefault(); buildTest(); }
   });
 
   /* monkeytype-style: any ordinary key press anywhere on the test view refocuses the hidden
@@ -164,7 +228,6 @@
     if(activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
     const testView = document.getElementById('view-test');
     if(!testView || !testView.classList.contains('active')) return;
-    if(typeof isProfileModalOpen === 'function' && isProfileModalOpen()) return;
     typeInput.focus();
   });
 
@@ -172,16 +235,21 @@
     if(state.finished) return;
     state.finished = true;
     if(state.timerId){ clearInterval(state.timerId); state.timerId = null; }
-    const s = computeStats();
+    const s = computeStats(state.mode==='time' && state.startTime ? state.startTime + state.timeLen*1000 : Date.now());
     document.getElementById('typingScreen').style.display = 'none';
     document.getElementById('resultsScreen').style.display = 'block';
-    document.getElementById('resWpm').textContent = s.wpm;
-    document.getElementById('resAcc').textContent = s.acc + '%';
+    const resWpm = document.getElementById('resWpm'), resAcc = document.getElementById('resAcc');
+    resWpm.textContent = s.wpm;
+    resAcc.textContent = s.acc + '%';
+    finishEffects(s.wpm, s.acc, resWpm, resAcc);
     const isNewBest = !isGuest && s.wpm > profileBestWpm && s.wpm > 0;
-    document.getElementById('resNewBest').style.display = isNewBest ? 'inline' : 'none';
+    document.getElementById('resNewBest').style.display = isNewBest ? 'block' : 'none';
     updateDimming();
     let modeLabel, langInfo;
-    if(state.mode==='code'){
+    if(state.mode==='daily'){
+      modeLabel = 'daily · ' + state.textLang;
+      langInfo = { textLang: state.textLang };
+    } else if(state.mode==='code'){
       modeLabel = 'code · ' + (state.lang==='python'?'py':state.lang==='javascript'?'js':state.lang);
       langInfo = { codeLang: state.lang };
     } else if(state.mode==='time'){
@@ -191,8 +259,21 @@
       modeLabel = 'words · ' + state.wordLen + ' · ' + state.textLang;
       langInfo = { textLang: state.textLang };
     }
-    submitScore(modeLabel, s.wpm, s.acc);
-    updateUserStats(s.wpm, s.acc, modeLabel, currentTestMissed, langInfo);
+    const note = document.getElementById('resRankNote');
+    if(isGuest){ note.textContent = s.wpm > 0 ? t('test.note.guest') : ''; return; }
+    if(s.wpm <= 0) return;
+    const seq = state.testSeq, rhythm = keyRhythm(state.keyTimes);
+    Promise.resolve(state.tokenPromise).then((testToken)=>{
+      const sent = updateUserStats(s.wpm, s.acc, modeLabel, currentTestMissed, langInfo, null, {
+        kind: state.mode, textLang: state.mode==='code' ? null : state.textLang,
+        durationMs: s.durationMs, correct: s.correct, typed: s.typed, testToken, intervals: rhythm,
+      });
+      if(sent) sent.then((res)=>{
+        if(!res || seq !== state.testSeq) return;
+        note.textContent = res.flagged ? t('test.note.flagged') : res.ranked ? t('test.note.ranked') : (res.acc < 90 ? t('test.note.lowAcc') : '');
+        note.className = 'res-note' + (res.flagged ? ' warn' : res.ranked ? ' ok' : '');
+      });
+    });
   }
 
   document.getElementById('btnRestart').addEventListener('click', ()=> buildTest());

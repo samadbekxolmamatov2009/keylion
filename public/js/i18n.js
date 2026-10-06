@@ -26,9 +26,9 @@ const I18N = {
   "auth.sendCode": "SMS kod yuborish",
   "auth.codePlaceholder": "6 xonali kod",
   "auth.verify": "tasdiqlash",
-  "test.mode.words": "words",
-  "test.mode.time": "time",
-  "test.mode.code": "code",
+  "test.mode.words": "so'zlar",
+  "test.mode.time": "vaqt",
+  "test.mode.code": "kod",
   "test.stats.wpm": "wpm",
   "test.stats.acc": "aniqlik",
   "test.stats.time": "vaqt",
@@ -178,9 +178,9 @@ const I18N = {
   "auth.sendCode": "Отправить SMS-код",
   "auth.codePlaceholder": "6-значный код",
   "auth.verify": "подтвердить",
-  "test.mode.words": "words",
-  "test.mode.time": "time",
-  "test.mode.code": "code",
+  "test.mode.words": "слова",
+  "test.mode.time": "время",
+  "test.mode.code": "код",
   "test.stats.wpm": "wpm",
   "test.stats.acc": "точность",
   "test.stats.time": "время",
@@ -482,9 +482,9 @@ const I18N = {
   "auth.sendCode": "SMS кодын жіберу",
   "auth.codePlaceholder": "6 таңбалы код",
   "auth.verify": "растау",
-  "test.mode.words": "words",
-  "test.mode.time": "time",
-  "test.mode.code": "code",
+  "test.mode.words": "сөздер",
+  "test.mode.time": "уақыт",
+  "test.mode.code": "код",
   "test.stats.wpm": "wpm",
   "test.stats.acc": "дәлдік",
   "test.stats.time": "уақыт",
@@ -622,9 +622,9 @@ const I18N = {
   "auth.sendCode": "SMS код жиберүү",
   "auth.codePlaceholder": "6 сандуу код",
   "auth.verify": "текшерүү",
-  "test.mode.words": "words",
-  "test.mode.time": "time",
-  "test.mode.code": "code",
+  "test.mode.words": "сөздөр",
+  "test.mode.time": "убакыт",
+  "test.mode.code": "код",
   "test.stats.wpm": "wpm",
   "test.stats.acc": "тактык",
   "test.stats.time": "убакыт",
@@ -741,12 +741,15 @@ const I18N = {
   /* all 5 languages below have full, parallel UI-chrome translations, so the switcher exposes
      all of them \u2014 the same 5-language set (ru/uz/en/kk/ky) also controls the TYPING CONTENT
      language (words/time mode word banks), independently of this UI-chrome setting */
-  const LANG_LABELS = { en: "EN", uz: "O'Z", ru: "RU", kk: "KZ", ky: "KG" };
-  let currentLang = localStorage.getItem('kl_lang') || 'en';
-  if(!LANG_LABELS[currentLang]) currentLang = 'en';
+  const LANG_LABELS = { uz: "O'Z", ru: "RU", en: "EN", kk: "KZ", ky: "KG" };
+  /* the site is made for Uzbek speakers: Uzbek unless the visitor picked another language */
+  let currentLang = localStorage.getItem('tz_lang') || 'uz';
+  if(!LANG_LABELS[currentLang]) currentLang = 'uz';
 
   function t(key, vars){
-    let str = (I18N[currentLang] && I18N[currentLang][key]) || (I18N.uz && I18N.uz[key]) || key;
+    let str = (I18N[currentLang] && I18N[currentLang][key])
+      || ((currentLang === 'kk' || currentLang === 'ky') && I18N.ru[key])   // Cyrillic readers: Russian before Uzbek
+      || (I18N.uz && I18N.uz[key]) || key;
     if(vars){
       Object.entries(vars).forEach(([k,v])=>{ str = str.split('{'+k+'}').join(v); });
     }
@@ -766,12 +769,16 @@ const I18N = {
     });
     /* re-render bits that are built dynamically in JS, not just static textContent */
     if(typeof renderLenSeg === 'function') renderLenSeg();
+    if(typeof currentView !== 'undefined' && fbReady){
+      if(currentView === 'profile') renderProfile();
+      if(currentView === 'leaderboard') loadLeaderboard();
+    }
   }
 
   function setLang(lang){
     if(!LANG_LABELS[lang]) return;
     currentLang = lang;
-    localStorage.setItem('kl_lang', lang);
+    localStorage.setItem('tz_lang', lang);
     applyI18n();
   }
 

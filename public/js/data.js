@@ -1,103 +1,172 @@
+  /* word banks: reviewed for spelling and suitability (Uzbek with apostrophes: o'zbek, g'alaba, ma'no — the
+     typing engine accepts any apostrophe key, see CHAR_ALIASES in shared.js) */
   const wordBanks = {
-    en: ("the be to of and a in that have it for not on with he as you do at this but his by from "+
-    "they we say her she or an will my one all would there their what so up out if about who get which go me "+
-    "when make can like time no just him know take people into year your good some could them see other than "+
-    "then now look only come its over think also back after use two how our work first well way even new want "+
-    "because any these give day most us function const let var loop array object return class import export "+
-    "again against always animal answer ask baby become before begin believe better between big black blue body "+
-    "book born bring brother building call car care carry certain change child city class clear close cold color "+
-    "come common company continue control cost country course cut dark daughter death develop die different "+
-    "difficulty door draw during early earth east easy eat effect end enough even evening every example eye face "+
-    "fact fall family far father fear feel few field fight figure fill final find fine finger finish fire five "+
-    "floor fly food foot force form four free friend full game garden girl government great green ground grow "+
-    "hand happen hard head health hear heart heavy help high hold hope hospital hour house however human idea "+
-    "important increase indeed information inside interest issue keep kind kitchen large last late lead learn "+
-    "leave left level life light line list little live local long love machine main man matter maybe mean "+
-    "measure meet member mention mind minute mission moment money month morning mother mouth move music name "+
-    "nature near need never news next night north nothing notice number often once open order paper parent part "+
-    "party pass past pattern pay peace people perhaps person picture piece place plan plant play point poor "+
-    "position possible power present pretty problem process produce program project public purpose quality "+
-    "question quickly quiet rate rather reach read reason receive record red remain remember report rest result "+
-    "return right rise room run school season second section seem sense series serve set several shall short "+
-    "show side simple since sing sister site situation size skill small society soldier something sound source "+
-    "south space speak special stand start state stay step still stop story street strong student study system "+
-    "table talk teach team term thank thing third though thousand today together tomorrow tonight top toward "+
-    "town travel tree true try turn under understand until upon voice wait walk wall watch water weight west "+
-    "while white wide wife win wind woman word world write wrong yard young").split(' '),
-    ru: ("и в не на я быть тот он с а как это она к но они мы что за из у который свой весь год время человек "+
-    "дело жизнь рука день глаз вопрос дом слово случай работа лицо друг сторона страна мир ребенок город вода "+
-    "отец мать книга стол окно дверь стена дорога машина поезд самолет компьютер телефон школа университет "+
-    "студент учитель врач магазин деньги хлеб молоко чай солнце луна звезда небо земля лес гора река море "+
-    "зима весна лето осень утро вечер ночь сегодня завтра вчера неделя месяц быстро медленно большой маленький "+
-    "говорить сказать думать знать понимать видеть слышать чувствовать любить хотеть мочь должен нужно можно "+
-    "нельзя делать сделать идти пойти ходить ехать поехать бежать читать писать слушать смотреть играть работать "+
-    "учиться отдыхать спать вставать ложиться начинать кончать продолжать помогать давать брать покупать "+
-    "продавать платить стоить искать находить терять забывать вспоминать решать выбирать менять оставаться "+
-    "становиться казаться нравиться радоваться грустить бояться удивляться улыбаться плакать смеяться петь "+
-    "танцевать рисовать строить ломать чинить открывать закрывать включать выключать поднимать опускать бросать "+
-    "ловить держать нести везти водить летать плавать входить выходить приходить уходить возвращаться собираться "+
-    "готовиться одеваться раздеваться мыться причёсываться завтракать обедать ужинать пить есть готовить убирать "+
-    "стирать гладить деньги банк магазин рынок цена скидка товар покупатель продавец касса чек счёт зарплата "+
-    "налог кредит вклад машина автобус поезд метро самолёт корабль велосипед дорога улица площадь мост здание "+
-    "квартира комната кухня ванная туалет спальня гостиная балкон лестница крыша забор сад двор погода дождь "+
-    "снег ветер туман облако гроза радуга мороз жара тепло холодно светло темно рано поздно быстро медленно "+
-    "громко тихо далеко близко высоко низко много мало больше меньше лучше хуже новый старый молодой пожилой "+
-    "красивый некрасивый умный глупый добрый злой сильный слабый богатый бедный чистый грязный полный пустой "+
-    "тяжёлый лёгкий острый тупой сладкий горький солёный кислый вкусный невкусный").split(' '),
-    uz: ("va bu u men sen biz siz ular bor yoq keldi ketdi kitob uy ish kun tun vaqt hayot odam bola ota ona "+
-    "dost shahar qishloq maktab talaba oqituvchi kompyuter internet telefon mashina yol suv non choy osh "+
-    "bozor dokon pul dars savol javob yaxshi yomon katta kichik issiq sovuq tez sekin baland past keng tor "+
-    "oq qora qizil kok sariq yashil bugun ertaga kecha hafta oy yil soat daqiqa soniya bahor yoz kuz qish "+
-    "togʻ dengiz daryo ormon gul daraxt hayvon qush baliq it mushuk ot sigir sut gosht meva sabzavot olma uzum "+
-    "gapirmoq aytmoq oylamoq bilmoq tushunmoq kormoq eshitmoq his qilmoq sevmoq xohlamoq kerak mumkin bolmaydi "+
-    "qilmoq bormoq kelmoq yugurmoq oqimoq yozmoq tinglamoq oynamoq ishlamoq organmoq dam olmoq uxlamoq turmoq "+
-    "yotmoq boshlamoq tugatmoq davom etmoq yordam bermoq olmoq sotib olmoq sotmoq tolamoq qidirmoq topmoq "+
-    "yoqotmoq unutmoq eslamoq hal qilmoq tanlamoq ozgartirmoq qolmoq bolmoq korinmoq yoqmoq xursand bolmoq "+
-    "gamgin bolmoq qorqmoq ajablanmoq kulmoq yiglamoq qoshiq aytmoq raqsga tushmoq chizmoq qurmoq buzmoq "+
-    "tuzatmoq ochmoq yopmoq ochirmoq kotarmoq tushirmoq tashlamoq ushlamoq olib bormoq kiritmoq chiqmoq kirmoq "+
-    "qaytmoq tayyorlanmoq kiyinmoq yechinmoq yuvinmoq taranmoq nonushta qilmoq tushlik qilmoq kechki ovqat "+
-    "yemoq ichmoq pishirmoq tozalamoq yuvmoq dazmollamoq bank dokon bozor narx chegirma mahsulot xaridor "+
-    "sotuvchi kassa chek hisob maosh soliq kredit avtobus poyezd metro samolyot kema velosiped kocha maydon "+
-    "koprik bino kvartira xona oshxona hammom hojatxona yotoqxona mehmonxona balkon zina tom devor bog hovli "+
-    "ob-havo yomgir qor shamol tuman bulut chaqmoq kamalak sovuq issiqlik yorug qorongu erta kech baland ovoz "+
-    "past ovoz uzoq yaqin baland past kop kam koproq kamroq yaxshiroq yomonroq yangi eski yosh keksa chiroyli "+
-    "xunuk aqlli ahmoq mehribon yovuz kuchli ojiz boy kambagal toza iflos tolik bosh ogir yengil otkir otmas "+
-    "shirin achchiq shor nordon mazali mazasiz").split(' '),
-    kk: ("және бұл ол мен сен біз сіз олар бар жоқ келді кетті кітап үй жұмыс күн түн уақыт өмір адам бала "+
-    "әке ана дос қала ауыл мектеп студент мұғалім компьютер интернет телефон машина жол су нан шай ас "+
-    "базар дүкен ақша сабақ сұрақ жауап жақсы жаман үлкен кіші ыстық суық тез баяу биік аласа кең тар "+
-    "ақ қара қызыл көк сары жасыл бүгін ертең кеше апта ай жыл сағат минут секунд көктем жаз күз қыс "+
-    "тау теңіз өзен орман гүл ағаш жануар құс балық ит мысық ат сиыр сүт ет жеміс көкөніс алма жүзім "+
-    "сөйлеу айту ойлау білу түсіну көру есту сезіну сүю қалау керек болады болмайды істеу бару келу жүгіру "+
-    "оқу жазу тыңдау ойнау жұмыс істеу үйрену демалу ұйықтау тұру жату бастау аяқтау жалғастыру көмектесу "+
-    "беру алу сатып алу сату төлеу іздеу табу жоғалту ұмыту есте сақтау шешу таңдау өзгерту қалу болу көріну "+
-    "ұнау қуану мұңаю қорқу таңғалу күлу жылау ән айту би билеу сурет салу салу бұзу жөндеу ашу жабу қосу "+
-    "өшіру көтеру түсіру лақтыру ұстау апару кіргізу шығу кіру қайту дайындалу киіну шешіну жуыну тарану "+
-    "таңғы ас ішу түскі ас кешкі ас ішу тамақтану пісіру тазалау жуу үтіктеу ақша банк дүкен базар баға "+
-    "жеңілдік тауар сатып алушы сатушы касса чек шот жалақы салық несие автобус пойыз метро ұшақ кеме "+
-    "велосипед жол көше алаң көпір ғимарат пәтер бөлме асхана жуынатын бөлме дәретхана жатын бөлме балкон "+
-    "баспалдақ шатыр қабырға бақ аула ауа райы жаңбыр қар жел тұман бұлт найзағай кемпірқосақ аяз жылу жарық "+
-    "қараңғы ерте кеш тез баяу қатты дауыс ащы дауыс алыс жақын биік аласа көп аз көбірек азырақ жақсырақ "+
-    "нашарлау жаңа ескі жас қарт әдемі ұсқынсыз ақылды ақымақ мейірімді зұлым күшті әлсіз бай кедей таза лас "+
-    "толық бос ауыр жеңіл өткір мұқал тәтті ащы тұзды қышқыл дәмді дәмсіз").split(' '),
-    ky: ("жана бул ал мен сен биз силер алар бар жок келди кетти китеп үй иш күн түн убакыт жашоо адам бала "+
-    "ата эне дос шаар айыл мектеп студент мугалим компьютер интернет телефон машина жол суу нан чай ас "+
-    "базар дүкөн акча сабак суроо жооп жакшы жаман чоң кичине ысык муздак тез жай бийик төмөн кең тар "+
-    "ак кара кызыл көк сары жашыл бүгүн эртең кечээ жума ай жыл саат мүнөт секунд жаз күз кыш тоо "+
-    "деңиз дарыя токой гүл дарак жаныбар куш балык ит мышык ат уй сүт эт мөмө жашылча алма жүзүм "+
-    "сүйлөө айтуу ойлоо билүү түшүнүү көрүү угуу сезүү сүйүү каалоо керек болот болбойт кылуу баруу келүү "+
-    "чуркоо окуу жазуу угуу ойноо иштөө үйрөнүү эс алуу уктоо туруу жатуу баштоо бүтүрүү улантуу жардам берүү "+
-    "берүү алуу сатып алуу сатуу төлөө издөө табуу жоготуу унутуу эсте сактоо чечүү тандоо өзгөртүү калуу "+
-    "болуу көрүнүү жагуу кубануу кайгыруу коркуу таң калуу күлүү ыйлоо ыр ырдоо бийлөө сүрөт тартуу куруу "+
-    "бузуу оңдоо ачуу жабуу күйгүзүү өчүрүү көтөрүү түшүрүү ыргытуу кармоо алып баруу киргизүү чыгуу кирүү "+
-    "кайтуу даярдануу кийинүү чечинүү жуунуу тарануу эртең мененки тамак түшкү тамак кечки тамак тамактануу "+
-    "бышыруу тазалоо жуу үтүктөө акча банк дүкөн базар баа арзандатуу товар сатып алуучу сатуучу касса чек "+
-    "эсеп айлык маяна салык кредит автобус поезд метро учак кеме велосипед жол көчө аянт көпүрө имарат батир "+
-    "бөлмө ашкана жуунуучу бөлмө даараткана жатар бөлмө балкон тепкич чатыр дубал бак короо аба ырайы жамгыр "+
-    "кар шамал туман булут чагылган асман жаа муздак жылуулук жарык караңгы эрте кеч тез жай катуу үн акырын "+
-    "үн алыс жакын бийик жапыз көп аз көбүрөөк азыраак жакшыраак начар жаңы эски жаш карыя сулуу көрксүз "+
-    "акылдуу акмак мээримдүү каардуу күчтүү алсыз бай кедей таза кир толук бош оор жеңил курч мокок таттуу "+
-    "ачуу туздуу кычкыл даамдуу даамсыз").split(' '),
+    en: ("a the be to of and in that have it for not on with he as you do at this but his by from they we say her "+
+    "she or an will my one all would there their what so up out if about who get which go me when make can "+
+    "like time no just him know take people into year your good some could them see other than then now look "+
+    "only come its over think also back after use two how our work first well way even new want because any "+
+    "these give day most us again against always animal answer ask baby become before begin believe better "+
+    "between big black blue body book born bring brother building call car care carry certain change child "+
+    "city clear close cold color common company continue control cost country course cut dark daughter death "+
+    "develop die different difficulty door draw during early earth east easy eat effect end enough evening "+
+    "every example eye face fact fall family far father fear feel few field fight figure fill final find fine "+
+    "finger finish fire five floor fly food foot force form four free friend full game garden girl government "+
+    "great green ground grow hand happen hard head health hear heart heavy help high hold hope hospital hour "+
+    "house however human idea important increase indeed information inside interest issue keep kind kitchen "+
+    "large last late lead learn leave left level life light line list little live local long love machine "+
+    "main man matter maybe mean measure meet member mention mind minute mission moment money month morning "+
+    "mother mouth move music name nature near need never news next night north nothing notice number often "+
+    "once open order paper parent part party pass past pattern pay peace perhaps person picture piece place "+
+    "plan plant play point poor position possible power present pretty problem process produce program "+
+    "project public purpose quality question quickly quiet rate rather reach read reason receive record red "+
+    "remain remember report rest result right rise room run school season second section seem sense series "+
+    "serve set several shall short show side simple since sing sister site situation size skill small society "+
+    "soldier something sound source south space speak special stand start state stay step still stop story "+
+    "street strong student study system table talk teach team term thank thing third though thousand today "+
+    "together tomorrow tonight top toward town travel tree true try turn under understand until upon voice "+
+    "wait walk wall watch water weight west while white wide wife win wind woman word world write wrong yard "+
+    "young don't can't won't it's that's let's there's didn't isn't wasn't doesn't aren't couldn't wouldn't "+
+    "shouldn't haven't you're they're we're what's three six seven eight nine ten twenty hundred zero half "+
+    "yellow orange purple pink brown gray silver gold aunt uncle cousin grandma grandpa son husband teacher "+
+    "lesson pencil pen desk homework exam test library board science history notebook page letter bed chair "+
+    "window roof cup plate spoon clock key box bag bottle sun moon star sky cloud rain snow river lake sea "+
+    "ocean mountain forest flower leaf grass beach storm weather spring summer winter dog cat bird fish horse "+
+    "cow lion tiger bear chicken rabbit bread milk apple banana rice soup egg tea coffee meat fruit cake "+
+    "lunch dinner breakfast road bridge park shop market bank station bus train airport office village map "+
+    "job business doctor nurse farmer driver cook price sell buy build fix week weekend yesterday soon later "+
+    "already future birthday holiday happy sad angry afraid tired excited proud calm worried brave smile "+
+    "laugh cry fun funny ball football swim jump race goal player score bike sport throw catch computer phone "+
+    "screen keyboard internet camera video photo message type beautiful clean hot warm fast slow quick old "+
+    "tall soft loud bright sweet empty busy safe ready real healthy smart dry fresh friendly useful wonderful "+
+    "climb dance wash sleep wake dream sit push pull send choose decide explain share visit enjoy forget "+
+    "follow listen join paint ride drive touch wish agree arrive save search wear slowly carefully almost "+
+    "usually sometimes really here everywhere outside quite very too yet finally suddenly easily probably is "+
+    "are was were been has had did more many much where why should must might may each both same off down "+
+    "through around yes please sorry hello put tell those without above below behind across").split(' '),
+    ru: ("и в я с а к у не на быть тот он как это она но они мы что за из который свой весь год время человек дело "+
+    "жизнь рука день глаз вопрос дом слово случай работа лицо друг сторона страна мир город вода отец мать "+
+    "книга стол окно дверь стена дорога машина поезд компьютер телефон школа университет студент учитель врач "+
+    "магазин деньги хлеб молоко чай солнце луна звезда небо земля лес гора река море зима весна лето осень "+
+    "утро вечер ночь сегодня завтра вчера неделя месяц быстро медленно большой маленький говорить сказать "+
+    "думать знать понимать видеть слышать чувствовать любить хотеть мочь должен нужно можно нельзя делать "+
+    "сделать идти пойти ходить ехать поехать бежать читать писать слушать смотреть играть работать учиться "+
+    "отдыхать спать вставать ложиться начинать продолжать помогать давать брать покупать продавать платить "+
+    "стоить искать находить терять забывать вспоминать решать выбирать менять оставаться становиться казаться "+
+    "нравиться радоваться грустить бояться удивляться улыбаться плакать смеяться петь танцевать рисовать "+
+    "строить ломать чинить открывать закрывать включать выключать поднимать опускать бросать ловить держать "+
+    "нести везти водить летать плавать входить выходить приходить уходить возвращаться собираться готовиться "+
+    "одеваться раздеваться мыться причёсываться завтракать обедать ужинать пить есть готовить убирать стирать "+
+    "гладить банк рынок цена скидка товар покупатель продавец касса чек счёт зарплата налог кредит вклад "+
+    "автобус метро самолёт корабль велосипед улица площадь мост здание квартира комната кухня ванная туалет "+
+    "спальня гостиная балкон лестница крыша забор сад двор погода дождь снег ветер туман облако гроза радуга "+
+    "мороз жара тепло холодно светло темно рано поздно громко тихо далеко близко высоко низко много мало "+
+    "больше меньше лучше хуже новый старый молодой пожилой красивый некрасивый умный глупый добрый злой "+
+    "сильный слабый богатый бедный чистый грязный полный пустой тяжёлый лёгкий острый сладкий горький солёный "+
+    "кислый вкусный невкусный ребёнок один два три четыре пять шесть семь восемь девять десять сто красный "+
+    "синий зелёный жёлтый белый чёрный серый голубой мама папа брат сестра бабушка дедушка сын дочь семья муж "+
+    "жена урок класс ученик учебник тетрадь ручка карандаш доска задача ответ экзамен рюкзак диван кровать "+
+    "стул шкаф лампа зеркало холодильник тарелка чашка ложка вилка часы дерево цветок трава лист камень озеро "+
+    "поле птица рыба собака кошка лошадь корова медведь ёлка яблоко банан апельсин картошка морковь помидор "+
+    "сыр масло яйцо мясо суп сахар соль мёд торт сок кофе пирог парк театр музей больница аптека библиотека "+
+    "вокзал аэропорт кафе ресторан стадион офис начальник проект задание встреча письмо инженер водитель "+
+    "повар строитель директор минута час выходные праздник сейчас потом всегда никогда иногда часто редко уже "+
+    "ещё радость счастье любовь улыбка весёлый грустный спокойный надежда мечта сердце футбол мяч игра "+
+    "команда спорт победа хоккей теннис лыжи интернет сайт клавиатура экран программа сообщение ноутбук "+
+    "кнопка пароль где когда почему зачем куда сколько очень тоже только здесь там вместе опять снова почти "+
+    "теперь или если чтобы даже всё его её их мой твой наш кто нет высокий низкий длинный короткий тёплый "+
+    "холодный интересный важный трудный быстрый громкий тихий хороший плохой первый последний свободный "+
+    "спрашивать отвечать звонить ждать жить сидеть стоять лежать бегать прыгать гулять учить объяснять "+
+    "рассказывать показывать считать получать путешествовать заканчивать").split(' '),
+    uz: ("u va bu men sen biz siz ular bor keldi ketdi kitob uy ish kun tun vaqt hayot odam bola ota ona shahar "+
+    "qishloq maktab talaba kompyuter internet telefon mashina suv non choy osh bozor pul dars savol javob "+
+    "yaxshi yomon katta kichik issiq sovuq tez sekin baland past keng tor oq qora qizil sariq yashil bugun "+
+    "ertaga kecha hafta oy yil soat daqiqa soniya bahor yoz kuz qish dengiz daryo gul daraxt hayvon qush "+
+    "baliq it mushuk ot sigir sut meva sabzavot olma uzum gapirmoq aytmoq bilmoq tushunmoq eshitmoq his "+
+    "qilmoq sevmoq xohlamoq kerak mumkin bormoq kelmoq yugurmoq yozmoq tinglamoq ishlamoq dam olmoq uxlamoq "+
+    "turmoq yotmoq boshlamoq tugatmoq davom etmoq yordam bermoq sotib sotmoq qidirmoq topmoq unutmoq eslamoq "+
+    "hal tanlamoq qolmoq yoqmoq xursand ajablanmoq kulmoq qoshiq tushmoq chizmoq qurmoq buzmoq tuzatmoq "+
+    "ochmoq yopmoq tushirmoq tashlamoq ushlamoq olib kiritmoq chiqmoq kirmoq qaytmoq tayyorlanmoq kiyinmoq "+
+    "yechinmoq yuvinmoq taranmoq nonushta tushlik kechki ovqat yemoq ichmoq pishirmoq tozalamoq yuvmoq "+
+    "dazmollamoq bank narx chegirma mahsulot xaridor sotuvchi kassa chek hisob maosh soliq kredit avtobus "+
+    "poyezd metro samolyot kema velosiped maydon bino kvartira xona oshxona hammom hojatxona yotoqxona "+
+    "mehmonxona balkon zina tom devor hovli ob-havo qor shamol tuman bulut chaqmoq kamalak issiqlik erta kech "+
+    "ovoz uzoq yaqin kam kamroq yaxshiroq yomonroq yangi eski yosh keksa chiroyli xunuk aqlli mehribon yovuz "+
+    "kuchli ojiz boy toza iflos bosh yengil shirin achchiq sho'r nordon mazali mazasiz yo'q do'st o'qituvchi "+
+    "yo'l do'kon ko'k tog' o'rmon go'sht o'ylamoq ko'rmoq bo'lmaydi o'qimoq o'ynamoq o'rganmoq to'lamoq "+
+    "yo'qotmoq o'zgartirmoq bo'lmoq ko'rinmoq g'amgin qo'rqmoq yig'lamoq o'chirmoq ko'tarmoq ko'cha ko'prik "+
+    "bog' yomg'ir yorug' qorong'i ko'p ko'proq kambag'al to'liq og'ir o'tkir o'tmas bir ikki uch to'rt besh "+
+    "olti yetti sakkiz to'qqiz o'n yuz ming binafsha pushti kulrang rang aka uka opa singil bobo buvi oila "+
+    "o'g'il qiz qo'shni mehmon daftar qalam sinf o'quvchi imtihon vazifa tarix so'z kutubxona lug'at ta'lim "+
+    "bilim ma'no ta'til eshik deraza stol gilam chiroq piyola choynak ko'rpa kalit quyosh yulduz osmon yer "+
+    "tosh cho'l ko'l dala tabiat olov havo to'lqin qirg'oq o'simlik bo'ri sher qo'y xo'roz kapalak piyoz "+
+    "kartoshka pomidor tuxum tuz palov sho'rva lag'mon o'rik shaftoli qovun yong'oq bekat shifoxona dorixona "+
+    "teatr stadion aeroport mahalla shifokor haydovchi oshpaz muhandis dasturchi rassom mehnat ertalab "+
+    "kechqurun hozir keyin oldin ba'zan bayram quvonch baxt g'azab qayg'u sevgi do'stlik orzu ishonch qo'rquv "+
+    "futbol shaxmat suzish o'yin to'p musobaqa g'alaba mashg'ulot dastur sayt klaviatura sichqoncha ekran "+
+    "parol xabar uzun qisqa chuqur yumshoq to'g'ri oson qiyin muhim ho'l tinch sog' bo'sh go'zal juda faqat "+
+    "albatta hamma lekin chunki qanday rahmat salom yashamoq o'tirmoq kutmoq qo'ymoq yurmoq yig'moq sug'ormoq "+
+    "so'ramoq yubormoq o'rgatmoq to'xtamoq ko'chirmoq ko'rsatmoq qo'l oyoq ko'z quloq og'iz yurak bo'yin "+
+    "sog'liq kiyim ko'ylak do'ppi qo'lqop sovg'a musiqa san'at she'r e'lon mas'ul ta'm ma'lumot ta'sir "+
+    "e'tibor a'lo qal'a qo'shiq raqs qog'oz o'yinchoq to'y o'z").split(' '),
+    kk: ("және бұл ол мен сен біз сіз олар бар жоқ келді кетті кітап үй жұмыс күн түн уақыт өмір адам бала әке ана "+
+    "дос қала ауыл мектеп студент мұғалім компьютер интернет телефон машина жол су нан шай ас базар дүкен "+
+    "ақша сабақ сұрақ жауап жақсы жаман үлкен кіші ыстық суық тез баяу биік аласа кең тар ақ қара қызыл көк "+
+    "сары жасыл бүгін ертең кеше апта ай жыл сағат минут секунд көктем жаз күз қыс тау теңіз өзен орман гүл "+
+    "ағаш жануар құс балық ит мысық ат сиыр сүт ет жеміс көкөніс алма жүзім сөйлеу айту ойлау білу түсіну "+
+    "көру есту сезіну сүю қалау керек болады болмайды істеу бару келу жүгіру оқу жазу тыңдау ойнау үйрену "+
+    "демалу ұйықтау тұру жату бастау аяқтау жалғастыру көмектесу беру алу сатып сату төлеу іздеу табу жоғалту "+
+    "ұмыту сақтау шешу таңдау өзгерту қалу болу көріну ұнау қуану мұңаю қорқу таңғалу күлу жылау ән би билеу "+
+    "сурет салу бұзу жөндеу ашу жабу қосу өшіру көтеру түсіру лақтыру ұстау апару кіргізу шығу кіру қайту "+
+    "дайындалу киіну шешіну жуыну тарану таңғы ішу түскі кешкі тамақтану пісіру тазалау жуу үтіктеу банк баға "+
+    "жеңілдік тауар алушы сатушы шот жалақы салық несие автобус пойыз метро ұшақ кеме велосипед көше алаң "+
+    "көпір ғимарат пәтер бөлме асхана жуынатын дәретхана жатын балкон баспалдақ шатыр қабырға бақ аула ауа "+
+    "жаңбыр қар жел тұман бұлт найзағай кемпірқосақ аяз жылу жарық қараңғы ерте кеш қатты дауыс ащы алыс "+
+    "жақын көп аз көбірек азырақ жақсырақ нашарлау жаңа ескі жас қарт әдемі ұсқынсыз ақылды мейірімді зұлым "+
+    "күшті әлсіз бай кедей таза лас толық бос ауыр жеңіл өткір мұқал тәтті тұзды қышқыл дәмді дәмсіз бір екі "+
+    "үш төрт бес алты жеті сегіз тоғыз он жүз мың қоңыр сұр күлгін аға апа іні қарындас сіңлі әпке ата әже "+
+    "немере отбасы ұл қыз бауыр дәптер қалам қарындаш сызғыш өшіргіш сынып тақта парта оқушы кітапхана сөздік "+
+    "есеп тапсырма білім тарих тіл әріп сөз сөйлем мәтін өлең ертегі есік терезе үстел орындық төсек шам "+
+    "кілем айна пеш қасық пышақ кесе жастық көрпе кілт еден төбе сабын аспан жұлдыз жер тас құм шөп жапырақ "+
+    "тамыр дала көл мұз түлкі қасқыр аю қоян қой жылқы көбелек ара піл ірімшік май күріш қант тұз бал "+
+    "жұмыртқа сәбіз қарбыз қауын шие тамақ аурухана саябақ аялдама көлік дәрігер жүргізуші аспаз әнші суретші "+
+    "жазушы еңбек хат таң түс таңертең кешке түнде қазір әрқашан кейін бұрын қуаныш бақыт қайғы махаббат үміт "+
+    "сенім көңіл жүрек тыныш сабыр көңілді доп күрес жүзу жарыс ойын жеңіс жеңу секіру ғаламтор бағдарлама "+
+    "құрылғы пернетақта тінтуір хабарлама бейне теледидар ақпарат жүйе ойыншық жүру отыру жеу күту сұрау "+
+    "жіберу қарау ұшу шақыру кездесу сөйлесу түсіндіру санау бояу жинау өсу тоқтау сену ұзын қысқа жіңішке "+
+    "жұмсақ түзу терең жылы салқын жалқау қызық қиын оңай маңызды пайдалы сұлу арзан қымбат соңғы дұрыс "+
+    "жылдам өте бірге жалғыз қайда қашан қалай рақмет сәлем әрине мүмкін бас көз құлақ мұрын ауыз тіс қол аяқ "+
+    "саусақ шаш бет көйлек шалбар етік жейде").split(' '),
+    ky: ("жана бул ал мен сен биз силер алар бар жок келди кетти китеп үй иш күн түн убакыт жашоо адам бала ата "+
+    "эне дос шаар айыл мектеп студент мугалим компьютер интернет телефон машина жол суу нан чай базар дүкөн "+
+    "акча сабак суроо жооп жакшы жаман чоң кичине ысык муздак тез жай бийик төмөн кең тар ак кара кызыл көк "+
+    "сары жашыл бүгүн эртең кечээ жума ай жыл саат мүнөт секунд жаз күз кыш тоо деңиз дарыя токой гүл дарак "+
+    "жаныбар куш балык ит мышык ат уй сүт эт мөмө жашылча алма жүзүм сүйлөө айтуу ойлоо билүү түшүнүү көрүү "+
+    "угуу сезүү сүйүү каалоо керек болот болбойт кылуу баруу келүү чуркоо окуу жазуу ойноо иштөө үйрөнүү эс "+
+    "алуу уктоо туруу жатуу баштоо бүтүрүү улантуу жардам берүү сатуу төлөө издөө табуу жоготуу унутуу сактоо "+
+    "чечүү тандоо өзгөртүү калуу болуу көрүнүү жагуу кубануу кайгыруу коркуу таң күлүү ыйлоо ыр ырдоо бийлөө "+
+    "сүрөт тартуу куруу бузуу оңдоо ачуу жабуу күйгүзүү өчүрүү көтөрүү түшүрүү ыргытуу кармоо киргизүү чыгуу "+
+    "кирүү кайтуу даярдануу кийинүү чечинүү жуунуу тарануу тамак түшкү кечки тамактануу бышыруу тазалоо жуу "+
+    "үтүктөө банк баа арзандатуу алуучу сатуучу касса чек эсеп айлык маяна салык автобус поезд метро учак "+
+    "кеме велосипед көчө аянт көпүрө имарат батир бөлмө ашкана даараткана балкон тепкич чатыр дубал бак короо "+
+    "аба жамгыр кар шамал туман булут чагылган асман жаа жылуулук жарык караңгы эрте кеч катуу үн акырын алыс "+
+    "жакын жапыз көп аз көбүрөөк азыраак жакшыраак начар жаңы эски жаш карыя сулуу көрксүз акылдуу мээримдүү "+
+    "каардуу күчтүү алсыз бай кедей таза кир толук бош оор жеңил курч мокок таттуу туздуу кычкыл даамдуу "+
+    "даамсыз аш бир эки үч төрт беш алты жети сегиз тогуз он жыйырма отуз кырк элүү алтымыш жетимиш сексен "+
+    "токсон жүз миң боз күрөң кызгылт ачык апа ага эже ини сиңди карындаш аял күйөө уул кыз тууган үй-бүлө "+
+    "дептер калем сызгыч өчүргүч такта тамга сөз сүйлөм сан сынак тапшырма окуучу билим тил тарых китепкана "+
+    "баштык кагаз эшик терезе килем жаздык үстөл отургуч чыны табак кашык казан чайнек меш от шам күзгү самын "+
+    "ачкыч керебет жер таш кум чөп жалбырак көл булак талаа жайлоо жылдыз аска толкун муз кой эчки төө жылкы "+
+    "тоок каз карга бүркүт карышкыр түлкү коён аюу жолборс чычкан жылан бака көпөлөк аары шорпо палоо боорсок "+
+    "май туз шекер бал айран күрүч ун жумуртка сабиз пияз алмурут жаңгак жемиш дарбыз коон кулпунай анар баш "+
+    "көз кулак мурун ооз тиш кол бут бармак чач жүрөк бет дарыкана жумуш кызмат дарыгер айдоочу дыйкан уста "+
+    "акын ырчы жазуучу аялдама апта мезгил азыр кийин дайыма качан дүйшөмбү шейшемби шаршемби бейшемби ишемби "+
+    "жекшемби кубаныч кайгы бакыт бактылуу капа тынч үмүт достук кызыгуу чарчоо ачка күлкү жылмаюу күрөш "+
+    "жарыш оюн топ жеңиш жеңүү сүзүү секирүү оюнчу байланыш кабар билдирүү жүктөө терүү ылдамдык узун кыска "+
+    "тегерек түз жумшак суук жылуу кургак тунук терең кооз ыңгайлуу оңой кыйын маанилүү кызыктуу чынчыл башка "+
+    "бирге жалгыз абдан өтө дагы кайра эми анан бирок эгер жогору ылдый сыртта алдыга артка ооба рахмат "+
+    "саламатсызбы сураныч ичүү жүрүү учуу кароо күтүү чакыруу тыңшоо эсептөө бөлүшүү үйрөтүү жетүү токтоо "+
+    "отуруу жүгүрүү жасоо колдонуу сүйлөшүү дүйнө өлкө эл тынчтык кийим көйнөк шым калпак белек майрам той "+
+    "конок коңшу саякат кат жомок оюнчук оорукана").split(' '),
   };
 
   const codeSnippets = {

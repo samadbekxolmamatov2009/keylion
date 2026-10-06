@@ -11,7 +11,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { createClient } from '@libsql/client';
-import { SCHEMA } from '../netlify/functions/schema.mjs';
+import { SCHEMA, MIGRATIONS } from '../netlify/functions/schema.mjs';
 import { encodeFirebaseHash } from '../netlify/functions/firebase-scrypt.mjs';
 
 const [rtdbPath, authPath, hashPath] = process.argv.slice(2);
@@ -23,6 +23,9 @@ const authByUid = Object.fromEntries(authUsers.map((u) => [u.localId, u]));
 
 const db = createClient({ url: process.env.TURSO_DATABASE_URL, authToken: process.env.TURSO_AUTH_TOKEN });
 await db.batch(SCHEMA.map((sql) => ({ sql, args: [] })), 'write');
+for (const sql of MIGRATIONS) {
+  try { await db.execute(sql); } catch (e) { if (!/duplicate column/i.test(String(e.message))) throw e; }
+}
 
 const uidMap = {};          // firebase uid -> new id
 const stmts = [];

@@ -7,7 +7,7 @@
   let playerName = "o'yinchi" + Math.floor(100 + Math.random()*900);
   let cachedProfile = null;
   let googleClientId = null;
-  const TOKEN_KEY = 'keylion.token';
+  const TOKEN_KEY = 'tezlash.token';
 
   /* ---- on-screen debug log (tap the status dot to open) ---- */
   const debugLines = [];
@@ -20,7 +20,7 @@
       panel.innerHTML = debugLines.map(l=>'<div>'+escapeHtml(l)+'</div>').join('');
       panel.scrollTop = panel.scrollHeight;
     }
-    console.log('[keylion]', msg);
+    console.log('[tezlash]', msg);
   }
   document.getElementById('fbStatus').addEventListener('click', ()=>{
     const panel = document.getElementById('debugPanel');
@@ -73,10 +73,10 @@
     playerName = p.name;
     syncProfileUI(playerName);
     profileBestWpm = p.bestWpm || 0;
-    document.getElementById('btnOpenAuth').style.display = isGuest ? 'flex' : 'none';
-    document.getElementById('btnLogout').style.display = isGuest ? 'none' : 'flex';
-    document.getElementById('profileModalLevel').textContent = isGuest ? '' : 'lvl ' + (1 + Math.floor(profileBestWpm/10));
+    syncPillTier(isGuest ? null : p.ratingWpm);
     renderStreakBadge(isGuest ? null : p.streak);
+    if(!isGuest) adoptServerPrefs(p.settings);
+    if(currentView === 'profile') renderProfile();
     setFbStatus('ok', 'ulandi');
     logDebug('auth OK, uid=' + uid.slice(0,8) + ', guest=' + isGuest);
   }
@@ -121,12 +121,16 @@
     if(roomParam){
       switchView('race');
       joinRoomFromUrl(roomParam.toUpperCase());
+    } else {
+      routeFromHash();
     }
   }
 
-  /* ---- stats: server stores totals; achievements/streak are evaluated here (see achievements.js) ---- */
-  function updateUserStats(wpm, acc, modeLabel, missedSnapshot, langInfo, directUnlockId){
-    if(!fbReady || !uid || isGuest) return;
+  /* ---- stats: server stores totals; achievements/streak are evaluated here (see achievements.js).
+     `extra` carries the raw counts the server re-checks: kind, textLang, durationMs, correct, typed,
+     testToken (or raceCode), intervals. Returns the request promise (resolves to the server reply or null). */
+  function updateUserStats(wpm, acc, modeLabel, missedSnapshot, langInfo, directUnlockId, extra){
+    if(!fbReady || !uid || isGuest) return null;
     const p = cachedProfile || {};
     const testsCount = (p.testsCount||0) + 1;
     const bestWpm = Math.max(p.bestWpm||0, wpm);
@@ -139,21 +143,18 @@
       const direct = ACHIEVEMENTS.find(a=> a.id===directUnlockId);
       if(direct) newly.push(direct);
     }
-    api('POST', '/results', {
+    return api('POST', '/results', Object.assign({
       wpm, acc, mode: modeLabel, missed: missedSnapshot || {}, langInfo: langInfo || {}, streak,
       achievements: newly.map(a=> a.id),
-    }).then((res)=>{
+    }, extra || {})).then((res)=>{
       cachedProfile = res.profile;
       profileBestWpm = res.profile.bestWpm;
-      document.getElementById('profileModalLevel').textContent = 'lvl ' + (1 + Math.floor(profileBestWpm/10));
+      syncPillTier(res.profile.ratingWpm);
       renderStreakBadge(res.profile.streak);
-      newly.forEach(a=> showAchievementToast(a));
-    }).catch((err)=> logDebug('XATO natijani saqlashda: ' + err.message));
-  }
-
-  function submitScore(modeLabel, wpm, acc){
-    if(!fbReady) return;
-    api('POST', '/scores', { mode: modeLabel, wpm, acc }).catch(err=> logDebug('XATO score submit: ' + err.message));
+      /* achievements only count when the server accepted the result into the player's stats */
+      newly.filter(a=> res.profile.achievements && res.profile.achievements[a.id]).forEach(a=> showAchievementToast(a));
+      return res;
+    }).catch((err)=>{ logDebug('XATO natijani saqlashda: ' + err.message); return null; });
   }
 
   /* ---- welcome / first-time name modal ---- */
@@ -177,12 +178,11 @@
 
   /* ---- auth modal ---- */
   const authModal = document.getElementById('authModal');
-  document.getElementById('btnOpenAuth').addEventListener('click', ()=>{
-    document.getElementById('profileModal').style.display = 'none';
+  function openAuthModal(){
     document.getElementById('authError').textContent = '';
     document.getElementById('authName').value = playerName;
     authModal.style.display = 'flex';
-  });
+  }
   document.getElementById('authClose').addEventListener('click', ()=> authModal.style.display='none');
   authModal.addEventListener('click', (e)=>{ if(e.target===authModal) authModal.style.display='none'; });
 
@@ -229,9 +229,9 @@
     }
     api('POST', '/auth/signup', { email, password, name }).then(authDone).catch(authFail);
   });
-  document.getElementById('btnLogout').addEventListener('click', ()=>{
+  function doLogout(){
     saveToken(null);
-    document.getElementById('profileModal').style.display = 'none';
     uid = null; fbReady = false; cachedProfile = null;
+    switchView('test');
     initFirebase();
-  });
+  }

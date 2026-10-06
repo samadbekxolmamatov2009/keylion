@@ -4,9 +4,35 @@
       '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
     }[ch]));
   }
-  function applyChar(text, typed, ch){
+  /* keyboard-friendly stand-ins: a typed character in the list counts as the expected one, so texts can
+     keep their real spelling while people type them on an ordinary keyboard —
+     Uzbek oʻ / gʻ / tutuq belgisi with any apostrophe key, Russian ё with е, and the Kazakh / Kyrgyz
+     letters that a Russian layout lacks with their base letter */
+  const CHAR_ALIASES = (()=>{
+    const map = {};
+    const group = (chars)=>{ for(const c of chars) map[c] = chars; };
+    group("'\u2018\u2019\u02BB\u02BC`\u00B4\u2032");          // ' ‘ ’ ʻ ʼ ` ´ ′
+    group('"\u201C\u201D\u00AB\u00BB\u201E');                  // " “ ” « » „
+    group('-\u2013\u2014\u2212');                               // - – — −
+    const base = { 'ё':'е', 'ә':'а', 'ғ':'г', 'қ':'к', 'ң':'н', 'ө':'о', 'ұ':'у', 'ү':'у', 'һ':'х', 'і':'иi' };
+    for(const [letter, plain] of Object.entries(base)){
+      map[letter] = (map[letter] || letter) + plain;
+      map[letter.toUpperCase()] = letter.toUpperCase() + plain.toUpperCase();
+    }
+    map['\u00A0'] = ' \u00A0';
+    return map;
+  })();
+  /* the character to record for key `ch` when `expected` is next in the text. In code (`code` true) two
+     plain-keyboard characters are never interchangeable: ` and ' are different tokens there */
+  function typedAs(expected, ch, code){
+    if(expected === undefined || ch === expected) return ch;
+    if(code && expected < '\u0080' && ch < '\u0080') return ch;
+    const ok = CHAR_ALIASES[expected];
+    return ok && ok.includes(ch) ? expected : ch;
+  }
+  function applyChar(text, typed, ch, code){
     if(typed.length >= text.length) return typed;
-    typed += ch;
+    typed += typedAs(text[typed.length], ch, code);
     while(text[typed.length] === '\n') typed += '\n';
     return typed;
   }

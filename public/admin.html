@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tezlash — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon"  type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .admin-wrap{ width:100%; max-width:1100px; margin:0 auto; padding:40px 24px 64px; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th,td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); }
+  th{ color:var(--text-faint); font-weight:600; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; }
+  .note{ color:var(--text-faint); font-size:13px; margin-bottom:20px; line-height:1.6; }
+  .warn{ background:#3a1414; color:#ffb4b4; padding:12px 16px; border-radius:var(--radius); margin-bottom:20px; font-size:13px; }
+  .admin-tabs{ display:flex; gap:6px; background:var(--bg-elev); border:1px solid var(--border); border-radius:999px; padding:4px; width:fit-content; margin-bottom:24px; }
+  .admin-tabs button{ background:none; border:none; color:var(--text-faint); font-size:13px; font-weight:500; padding:8px 16px; border-radius:999px; }
+  .admin-tabs button.active{ background:var(--bg-elev-2); color:var(--accent); }
+  .admin-tab-panel{ display:none; }
+  .admin-tab-panel.active{ display:block; }
+  .field-row{ margin-bottom:14px; }
+  .field-row label{ display:block; font-size:12px; color:var(--text-faint); margin-bottom:6px; font-family:var(--font-mono); }
+  .field-row input[type=text], .field-row input[type=url]{
+    width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius);
+    padding:9px 12px; color:var(--text); font-size:13px; font-family:var(--font-body);
+  }
+  .field-row.checkbox-row{ display:flex; align-items:center; gap:8px; }
+  .field-row.checkbox-row label{ margin:0; font-size:13px; color:var(--text); font-family:var(--font-body); }
+  #adSaveStatus{ font-size:12px; color:var(--success); min-height:16px; margin-top:10px; }
+  .err{ color:var(--error) !important; }
+  .field-row input[type=file]{ font-size:12px; color:var(--text-faint); }
+  .admin-tabs{ flex-wrap:wrap; }
+  .tab-count{ display:inline-block; min-width:18px; padding:0 5px; margin-left:4px; border-radius:999px; background:var(--error); color:#fff; font-size:10px; line-height:16px; text-align:center; }
+  .tab-count:empty{ display:none; }
+  .kpi-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:12px; margin-bottom:18px; }
+  .kpi{ background:var(--bg-elev); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
+  .kpi b{ display:block; font-family:var(--font-display); font-size:26px; color:var(--accent); }
+  .kpi span{ font-size:11px; color:var(--text-faint); }
+  .kpi.live b::before{ content:''; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--success); margin-right:8px; vertical-align:middle; box-shadow:0 0 8px var(--success); animation: blink 1.6s infinite; }
+  .kpi.alert b{ color:var(--error); }
+  .dash-grid{ display:grid; grid-template-columns: 1.6fr 1fr; gap:16px; }
+  @media (max-width: 860px){ .dash-grid{ grid-template-columns:1fr; } }
+  .bars{ display:flex; align-items:flex-end; gap:3px; height:150px; padding-top:8px; }
+  .bars .bar{ flex:1; display:flex; flex-direction:column; justify-content:flex-end; gap:1px; min-width:0; position:relative; height:100%; }
+  .bars .bar i{ display:block; background:var(--accent); border-radius:2px 2px 0 0; min-height:1px; }
+  .bars .bar i.su{ background:var(--success); }
+  .bars-x{ display:flex; justify-content:space-between; font-size:10px; color:var(--text-faint); margin-top:6px; font-family:var(--font-mono); }
+  .legend{ display:flex; gap:14px; font-size:11px; color:var(--text-faint); margin-top:8px; }
+  .legend i{ display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; background:var(--accent); }
+  .legend i.su{ background:var(--success); }
+  .online-list{ display:flex; flex-direction:column; gap:6px; max-height:260px; overflow:auto; font-size:13px; }
+  .online-list div{ display:flex; justify-content:space-between; gap:10px; }
+  .online-list small{ color:var(--text-faint); }
+  .tag{ display:inline-block; font-size:10px; padding:1px 7px; border-radius:999px; border:1px solid var(--border-strong); color:var(--text-faint); margin-left:6px; vertical-align:1px; }
+  .tag.ban{ border-color:var(--error); color:var(--error); }
+  .tag.flag{ border-color:var(--accent-dim); color:var(--accent); }
+  .tag.ok{ border-color:#3d6b2a; color:var(--success); }
+  .toolbar{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .toolbar input, .toolbar select{ background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; color:var(--text); font-size:13px; font-family:var(--font-body); }
+  .toolbar input{ flex:1; min-width:200px; }
+  .table-wrap{ overflow-x:auto; }
+  tr.clickable{ cursor:pointer; }
+  tr.clickable:hover td{ background:var(--bg-elev-2); }
+  .pager{ display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:12px; font-size:12px; color:var(--text-faint); }
+  .pager .btn{ padding:6px 12px; }
+  .row-actions{ display:flex; gap:6px; }
+  .row-actions .btn{ padding:5px 10px; font-size:12px; }
+  .btn.danger{ border-color:#6b2323; color:#ffb4b4; }
+  .btn.danger:hover{ background:#3a1414; }
+  .user-detail{ margin-bottom:16px; }
+  .user-detail h3{ margin:0 0 6px !important; color:var(--text) !important; font-size:18px !important; text-transform:none !important; }
+  .detail-meta{ font-size:12px; color:var(--text-faint); line-height:1.8; margin-bottom:12px; }
+  .detail-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+  .detail-actions input{ background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:8px 10px; color:var(--text); font-size:13px; width:200px; }
+  .detail-cols{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  @media (max-width: 860px){ .detail-cols{ grid-template-columns:1fr; } }
+  .muted{ color:var(--text-faint); font-size:12px; }
+  .bars .bar{ flex-direction:row; align-items:flex-end; gap:1px; }
+  .bars .bar i{ flex:1; }
+  .ad-guide{ background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; font-size:12px; line-height:1.7; color:var(--text-faint); margin-bottom:18px; }
+  .ad-guide b{ color:var(--text); }
+  .upload-row{ display:flex; gap:8px; align-items:center; margin-bottom:6px; flex-wrap:wrap; }
+  .upload-row .btn{ padding:6px 12px; }
+  .upload-status{ font-size:12px; color:var(--text-faint); margin-top:6px; min-height:16px; }
+  .ad-previews{ display:grid; grid-template-columns: minmax(0,1fr) minmax(0,390px); gap:18px; align-items:start; }
+  .ad-preview-phone{ width:100%; max-width:390px; }
+  @media (max-width: 900px){ .ad-previews{ grid-template-columns: minmax(0,1fr); } }
+  .ad-previews .ad-slot{ margin:0; max-width:none; }
+  .ad-preview-phone .ad-slot.has-mobile .ad-slot-media-wrap{ aspect-ratio: 3 / 1; }
+  .ad-off{ opacity:.45; }
+</style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <a href="index.html" class="logo" style="text-decoration:none;">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g transform="matrix(1 0 -0.2126 1 4.851 0)"><rect x="7.2" y="6" width="5.2" height="14.5" rx="1.3"/><rect x="7.2" y="3.5" width="12.2" height="6.6" rx="1.3"/><rect x="0" y="3.5" width="9" height="2.6" rx="1.3"/><rect x="3" y="7.5" width="6" height="2.6" rx="1.3"/></g></svg>
+    </div>
+    <span class="logo-wordmark">Tez<span>lash</span></span>
+  </a>
+  <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint); letter-spacing:.4px; text-transform:uppercase;">admin panel</span>
+</header>
+
+<main style="align-items:stretch; padding:0;">
+<div class="admin-wrap">
+
+  <h2 class="view-title" style="text-align:left; margin-bottom:10px;">Admin panel</h2>
+  <p class="note">
+    Bu sahifa navigatsiyada ko'rinmaydi va hech qayerga havola qilinmagan — faqat siz uni to'g'ridan-to'g'ri URL orqali ochasiz.
+    Haqiqiy himoya serverda: kirish <code>ADMIN_EMAIL</code> / <code>ADMIN_PASSWORD</code> (Netlify muhit o'zgaruvchilari) bilan tekshiriladi.
+    <b>Foydalanuvchilarning parollari bu yerda yo'q va bo'lmaydi ham</b> — ular faqat xesh (bir tomonlama shifrlangan) holda saqlanadi.
+  </p>
+
+  <div id="gate" class="panel" style="max-width:380px; margin:32px auto; text-align:center;">
+    <p style="margin:0 0 16px; font-size:13px; color:var(--text-faint);">Admin email va parolingiz bilan kiring.</p>
+    <input type="email" id="gateEmail" placeholder="email" autocomplete="username" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:8px; font-family:var(--font-body);">
+    <input type="password" id="gatePassword" placeholder="parol (kamida 6 belgi)" autocomplete="current-password" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:12px; font-family:var(--font-body);">
+    <button class="btn accent" id="btnAdminLogin" style="width:100%; justify-content:center;">kirish</button>
+    <div id="gateError" style="color:var(--error); font-size:12px; margin-top:10px; min-height:14px;"></div>
+  </div>
+  <div id="adminBody" style="display:none;">
+    <div class="admin-tabs" id="adminTabs">
+      <button data-tab="dash" class="active">Dashboard</button>
+      <button data-tab="users">Foydalanuvchilar</button>
+      <button data-tab="mod">Moderatsiya <span class="tab-count" id="flagCount"></span></button>
+      <button data-tab="ad">Reklama</button>
+      <button data-tab="log">Jurnal</button>
+    </div>
+
+    <!-- DASHBOARD TAB -->
+    <div class="admin-tab-panel active" id="tab-dash">
+      <div class="kpi-grid" id="kpiGrid"><div class="kpi"><b>…</b><span>yuklanmoqda</span></div></div>
+      <div class="dash-grid">
+        <div class="panel">
+          <h3>so'nggi 30 kun</h3>
+          <div class="bars" id="dailyBars"></div>
+          <div class="bars-x" id="dailyBarsX"></div>
+          <div class="legend"><span><i></i>testlar</span><span><i class="su"></i>yangi foydalanuvchilar</span></div>
+        </div>
+        <div class="panel">
+          <h3>hozir saytda (5 daqiqa)</h3>
+          <div class="online-list" id="onlineList"></div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:10px;">Har 30 soniyada avtomatik yangilanadi.</p>
+    </div>
+
+    <!-- USERS TAB -->
+    <div class="admin-tab-panel" id="tab-users">
+      <div class="panel user-detail" id="userDetail" style="display:none;"></div>
+      <div class="panel">
+        <div class="toolbar">
+          <input type="search" id="userSearch" placeholder="ism, email yoki ID bo'yicha qidirish">
+          <select id="userKind">
+            <option value="user">ro'yxatdan o'tganlar</option>
+            <option value="guest">mehmonlar</option>
+            <option value="banned">bloklanganlar</option>
+            <option value="all">hammasi</option>
+          </select>
+          <select id="userSort">
+            <option value="last">oxirgi faollik</option>
+            <option value="created">ro'yxatdan o'tgan sana</option>
+            <option value="best">eng yaxshi wpm</option>
+            <option value="tests">testlar soni</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>ism</th><th>email</th><th>ro'yxatdan o'tgan</th><th>oxirgi faollik</th><th>testlar</th><th>eng yaxshi</th><th>daraja</th>
+            </tr></thead>
+            <tbody id="usersBody"><tr><td colspan="7">yuklanmoqda...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pager"><span id="userPageInfo"></span><button class="btn" id="userPrev">←</button><button class="btn" id="userNext">→</button></div>
+      </div>
+    </div>
+
+    <!-- MODERATION TAB -->
+    <div class="admin-tab-panel panel" id="tab-mod">
+      <p class="note">
+        Server shubhali deb belgilagan natijalar: juda tez (220+ wpm), server vaqtidan tezroq tugatilgan, xom ma'lumotga mos kelmaydigan
+        yoki "robot" ritmidagi yozuv. Ular leaderboard'da <b>ko'rinmaydi</b>, toki siz tasdiqlamaguningizcha.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>o'yinchi</th><th>wpm</th><th>aniqlik</th><th>rejim</th><th>sana</th><th>sabab</th><th></th></tr></thead>
+          <tbody id="flaggedBody"><tr><td colspan="7">yuklanmoqda...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LOG TAB -->
+    <div class="admin-tab-panel panel" id="tab-log">
+      <p class="note">Admin panelda qilingan har bir amal shu yerda yoziladi.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>vaqt</th><th>amal</th><th>kimga</th><th>tafsilot</th></tr></thead>
+          <tbody id="logBody"><tr><td colspan="4">yuklanmoqda...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AD TAB -->
+    <div class="admin-tab-panel panel" id="tab-ad">
+      <h3>statistika (30 kun)</h3>
+      <div class="kpi-grid" id="adKpis"></div>
+      <div class="bars" id="adBars" style="height:90px;"></div>
+      <div class="bars-x" id="adBarsX"></div>
+      <div class="legend" style="margin-bottom:24px;"><span><i></i>ko'rishlar</span><span><i class="su"></i>bosishlar</span></div>
+      <p class="note">
+        Reklama test sahifasida, yozish maydoni va natijalar <b>ostida</b> chiqadi; foydalanuvchi yozayotganda xiralashadi
+        va video to'xtaydi. "Ko'rish" — reklama yuklanib, kamida yarmi 1 soniya ekranda turganda, bir kishiga kuniga bir marta
+        sanaladi; "bosish" — faqat havola bo'lsa.
+      </p>
+      <div class="ad-guide">
+        <b>O'lchamlar:</b>
+        kompyuter banneri — <b>1600×200 px (8:1)</b>, JPG/PNG/WebP, 5 MB gacha ·
+        telefon banneri (ixtiyoriy) — <b>900×300 px (3:1)</b>; bo'lmasa telefonda ham 8:1 banner ko'rsatiladi ·
+        video — <b>8:1</b>, MP4 (H.264), ovozsiz, 10–15 soniya, 5 MB gacha. Rasm ramkaga to'liq to'ldiriladi:
+        muhim matn va logotipni chetlardan uzoqroq, markazga joylang.
+      </div>
+      <div class="field-row checkbox-row">
+        <input type="checkbox" id="adEnabled">
+        <label for="adEnabled">Reklama yoqilgan (saytda ko'rsatilsin)</label>
+      </div>
+      <div class="ad-fields">
+        <div class="field-row">
+          <label for="adImageUrl">Kompyuter banneri (8:1) — yuklang yoki https:// manzil kiriting</label>
+          <div class="upload-row"><input type="file" id="adImageFile" accept="image/jpeg,image/png,image/webp,image/gif"><button class="btn" type="button" data-upload="image">yuklash</button></div>
+          <input type="url" id="adImageUrl" placeholder="https://... yoki yuklangan fayl">
+          <div class="upload-status" id="adImageStatus"></div>
+        </div>
+        <div class="field-row">
+          <label for="adMobileImageUrl">Telefon banneri (3:1, ixtiyoriy)</label>
+          <div class="upload-row"><input type="file" id="adMobileImageFile" accept="image/jpeg,image/png,image/webp,image/gif"><button class="btn" type="button" data-upload="mobile">yuklash</button></div>
+          <input type="url" id="adMobileImageUrl" placeholder="https://... yoki yuklangan fayl">
+          <div class="upload-status" id="adMobileImageStatus"></div>
+        </div>
+        <div class="field-row">
+          <label for="adVideoUrl">Video (8:1, ixtiyoriy) — bo'lsa rasm o'rniga video ko'rsatiladi; video ochilmasa rasm chiqadi</label>
+          <div class="upload-row"><input type="file" id="adVideoFile" accept="video/mp4,video/webm"><button class="btn" type="button" data-upload="video">yuklash</button></div>
+          <input type="url" id="adVideoUrl" placeholder="https://.../reklama.mp4 yoki yuklangan fayl">
+          <div class="upload-status" id="adVideoStatus"></div>
+        </div>
+        <div class="field-row">
+          <label for="adLinkUrl">Havola (bosilganda ochiladi; https:// bilan boshlansin, bo'sh qolsa reklama bosilmaydi)</label>
+          <input type="url" id="adLinkUrl" placeholder="https://...">
+        </div>
+        <div class="field-row">
+          <label for="adText">Qisqa matn (ixtiyoriy, 120 belgigacha; bo'sh bo'lsa matn qatori ko'rinmaydi)</label>
+          <input type="text" id="adText" maxlength="120" placeholder="masalan: onlayn matematika kurslari — DTM tayyorgarligi">
+        </div>
+      </div>
+      <button class="btn accent" id="btnSaveAd">saqlash</button>
+      <div id="adSaveStatus"></div>
+
+      <h3 style="margin:28px 0 12px;">ko'rinishi <span class="muted" id="adPreviewState"></span></h3>
+      <div class="ad-previews">
+        <div><div class="muted" style="margin-bottom:6px;">kompyuter</div><div id="adPreviewDesktop"></div></div>
+        <div class="ad-preview-phone"><div class="muted" style="margin-bottom:6px;">telefon (390 px)</div><div id="adPreviewMobile"></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<script>
+  /* Admin panel talks to /api/admin/* with a short-lived token from /api/admin/login
+     (ADMIN_EMAIL / ADMIN_PASSWORD are Netlify environment variables). */
+  let adminToken = null;
+  async function adminApi(method, path, body, raw){
+    const headers = adminToken ? { Authorization: 'Bearer ' + adminToken } : {};
+    if(!raw) headers['Content-Type'] = 'application/json';
+    const res = await fetch('/api' + path, { method, headers, body: raw ? body : (body === undefined ? undefined : JSON.stringify(body)) });
+    const data = await res.json().catch(()=> ({}));
+    if(!res.ok){ const e = new Error(data.error || ('HTTP ' + res.status)); e.status = res.status; throw e; }
+    return data;
+  }
+
+  function showAdmin(){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('adminBody').style.display = 'block';
+    loadDashboard();
+    loadAdSettings();
+  }
+  function showGate(){
+    document.getElementById('gate').style.display = 'block';
+    document.getElementById('adminBody').style.display = 'none';
+  }
+
+  document.getElementById('btnAdminLogin').addEventListener('click', ()=>{
+    const email = document.getElementById('gateEmail').value.trim();
+    const password = document.getElementById('gatePassword').value;
+    const errEl = document.getElementById('gateError');
+    errEl.textContent = '';
+    adminApi('POST', '/admin/login', { email, password }).then((res)=>{
+      adminToken = res.token;
+      try{ sessionStorage.setItem('tezlash.admin', adminToken); }catch(e){}
+      showAdmin();
+    }).catch((err)=>{
+      errEl.textContent = err.status === 401 ? 'Email yoki parol noto\'g\'ri.' : 'Xato: ' + err.message;
+    });
+  });
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, ch=>({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[ch]));
+  }
+
+  function fmtDate(ts){
+    if(!ts) return '—';
+    const d = new Date(ts);
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /* ---- tabs ---- */
+  let activeTab = 'dash';
+  document.getElementById('adminTabs').addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-tab]');
+    if(!btn) return;
+    activeTab = btn.dataset.tab;
+    document.querySelectorAll('#adminTabs button').forEach(b=> b.classList.toggle('active', b===btn));
+    document.querySelectorAll('.admin-tab-panel').forEach(p=> p.classList.toggle('active', p.id==='tab-'+activeTab));
+    ({ dash: loadDashboard, users: loadUsers, mod: loadFlagged, ad: loadAdStats, log: loadLog })[activeTab]();
+  });
+
+  /* any 401/403 means the 1-day admin token expired: back to the login form */
+  function adminFail(err, target, cols){
+    if(err.status === 401 || err.status === 403){
+      adminToken = null;
+      try{ sessionStorage.removeItem('tezlash.admin'); }catch(e){}
+      showGate();
+      return;
+    }
+    if(target) document.getElementById(target).innerHTML = '<tr><td colspan="'+cols+'" class="err">Xato: '+escapeHtml(err.message)+'</td></tr>';
+  }
+
+  function fmtAgo(ts){
+    if(!ts) return '—';
+    const s = Math.round((Date.now() - ts) / 1000);
+    if(s < 60) return 'hozir';
+    if(s < 3600) return Math.round(s/60) + ' daq oldin';
+    if(s < 86400) return Math.round(s/3600) + ' soat oldin';
+    return fmtDate(ts);
+  }
+  /* why the server flagged a result (reasons come from validateResult in api.mjs) */
+  const FLAG_REASONS = {
+    'wpm does not match raw counts': "wpm xom ma'lumotga mos emas",
+    'missing timing data': "vaqt ma'lumoti yo'q",
+    'no start stamp': "server start belgisi yo'q",
+    'faster than the server clock': 'server vaqtidan tezroq tugatilgan',
+    'above 220 wpm': '220 wpm dan yuqori',
+    'robotic key rhythm': 'robotga xos bir xil ritm',
+  };
+  const reasonText = (r)=> FLAG_REASONS[r] || r || '?';
+  const TIER_NAMES = [[110,'Usta'],[90,'Olmos'],[70,'Platina'],[50,'Oltin'],[30,'Kumush'],[0,'Bronza']];
+  const tierName = (w)=> (TIER_NAMES.find(([min])=> (w||0) >= min) || TIER_NAMES[5])[1];
+
+  /* ---- dashboard ---- */
+  let dashTimer = null;
+  function barsHtml(days, a, b){
+    const max = Math.max(1, ...days.map(d=> Math.max(d[a], d[b] || 0)));
+    /* two bars side by side per day, both on the same scale */
+    return days.map(d=> '<div class="bar" title="'+escapeHtml(d.d || d.day)+': '+d[a]+(b ? ' / '+d[b] : '')+'">'+
+      '<i style="height:'+(d[a]/max*100)+'%"></i>'+
+      (b ? '<i class="su" style="height:'+(d[b]/max*100)+'%"></i>' : '')+'</div>').join('');
+  }
+  function loadDashboard(){
+    clearTimeout(dashTimer);
+    adminApi('GET', '/admin/stats').then((st)=>{
+      const kpis = [
+        ['live', st.online, 'hozir onlayn'],
+        ['', st.users, "ro'yxatdan o'tganlar"],
+        ['', st.guests, 'mehmon sessiyalari'],
+        ['', st.testsToday, 'bugungi testlar'],
+        ['', st.signupsToday, "bugun ro'yxatdan o'tdi"],
+        ['', st.activeRooms, 'faol poyga xonalari'],
+        [st.flagged ? 'alert' : '', st.flagged, 'tekshiruvdagi natijalar'],
+        ['', st.banned, 'bloklanganlar'],
+      ];
+      document.getElementById('kpiGrid').innerHTML = kpis.map(([cls, v, l])=> '<div class="kpi '+cls+'"><b>'+Number(v||0)+'</b><span>'+l+'</span></div>').join('');
+      document.getElementById('flagCount').textContent = st.flagged ? st.flagged : '';
+      document.getElementById('dailyBars').innerHTML = barsHtml(st.days, 'tests', 'signups');
+      document.getElementById('dailyBarsX').innerHTML = '<span>'+escapeHtml(st.days[0].d.slice(5))+'</span><span>'+escapeHtml(st.days[st.days.length-1].d.slice(5))+'</span>';
+      document.getElementById('onlineList').innerHTML = st.onlineUsers.length
+        ? st.onlineUsers.map(u=> '<div><span>'+escapeHtml(u.name)+(u.guest ? '<span class="tag">mehmon</span>' : '')+'</span><small>'+fmtAgo(u.lastSeenAt)+'</small></div>').join('')
+        : '<span class="muted">hozir hech kim yo’q</span>';
+      if(activeTab === 'dash') dashTimer = setTimeout(()=>{ if(activeTab === 'dash' && adminToken) loadDashboard(); }, 30000);
+    }).catch((err)=> adminFail(err));
+  }
+
+  /* ---- users tab ---- */
+  const userQuery = { q: '', kind: 'user', sort: 'last', page: 0 };
+  let userSearchTimer = null;
+  document.getElementById('userSearch').addEventListener('input', (e)=>{
+    clearTimeout(userSearchTimer);
+    userSearchTimer = setTimeout(()=>{ userQuery.q = e.target.value.trim(); userQuery.page = 0; loadUsers(); }, 300);
+  });
+  document.getElementById('userKind').addEventListener('change', (e)=>{ userQuery.kind = e.target.value; userQuery.page = 0; loadUsers(); });
+  document.getElementById('userSort').addEventListener('change', (e)=>{ userQuery.sort = e.target.value; userQuery.page = 0; loadUsers(); });
+  document.getElementById('userPrev').addEventListener('click', ()=>{ if(userQuery.page > 0){ userQuery.page--; loadUsers(); } });
+  document.getElementById('userNext').addEventListener('click', ()=>{ userQuery.page++; loadUsers(); });
+
+  function loadUsers(){
+    const qs = new URLSearchParams(userQuery);
+    adminApi('GET', '/admin/users?' + qs).then(({ users, total, page, per })=>{
+      const body = document.getElementById('usersBody');
+      body.innerHTML = users.map(r=>
+        '<tr class="clickable" data-id="'+escapeHtml(r.id)+'"><td>'+escapeHtml(r.name)+(r.banned ? '<span class="tag ban">bloklangan</span>' : '')+(r.kind==='guest' ? '<span class="tag">mehmon</span>' : '')+'</td>'+
+        '<td>'+escapeHtml(r.email || '—')+'</td><td>'+fmtDate(r.createdAt)+'</td><td>'+fmtAgo(r.lastSeenAt || r.lastLoginAt)+'</td>'+
+        '<td>'+r.testsCount+'</td><td>'+r.bestWpm+'</td><td>'+escapeHtml(tierName(r.ratingWpm))+' <span class="muted">'+r.ratingWpm+'</span></td></tr>'
+      ).join('') || '<tr><td colspan="7">Hech kim topilmadi.</td></tr>';
+      const from = total ? page*per + 1 : 0, to = Math.min(total, (page+1)*per);
+      document.getElementById('userPageInfo').textContent = from + '–' + to + ' / ' + total;
+      document.getElementById('userPrev').disabled = page === 0;
+      document.getElementById('userNext').disabled = to >= total;
+    }).catch((err)=> adminFail(err, 'usersBody', 7));
+  }
+  document.getElementById('usersBody').addEventListener('click', (e)=>{
+    const tr = e.target.closest('tr[data-id]');
+    if(tr) openUser(tr.dataset.id);
+  });
+
+  function openUser(id){
+    const box = document.getElementById('userDetail');
+    box.style.display = 'block';
+    box.innerHTML = '<p class="muted">yuklanmoqda...</p>';
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    adminApi('GET', '/admin/users/' + encodeURIComponent(id)).then(({ user, history, scores })=>{
+      const statusTag = { ok: '<span class="tag ok">reytingda</span>', flagged: '<span class="tag flag">tekshiruvda</span>', hidden: '<span class="tag">yashirilgan</span>' };
+      box.innerHTML =
+        '<div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">'+
+          '<h3>'+escapeHtml(user.name)+(user.banned ? '<span class="tag ban">bloklangan</span>' : '')+(user.kind==='guest' ? '<span class="tag">mehmon</span>' : '')+'</h3>'+
+          '<button class="btn" data-uact="close">yopish ×</button></div>'+
+        '<div class="detail-meta">ID: '+escapeHtml(user.id)+' · '+escapeHtml(user.email || 'email yo’q')+(user.google ? ' · Google' : '')+'<br>'+
+          "ro'yxatdan o'tgan: "+fmtDate(user.createdAt)+' · oxirgi kirish: '+fmtDate(user.lastLoginAt)+' · oxirgi faollik: '+fmtAgo(user.lastSeenAt)+'<br>'+
+          'testlar: '+user.testsCount+' · eng yaxshi: '+user.bestWpm+' wpm · daraja: '+escapeHtml(tierName(user.ratingWpm))+' ('+user.ratingWpm+' wpm) · profil: '+(user.profilePublic ? 'ochiq' : 'yopiq')+'</div>'+
+        '<div class="detail-actions">'+
+          '<input id="renameInput" maxlength="24" value="'+escapeHtml(user.name)+'"><button class="btn" data-uact="rename">ismni o’zgartirish</button>'+
+          '<button class="btn '+(user.banned ? '' : 'danger')+'" data-uact="ban" data-banned="'+(user.banned ? 1 : 0)+'">'+(user.banned ? 'blokdan chiqarish' : 'bloklash')+'</button>'+
+          '<button class="btn danger" data-uact="hide">natijalarini reytingdan olib tashlash</button>'+
+          (user.kind === 'user' ? '<a class="btn" href="index.html#/u/'+encodeURIComponent(user.id)+'" target="_blank" rel="noopener">profilni ochish ↗</a>' : '')+
+        '</div>'+
+        '<div class="detail-cols">'+
+          '<div><h4 class="muted">reyting natijalari</h4><div class="table-wrap"><table><thead><tr><th>wpm</th><th>aniqlik</th><th>rejim</th><th>sana</th><th>holat</th><th></th></tr></thead><tbody>'+
+            (scores.map(sc=> '<tr><td>'+sc.wpm+'</td><td>'+sc.acc+'%</td><td>'+escapeHtml(sc.mode)+'</td><td>'+fmtDate(sc.ts)+'</td><td>'+(statusTag[sc.status] || escapeHtml(sc.status))+(sc.reason ? '<br><span class="muted">'+escapeHtml(reasonText(sc.reason))+'</span>' : '')+'</td>'+
+              '<td class="row-actions">'+(sc.status !== 'ok' ? '<button class="btn" data-score="'+sc.id+'" data-sact="approve">tasdiqlash</button>' : '')+(sc.status !== 'hidden' ? '<button class="btn danger" data-score="'+sc.id+'" data-sact="hide">yashirish</button>' : '')+'</td></tr>').join('')
+              || '<tr><td colspan="6" class="muted">yo’q</td></tr>')+
+          '</tbody></table></div></div>'+
+          '<div><h4 class="muted">so’nggi testlar</h4><div class="table-wrap"><table><thead><tr><th>wpm</th><th>aniqlik</th><th>rejim</th><th>sana</th></tr></thead><tbody>'+
+            (history.map(h=> '<tr><td>'+h.wpm+'</td><td>'+h.acc+'%</td><td>'+escapeHtml(h.mode)+'</td><td>'+fmtDate(h.ts)+'</td></tr>').join('') || '<tr><td colspan="4" class="muted">yo’q</td></tr>')+
+          '</tbody></table></div></div>'+
+        '</div>';
+      box.dataset.id = user.id;
+    }).catch((err)=>{ adminFail(err); box.innerHTML = '<p class="err">Xato: '+escapeHtml(err.message)+'</p>'; });
+  }
+  document.getElementById('userDetail').addEventListener('click', (e)=>{
+    const box = document.getElementById('userDetail');
+    const id = box.dataset.id;
+    const u = e.target.closest('[data-uact]');
+    const sc = e.target.closest('[data-sact]');
+    let p = null;
+    if(u){
+      const act = u.dataset.uact;
+      if(act === 'close'){ box.style.display = 'none'; box.innerHTML = ''; return; }
+      if(act === 'rename'){
+        const name = document.getElementById('renameInput').value.trim();
+        if(!name) return;
+        p = adminApi('PUT', '/admin/users/' + encodeURIComponent(id) + '/name', { name });
+      }
+      if(act === 'ban'){
+        const banning = u.dataset.banned !== '1';
+        if(banning && !confirm('Bu foydalanuvchini bloklaysizmi? U saytga kira olmaydi va reytingdan yo’qoladi.')) return;
+        p = adminApi('POST', '/admin/users/' + encodeURIComponent(id) + '/ban', { banned: banning });
+      }
+      if(act === 'hide'){
+        if(!confirm('Bu foydalanuvchining barcha natijalari reytingdan olib tashlansinmi?')) return;
+        p = adminApi('POST', '/admin/users/' + encodeURIComponent(id) + '/hide-scores');
+      }
+    } else if(sc){
+      p = adminApi('POST', '/admin/scores/' + encodeURIComponent(sc.dataset.score) + '/' + sc.dataset.sact);
+    }
+    if(p) p.then(()=>{ openUser(id); loadUsers(); }).catch((err)=>{ adminFail(err); alert('Xato: ' + err.message); });
+  });
+
+  /* ---- moderation tab ---- */
+  function loadFlagged(){
+    adminApi('GET', '/admin/flagged').then(({ scores })=>{
+      document.getElementById('flagCount').textContent = scores.length ? scores.length : '';
+      document.getElementById('flaggedBody').innerHTML = scores.map(sc=>
+        '<tr><td><a href="#" data-user="'+escapeHtml(sc.userId || '')+'">'+escapeHtml(sc.name || '—')+'</a></td><td><b>'+sc.wpm+'</b></td><td>'+sc.acc+'%</td><td>'+escapeHtml(sc.mode)+'</td><td>'+fmtDate(sc.ts)+'</td>'+
+        '<td><span class="tag flag">'+escapeHtml(reasonText(sc.reason))+'</span></td>'+
+        '<td class="row-actions"><button class="btn" data-score="'+sc.id+'" data-sact="approve">tasdiqlash</button><button class="btn danger" data-score="'+sc.id+'" data-sact="hide">yashirish</button></td></tr>'
+      ).join('') || '<tr><td colspan="7">Tekshiruvni kutayotgan natija yo’q 🎉</td></tr>';
+    }).catch((err)=> adminFail(err, 'flaggedBody', 7));
+  }
+  document.getElementById('flaggedBody').addEventListener('click', (e)=>{
+    const userLink = e.target.closest('[data-user]');
+    if(userLink){
+      e.preventDefault();
+      if(!userLink.dataset.user) return;
+      document.querySelector('#adminTabs button[data-tab="users"]').click();
+      openUser(userLink.dataset.user);
+      return;
+    }
+    const b = e.target.closest('[data-sact]');
+    if(!b) return;
+    b.disabled = true;
+    adminApi('POST', '/admin/scores/' + encodeURIComponent(b.dataset.score) + '/' + b.dataset.sact)
+      .then(loadFlagged)
+      .catch((err)=>{ b.disabled = false; adminFail(err); alert('Xato: ' + err.message); });
+  });
+
+  /* ---- log tab ---- */
+  const ACTION_NAMES = { login: 'kirish', ban: 'bloklash', unban: 'blokdan chiqarish', rename: 'ismni o’zgartirish', 'hide-scores': 'natijalarni yashirish',
+    'approve-score': 'natijani tasdiqlash', 'hide-score': 'natijani yashirish', 'ad-update': 'reklamani o’zgartirish' };
+  function loadLog(){
+    adminApi('GET', '/admin/log').then(({ log })=>{
+      document.getElementById('logBody').innerHTML = log.map(l=>
+        '<tr><td>'+fmtDate(l.ts)+'</td><td>'+escapeHtml(ACTION_NAMES[l.action] || l.action)+'</td><td>'+escapeHtml(l.name || l.target || '—')+'</td><td class="muted">'+escapeHtml(l.detail || '')+'</td></tr>'
+      ).join('') || '<tr><td colspan="4">Hali yozuv yo’q.</td></tr>';
+    }).catch((err)=> adminFail(err, 'logBody', 4));
+  }
+
+  /* ---- ad stats ---- */
+  function loadAdStats(){
+    adminApi('GET', '/admin/ad-stats').then(({ days })=>{
+      const views = days.reduce((a,d)=> a + d.view, 0), clicks = days.reduce((a,d)=> a + d.click, 0);
+      document.getElementById('adKpis').innerHTML =
+        '<div class="kpi"><b>'+views+'</b><span>ko’rishlar</span></div><div class="kpi"><b>'+clicks+'</b><span>bosishlar</span></div>'+
+        '<div class="kpi"><b>'+(views ? (clicks/views*100).toFixed(1) : '0.0')+'%</b><span>CTR (bosish / ko’rish)</span></div>';
+      document.getElementById('adBars').innerHTML = views ? barsHtml(days, 'view', 'click') : '<span class="muted">hali ma’lumot yo’q</span>';
+      document.getElementById('adBarsX').innerHTML = views ? '<span>'+escapeHtml(days[0].day.slice(5))+'</span><span>'+escapeHtml(days[days.length-1].day.slice(5))+'</span>' : '';
+    }).catch((err)=> adminFail(err));
+  }
+
+  /* ---- ad tab ---- */
+  const AD_FIELDS = { image: 'adImageUrl', mobile: 'adMobileImageUrl', video: 'adVideoUrl' };
+  const AD_FILES = { image: 'adImageFile', mobile: 'adMobileImageFile', video: 'adVideoFile' };
+  const AD_STATUS = { image: 'adImageStatus', mobile: 'adMobileImageStatus', video: 'adVideoStatus' };
+  const val = (id)=> document.getElementById(id).value.trim();
+  function setStatus(id, msg, isErr){ const el = document.getElementById(id); el.textContent = msg; el.classList.toggle('err', !!isErr); }
+
+  /* the upload buttons only take the matching kind of file */
+  document.getElementById('tab-ad').addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-upload]');
+    if(!btn) return;
+    const kind = btn.dataset.upload, file = document.getElementById(AD_FILES[kind]).files[0];
+    if(!file) return setStatus(AD_STATUS[kind], 'avval fayl tanlang', true);
+    const wantVideo = kind === 'video';
+    if(wantVideo ? !/^video\/(mp4|webm)$/.test(file.type) : !/^image\/(jpeg|png|webp|gif)$/.test(file.type))
+      return setStatus(AD_STATUS[kind], wantVideo ? 'bu yerga faqat MP4 yoki WebM video yuklanadi' : 'bu yerga faqat JPG, PNG, WebP yoki GIF rasm yuklanadi', true);
+    if(file.size > 5.5 * 1024 * 1024) return setStatus(AD_STATUS[kind], 'fayl juda katta (5 MB gacha)', true);
+    btn.disabled = true;
+    setStatus(AD_STATUS[kind], 'yuklanmoqda...');
+    adminApi('POST', '/admin/upload', file, true).then((res)=>{
+      document.getElementById(AD_FIELDS[kind]).value = res.url;
+      setStatus(AD_STATUS[kind], 'yuklandi ✓ — endi pastdagi "saqlash" tugmasini bosing');
+      updateAdPreview();
+    }).catch((err)=>{ adminFail(err); setStatus(AD_STATUS[kind], 'Xato: ' + err.message, true); })
+      .then(()=>{ btn.disabled = false; });
+  });
+
+  /* the preview is built with the same markup and CSS classes as the live slot */
+  function previewSlot(ad, phone){
+    const slot = document.createElement('div');
+    slot.className = 'ad-slot' + (ad.enabled ? '' : ' ad-off') + (phone && ad.mobileImageUrl && !ad.videoUrl ? ' has-mobile' : '');
+    const wrap = document.createElement('div');
+    wrap.className = 'ad-slot-media-wrap';
+    if(ad.videoUrl){
+      const v = document.createElement('video');
+      v.className = 'ad-slot-video'; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true; v.src = ad.videoUrl;
+      if(ad.imageUrl) v.onerror = ()=>{ const i = document.createElement('img'); i.className = 'ad-slot-img'; i.src = ad.imageUrl; v.replaceWith(i); };
+      wrap.appendChild(v);
+    } else if(ad.imageUrl){
+      const i = document.createElement('img');
+      i.className = 'ad-slot-img';
+      i.src = phone && ad.mobileImageUrl ? ad.mobileImageUrl : ad.imageUrl;
+      wrap.appendChild(i);
+    } else {
+      const e = document.createElement('div');
+      e.className = 'muted'; e.style.cssText = 'height:100%; display:flex; align-items:center; justify-content:center;';
+      e.textContent = 'rasm yoki video qo’shilmagan';
+      wrap.appendChild(e);
+    }
+    const label = document.createElement('span');
+    label.className = 'ad-slot-label'; label.textContent = 'reklama';
+    wrap.appendChild(label);
+    slot.appendChild(wrap);
+    if(ad.text){
+      const body = document.createElement('div'); body.className = 'ad-slot-body';
+      const tx = document.createElement('span'); tx.className = 'ad-slot-text'; tx.textContent = ad.text;
+      body.appendChild(tx); slot.appendChild(body);
+    }
+    return slot;
+  }
+  function currentAdForm(){
+    return {
+      enabled: document.getElementById('adEnabled').checked,
+      imageUrl: val('adImageUrl'), mobileImageUrl: val('adMobileImageUrl'), videoUrl: val('adVideoUrl'),
+      linkUrl: val('adLinkUrl'), text: val('adText'),
+    };
+  }
+  function updateAdPreview(){
+    const ad = currentAdForm();
+    document.getElementById('adPreviewDesktop').replaceChildren(previewSlot(ad, false));
+    document.getElementById('adPreviewMobile').replaceChildren(previewSlot(ad, true));
+    document.getElementById('adPreviewState').textContent = ad.enabled ? '' : '(hozir o’chirilgan — saytda ko’rinmaydi)';
+  }
+  ['adImageUrl', 'adMobileImageUrl', 'adVideoUrl', 'adText', 'adEnabled'].forEach((id)=>{
+    document.getElementById(id).addEventListener(id === 'adEnabled' ? 'change' : 'input', updateAdPreview);
+  });
+
+  function loadAdSettings(){
+    adminApi('GET', '/admin/ad').then(({ ad })=>{
+      ad = ad || {};
+      document.getElementById('adEnabled').checked = !!ad.enabled;
+      document.getElementById('adImageUrl').value = ad.imageUrl || '';
+      document.getElementById('adMobileImageUrl').value = ad.mobileImageUrl || '';
+      document.getElementById('adVideoUrl').value = ad.videoUrl || '';
+      document.getElementById('adLinkUrl').value = ad.linkUrl || '';
+      document.getElementById('adText').value = ad.text || '';
+      updateAdPreview();
+    }).catch((err)=>{ adminFail(err); setStatus('adSaveStatus', 'Yuklashda xato: ' + err.message, true); });
+  }
+
+  const SAVE_ERRORS = {
+    'link: must start with https://': 'Havola https:// bilan boshlanishi kerak.',
+    'image: must start with https://': 'Kompyuter banneri manzili https:// bilan boshlanishi kerak (yoki faylni yuklang).',
+    'mobile image: must start with https://': 'Telefon banneri manzili https:// bilan boshlanishi kerak (yoki faylni yuklang).',
+    'video: must start with https://': 'Video manzili https:// bilan boshlanishi kerak (yoki faylni yuklang).',
+    'add an image or a video before switching the ad on': 'Reklamani yoqishdan oldin rasm yoki video qo’shing.',
+    'image: uploaded file not found': 'Kompyuter banneri fayli topilmadi — qaytadan yuklang.',
+    'mobile image: uploaded file not found': 'Telefon banneri fayli topilmadi — qaytadan yuklang.',
+    'video: uploaded file not found': 'Video fayli topilmadi — qaytadan yuklang.',
+  };
+  document.getElementById('btnSaveAd').addEventListener('click', ()=>{
+    const ad = currentAdForm();
+    if(ad.linkUrl && !/^https?:\/\//i.test(ad.linkUrl)) return setStatus('adSaveStatus', SAVE_ERRORS['link: must start with https://'], true);
+    setStatus('adSaveStatus', 'saqlanmoqda...');
+    adminApi('PUT', '/admin/ad', ad).then(()=>{
+      setStatus('adSaveStatus', 'saqlandi ✓ (ochiq sahifalarda 10 daqiqa ichida yangilanadi)');
+      loadAdStats();
+    }).catch((err)=>{ adminFail(err); setStatus('adSaveStatus', 'Xato: ' + (SAVE_ERRORS[err.message] || err.message), true); });
+  });
+
+  try{
+    const saved = sessionStorage.getItem('tezlash.admin');
+    if(saved){ adminToken = saved; showAdmin(); }
+  }catch(e){}
+</script>
+</body>
+</html>

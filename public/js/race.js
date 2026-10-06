@@ -12,7 +12,7 @@
   let raceTimerInterval = null, lastSync = 0;
   let roomPlayersCache = {};
 
-  const raceOpts = { type: 'words', lang: 'python', textLang: 'en', wordLen: 25, timeLen: 30 };
+  const raceOpts = { type: 'words', lang: 'python', textLang: 'uz', wordLen: 25, timeLen: 30 };
 
   function renderRaceLenSeg(){
     const wrap = document.getElementById('raceLenSeg');
@@ -71,6 +71,8 @@
   }
 
   function resetRaceScreen(timeLimit){
+    raceState._lastWpm = 0; raceState._lastAcc = 100;
+    raceState._lastCorrect = 0; raceState._lastTyped = 0; raceState._lastElapsed = 0;
     raceState.typed = '';
     raceState.startTime = null;
     raceState.timeLeft = timeLimit || 60;
@@ -108,7 +110,7 @@
       const div = document.createElement('div');
       div.className = 'racer';
       div.innerHTML =
-        '<div class="racer-head"><span class="name">'+(mine? 'siz' : escapeHtml(p.name||"o'yinchi"))+'</span><span class="wpm">'+wpm+' wpm</span></div>'+
+        '<div class="racer-head"><span class="name">'+(mine? escapeHtml(t('race.you')) : escapeHtml(p.name||t('race.player')))+'</span><span class="wpm">'+wpm+' wpm</span></div>'+
         '<div class="track '+(mine?'you':'opp')+'">'+
           '<div class="fill" style="width:'+pct+'%;"></div>'+
           '<div class="racer-mark" style="left:'+pct+'%;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 3 21h18L12 2z"/></svg></div>'+
@@ -126,6 +128,9 @@
     const pct = Math.min(100, (raceState.typed.length/raceState.text.length)*100);
     raceState._lastWpm = wpm;
     raceState._lastAcc = acc;
+    raceState._lastCorrect = correct;
+    raceState._lastTyped = raceState.typed.length;
+    raceState._lastElapsed = raceState.startTime ? Date.now() - raceState.startTime : 0;
     renderRaceTracks(roomPlayersCache);
     return {wpm, pct, acc};
   }
@@ -152,8 +157,8 @@
           document.getElementById('raceStatus').textContent = t('race.status.inProgress');
         }
         const expected = raceState.text[raceState.typed.length];
-        if(expected !== undefined && ch !== expected) playErrorTick();
-        raceState.typed = applyChar(raceState.text, raceState.typed, ch);
+        typingFeedback(expected === undefined || typedAs(expected, ch, raceState.roomType === 'code') === expected, document.getElementById('raceTypeWrap'));
+        raceState.typed = applyChar(raceState.text, raceState.typed, ch, raceState.roomType === 'code');
       }
     }
     raceInput.value = '';
@@ -206,8 +211,8 @@
     document.getElementById('raceScreen').style.display = 'none';
     document.getElementById('raceResultsScreen').style.display = 'block';
     document.getElementById('raceResultsTitle').textContent = iWon
-      ? "🏆 tabriklaymiz — siz g‘alaba qozondingiz!"
-      : (entries[0] ? (entries[0][1].name||"o'yinchi") + " g‘alaba qozondi" : "poyga tugadi"); // textContent, not innerHTML — safe as-is
+      ? "🏆 " + t('race.winnerTitle')
+      : (entries[0] ? (entries[0][1].name||t('race.player')) + " " + t('race.someoneWon') : t('race.over')); // textContent, not innerHTML — safe as-is
     const list = document.getElementById('raceResultsList');
     list.innerHTML = '';
     entries.forEach(([pUid, p], i)=>{
@@ -216,8 +221,8 @@
       row.className = 'race-result-row' + (i===0 ? ' winner' : '');
       row.innerHTML =
         '<div class="rr-rank">'+(i+1)+'</div>'+
-        '<div class="rr-name">'+(mine?'siz':escapeHtml(p.name||"o'yinchi"))+(i===0?' 🥇':'')+'</div>'+
-        '<div class="rr-stats">'+Math.round(p.wpm||0)+' wpm · '+Math.round(p.progress||0)+'% '+(p.finished?'(tugatdi)':'(tugatmadi)')+'</div>';
+        '<div class="rr-name">'+(mine?escapeHtml(t('race.you')):escapeHtml(p.name||t('race.player')))+(i===0?' 🥇':'')+'</div>'+
+        '<div class="rr-stats">'+Math.round(p.wpm||0)+' wpm · '+Math.round(p.progress||0)+'% ('+escapeHtml(t(p.finished?'race.finishedTag':'race.notFinishedTag'))+')</div>';
       list.appendChild(row);
     });
     if(uid){
@@ -226,8 +231,10 @@
         const modeLabel = (raceState.roomType==='code' ? 'code · race' : raceState.roomType==='time' ? 'time · race' : 'words · race');
         const wpmRounded = Math.round(me.wpm||0), accRounded = Math.round(raceState._lastAcc||100);
         const langInfo = raceState.roomType==='code' ? { codeLang: raceState.lang } : { textLang: raceState.textLang };
-        submitScore(modeLabel, wpmRounded, accRounded);
-        updateUserStats(wpmRounded, accRounded, modeLabel, {}, langInfo, iWon ? 'racer_win' : null);
+        updateUserStats(wpmRounded, accRounded, modeLabel, {}, langInfo, iWon ? 'racer_win' : null, {
+          raceCode: raceState.roomCode, durationMs: raceState._lastElapsed || 0,
+          correct: raceState._lastCorrect || 0, typed: raceState._lastTyped || 0,
+        });
       }
     }
   }

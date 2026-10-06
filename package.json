@@ -1,12 +1,16 @@
 {
-  "name": "keylion",
+  "name": "tezlash",
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node server.mjs",
     "migrate": "node scripts/migrate-firebase-to-turso.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
     "@netlify/blobs": "^8.1.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
