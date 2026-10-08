@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keylion — taqdimot</title>
+<meta name="description" content="Keylion: o'zbekcha tez yozish platformasi — 10 slayddan iborat taqdimot.">
+<meta name="theme-color" content="#0a0a0c">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0c; --panel:#131316; --panel2:#1c1c20; --border:#26262b; --border2:#35353c;
+    --text:#eae7e0; --dim:#8a8a92; --faint:#55555c;
+    --gold:#e0a940; --gold-hi:#f3c766; --gold-lo:#8a6620; --gold-bg:#241d0e;
+    --ok:#7fc95c; --err:#e2574c;
+    --lp:#ef6f6c; --lr:#f0a35e; --lm:#e8c547; --li:#6cc36c; --ri:#4fb8c9; --rm:#6c8ef0; --rr:#a17cf0; --rp:#e57ac9; --th:#9aa0a6;
+    --display:'Sora', system-ui, sans-serif; --body:'Inter', system-ui, sans-serif; --mono:'JetBrains Mono', ui-monospace, monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; height:100%; background:var(--bg); color:var(--text); font-family:var(--body); overflow:hidden; }
+  body{ background:radial-gradient(ellipse at 50% -20%, rgba(224,169,64,.10), transparent 60%), var(--bg); }
+
+  /* the deck is drawn at 1280x720 and scaled to fit the window */
+  .stage{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  .deck{ position:relative; width:1280px; height:720px; flex:none; transform-origin:center center; }
+  .slide{ position:absolute; inset:0; padding:56px 80px 76px; display:flex; flex-direction:column; justify-content:center; border-radius:22px; overflow:hidden;
+    background:linear-gradient(160deg, #111114, #0b0b0d 60%); border:1px solid var(--border);
+    opacity:0; visibility:hidden; transform:translateX(40px); transition:opacity .45s ease, transform .45s ease, visibility 0s .45s; }
+  .slide.on{ opacity:1; visibility:visible; transform:none; transition:opacity .45s ease, transform .45s ease, visibility 0s; }
+  .slide.back{ transform:translateX(-40px); }
+  .slide::before{ content:''; position:absolute; width:520px; height:520px; right:-160px; top:-200px; border-radius:50%;
+    background:radial-gradient(circle, rgba(224,169,64,.13), transparent 65%); pointer-events:none; }
+  .slide > *{ position:relative; }
+
+  /* reveal children one after another when a slide opens */
+  .slide.on .r{ animation:rise .6s ease both; }
+  .slide.on .r:nth-child(2){ animation-delay:.08s; } .slide.on .r:nth-child(3){ animation-delay:.16s; }
+  .slide.on .r:nth-child(4){ animation-delay:.24s; } .slide.on .r:nth-child(5){ animation-delay:.32s; }
+  .slide.on .r:nth-child(6){ animation-delay:.40s; } .slide.on .r:nth-child(7){ animation-delay:.48s; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(16px); } }
+
+  .kicker{ font-family:var(--mono); font-size:14px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+  .kicker::before{ content:''; width:26px; height:2px; background:var(--gold); border-radius:2px; }
+  h1{ font-family:var(--display); font-size:64px; line-height:1.05; margin:0; font-weight:800; letter-spacing:-.5px; }
+  h2{ font-family:var(--display); font-size:44px; line-height:1.12; margin:0 0 26px; font-weight:700; letter-spacing:-.3px; }
+  h2 em, h1 em{ font-style:normal; color:var(--gold); }
+  p.lead{ font-size:21px; line-height:1.6; color:#cfccc4; margin:0; max-width:900px; }
+  .foot{ position:absolute; left:80px; right:80px; bottom:26px; display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:12px; color:var(--faint); }
+  .foot b{ color:var(--dim); font-weight:500; }
+
+  .logo{ display:flex; align-items:center; gap:14px; }
+  .logo-mark{ width:64px; height:64px; border-radius:16px; border:1px solid var(--border2); background:linear-gradient(155deg, var(--gold-bg), var(--panel2)); display:flex; align-items:center; justify-content:center; color:var(--gold); }
+  .logo-mark svg{ width:40px; height:40px; }
+  .logo-word{ font-family:var(--display); font-weight:800; font-size:34px; }
+  .logo-word span{ color:var(--gold); }
+
+  .grid{ display:grid; gap:18px; }
+  .card{ background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:22px 24px; }
+  .card h3{ margin:0 0 8px; font-family:var(--display); font-size:21px; font-weight:600; display:flex; align-items:center; gap:10px; }
+  .card p{ margin:0; color:#bdbab2; font-size:16px; line-height:1.55; }
+  .ico{ width:42px; height:42px; border-radius:12px; flex:none; display:flex; align-items:center; justify-content:center; background:var(--gold-bg); color:var(--gold); border:1px solid #3a2f17; }
+  .ico svg{ width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  .pill{ display:inline-flex; align-items:center; gap:6px; background:var(--panel2); border:1px solid var(--border2); border-radius:999px; padding:6px 14px; font-size:14px; color:#d6d3cb; }
+  .pill.gold{ color:var(--gold); border-color:#6b5420; background:var(--gold-bg); }
+  .num{ font-family:var(--display); font-weight:800; font-size:54px; color:var(--gold); line-height:1; }
+  .num-l{ color:var(--dim); font-size:15px; margin-top:8px; }
+  ul.list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:14px; }
+  ul.list li{ position:relative; padding-left:26px; font-size:19px; line-height:1.5; color:#d6d3cb; }
+  ul.list li::before{ content:''; position:absolute; left:2px; top:10px; width:10px; height:10px; border-radius:3px; background:var(--gold); transform:rotate(45deg); }
+  ul.list b{ color:var(--text); }
+  .mono{ font-family:var(--mono); }
+
+  /* slide 1 */
+  .title-wrap{ flex:1; display:flex; flex-direction:column; justify-content:center; gap:26px; }
+  .title-sub{ font-size:24px; color:#cfccc4; max-width:620px; line-height:1.5; }
+  .title-meta{ display:flex; gap:12px; flex-wrap:wrap; }
+  .typing-demo{ position:absolute; right:80px; bottom:110px; width:430px; background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:20px 22px; }
+  .typing-demo .tline{ font-family:var(--mono); font-size:22px; line-height:1.6; color:var(--faint); min-height:72px; }
+  .typing-demo .tline .ok{ color:var(--text); }
+  .typing-demo .tline .cur{ display:inline-block; width:2px; height:26px; background:var(--gold); vertical-align:-5px; animation:blink 1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .typing-demo .tstats{ display:flex; gap:22px; margin-top:12px; font-family:var(--mono); font-size:13px; color:var(--dim); }
+  .typing-demo .tstats b{ color:var(--gold); font-size:20px; font-family:var(--display); }
+
+  /* slide 2 */
+  .vs{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:6px; }
+  .vs .card{ padding:26px 28px; }
+  .vs .bad h3{ color:#f0a39c; } .vs .good h3{ color:var(--gold); }
+  .vs .good{ border-color:#4a3a1a; background:linear-gradient(160deg, #1a150b, var(--panel) 70%); }
+
+  /* keyboard (slide 5) */
+  .kb{ display:flex; flex-direction:column; gap:6px; align-items:center; }
+  .kb-row{ display:flex; gap:6px; }
+  .kb-row:nth-child(2){ margin-left:22px; } .kb-row:nth-child(3){ margin-left:40px; }
+  .key{ width:38px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; font-weight:600; color:#0a0a0c; opacity:.45; }
+  .key.on{ opacity:1; box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--gold); transform:translateY(-2px); }
+  .key.space{ width:240px; }
+  .lessons-layout{ display:grid; grid-template-columns:1.05fr 1fr; gap:34px; align-items:start; }
+  .map-mini{ position:relative; height:290px; }
+  .map-mini svg.trail{ position:absolute; inset:0; }
+  .mnode{ position:absolute; width:56px; height:56px; margin:-28px 0 0 -28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:800; font-size:21px; }
+  .mnode.done{ color:#14100a; background:radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold) 60%, #b98327); box-shadow:0 5px 0 var(--gold-lo); }
+  .mnode.cur{ color:var(--gold); background:var(--panel2); border:3px solid var(--gold); box-shadow:0 0 26px rgba(224,169,64,.4); animation:bob 1.8s ease-in-out infinite; }
+  .mnode.lock{ color:var(--faint); background:var(--panel); border:2px solid var(--border); }
+  .mnode.lock svg{ width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; }
+  .mlabel{ position:absolute; transform:translate(-50%, 34px); font-size:12px; color:#cfccc4; white-space:nowrap; background:#0d0d0f; padding:1px 7px; border-radius:6px; }
+  @keyframes bob{ 50%{ transform:translateY(-5px); } }
+  .lesson-list{ display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; margin-top:6px; }
+  .lesson-list div{ display:flex; align-items:center; gap:10px; font-size:15px; color:#d6d3cb; }
+  .lesson-list span{ width:26px; height:26px; flex:none; border-radius:8px; display:flex; align-items:center; justify-content:center; background:var(--gold-bg); color:var(--gold); font-family:var(--display); font-weight:700; font-size:13px; border:1px solid #3a2f17; }
+
+  /* tiers (slide 7) */
+  .tiers{ display:flex; align-items:flex-end; gap:12px; height:220px; }
+  .tier{ flex:1; border-radius:14px 14px 6px 6px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; padding:12px 6px; text-align:center;
+    background:linear-gradient(180deg, color-mix(in srgb, var(--c) 30%, transparent), color-mix(in srgb, var(--c) 8%, transparent)); border:1px solid color-mix(in srgb, var(--c) 45%, transparent); }
+  .tier b{ font-family:var(--display); font-size:16px; color:var(--c); }
+  .tier small{ font-family:var(--mono); font-size:12px; color:var(--dim); margin-top:4px; }
+
+  /* tech (slide 9) */
+  .arch{ display:flex; align-items:stretch; gap:14px; margin-bottom:22px; }
+  .arch .card{ flex:1; padding:18px 20px; }
+  .arch .card small{ font-family:var(--mono); color:var(--gold); font-size:12px; letter-spacing:1px; text-transform:uppercase; }
+  .arch .card b{ display:block; font-family:var(--display); font-size:19px; margin:6px 0 6px; }
+  .arch .card p{ font-size:14px; }
+  .arrow{ align-self:center; color:var(--gold); font-size:26px; }
+
+  /* contact (slide 10) */
+  .contact{ display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; margin-top:30px; }
+  .contact a{ text-decoration:none; color:inherit; display:block; }
+  .contact .card{ height:100%; transition:border-color .2s, transform .2s; }
+  .contact a:hover .card{ border-color:var(--gold); transform:translateY(-3px); }
+  .contact .card small{ display:block; font-family:var(--mono); font-size:12px; color:var(--dim); letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; }
+  .contact .card b{ font-family:var(--display); font-size:18px; overflow-wrap:anywhere; color:var(--text); }
+  .contact .tg{ border-color:#2c5a7a; background:linear-gradient(160deg, #0f1c26, var(--panel) 70%); }
+  .contact .tg b{ color:#5fb6f0; }
+
+  /* controls */
+  .ui{ position:fixed; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; gap:10px; padding:10px; z-index:5; }
+  .ui button{ background:rgba(28,28,32,.85); border:1px solid var(--border2); color:var(--text); width:42px; height:38px; border-radius:10px; font-size:17px; cursor:pointer; }
+  .ui button:hover{ border-color:var(--gold); color:var(--gold); }
+  .ui .count{ font-family:var(--mono); font-size:13px; color:var(--dim); min-width:64px; text-align:center; }
+  .progress{ position:fixed; left:0; top:0; height:3px; background:var(--gold); transition:width .4s ease; z-index:6; }
+  .hint{ position:fixed; right:14px; bottom:14px; font-family:var(--mono); font-size:11px; color:var(--faint); z-index:5; }
+  @media (max-width:700px){ .hint{ display:none; } }
+
+  /* printing / "Save as PDF": one slide per page */
+  @media print{
+    @page{ size:1280px 720px; margin:0; }
+    html,body{ overflow:visible; height:auto; background:var(--bg); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .stage{ position:static; display:block; }
+    .deck{ transform:none !important; width:1280px; height:auto; }
+    .slide{ position:relative; inset:auto; width:1280px; height:720px; opacity:1; visibility:visible; transform:none; border-radius:0; page-break-after:always; break-after:page; }
+    .slide .r{ animation:none !important; }
+    .ui, .progress, .hint{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="stage" id="stage">
+<div class="deck" id="deck">
+
+  <!-- 1. title -->
+  <section class="slide">
+    <div class="title-wrap">
+      <div class="logo r">
+        <div class="logo-mark"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12.00 0.40 13.91 3.62 17.03 1.55 17.36 5.28 21.07 4.77 19.75 8.27 23.31 9.42 20.60 12.00 23.31 14.58 19.75 15.73 21.07 19.23 17.36 18.72 17.03 22.45 13.91 20.38 12.00 23.60 10.09 20.38 6.97 22.45 6.64 18.72 2.93 19.23 4.25 15.73 0.69 14.58 3.40 12.00 0.69 9.42 4.25 8.27 2.93 4.77 6.64 5.28 6.97 1.55 10.09 3.62ZM7.20 7.50 9.48 7.50 9.48 11.34 13.44 7.50 16.32 7.50 11.76 12.06 16.80 16.50 13.68 16.50 9.48 12.78 9.48 16.50 7.20 16.50Z"/></svg></div>
+        <div class="logo-word">Key<span>lion</span></div>
+      </div>
+      <h1 class="r">O'zbekcha <em>tez yozish</em><br>platformasi</h1>
+      <div class="title-sub r">Tezlik testi, ko'r usulda yozish darslari, do'stlar bilan poyga, reyting va AI murabbiy — barchasi brauzerda, bepul.</div>
+      <div class="title-meta r">
+        <span class="pill gold">Muallif: Samadbek Xolmamatov</span>
+        <span class="pill">Telegram: @xolmamatov09</span>
+      </div>
+    </div>
+    <div class="typing-demo r" aria-hidden="true">
+      <div class="tline" id="typeDemo"></div>
+      <div class="tstats"><span><b id="demoWpm">0</b> wpm</span><span><b>100%</b> aniqlik</span></div>
+    </div>
+    <div class="foot"><span>v0-new-project-k1yqiqxaqoj.vercel.app</span><span><b>01</b> / 10</span></div>
+  </section>
+
+  <!-- 2. problem -->
+  <section class="slide">
+    <div class="kicker r">Muammo</div>
+    <h2 class="r">Ko'pchilik hali ham <em>ikki barmoq</em> bilan yozadi</h2>
+    <div class="vs r">
+      <div class="card bad">
+        <h3>Hozirgi holat</h3>
+        <ul class="list">
+          <li>Klaviaturaga qarab, sekin va ko'p xato bilan yoziladi</li>
+          <li>Mashhur saytlar (typing.com, monkeytype) — chet tilida, o'zbek matnlari yo'q</li>
+          <li>O' va G' harflaridagi tutuq belgisi ko'pincha "xato" deb hisoblanadi</li>
+          <li>Mashq qilish zerikarli — natijani solishtirish, raqobat yo'q</li>
+        </ul>
+      </div>
+      <div class="card good">
+        <h3>Keylion bilan</h3>
+        <ul class="list">
+          <li>O'nta barmoq bilan, qaramasdan yozishni qadamma-qadam o'rganish</li>
+          <li>O'zbek tili birinchi o'rinda: o'zbekcha matnlar va interfeys</li>
+          <li>Istalgan tutuq belgisi (' ` ʻ ’) to'g'ri qabul qilinadi</li>
+          <li>Poyga, reyting va yutuqlar — mashq qilishni o'yinga aylantiradi</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot"><span>Keylion · taqdimot</span><span><b>02</b> / 10</span></div>
+  </section>
+
+  <!-- 3. solution / overview -->
+  <section class="slide">
+    <div class="kicker r">Yechim</div>
+    <h2 class="r">Bitta saytda — <em>olti</em> bo'lim</h2>
+    <div class="grid r" style="grid-template-columns:repeat(3,1fr)">
+      <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></svg></span>Tezlik testi</h3><p>So'zlar, vaqt, kod va kunlik challenge rejimlari. Natija: wpm va aniqlik.</p></div>
+      <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg></span>Darslar</h3><p>Ko'r usulda yozishni noldan o'rgatuvchi 7 ta dars, 38 ta qadam.</p></div>
+      <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 21V4l14 4-14 4"/></svg></span>Poyga</h3><p>Do'stlar bilan real vaqtda musobaqa — xona havolasini yuborish kifoya.</p></div>
+      <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24"><path d="M6 20v-8M12 20V6M18 20v-5"/></svg></span>Reyting</h3><p>Kunlik, haftalik, oylik va umumiy reyting, darajalar (Bronza → Usta).</p></div>
+      <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z"/><path d="M19 15l.8 1.9L22 18l-2.2.9L19 21l-.8-2.1L16 18l2.2-1.1z"/></svg></span>AI murabbiy</h3><p>Xatolaringizni tahlil qilib, nimaga e'tibor berishni maslahat beradi.</p></div>
+      <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Profil</h3><p>Natijalar tarixi, grafik, yutuqlar, kunlik seriya va shaxsiy sozlamalar.</p></div>
+    </div>
+    <div class="foot"><span>Keylion · taqdimot</span><span><b>03</b> / 10</span></div>
+  </section>
+
+  <!-- 4. typing test -->
+  <section class="slide">
+    <div class="kicker r">Tezlik testi</div>
+    <h2 class="r">Har kim uchun <em>o'z</em> rejimi</h2>
+    <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:34px; align-items:start;">
+      <ul class="list r">
+        <li><b>So'zlar va vaqt rejimi</b> — 10, 25, 50 so'z yoki 15, 30, 60 soniya</li>
+        <li><b>Kod rejimi</b> — Python, JavaScript, C++, Java, C# va C dagi kod parchalari, rangli sintaksis bilan</li>
+        <li><b>Kunlik challenge</b> — bugun hamma bir xil matnni yozadi va alohida reytingda bellashadi</li>
+        <li><b>5 til</b> — o'zbek, rus, ingliz, qozoq va qirg'iz; interfeys ham shu tillarda</li>
+        <li><b>Ekrandagi klaviatura</b> — keyingi tugma yonib turadi</li>
+      </ul>
+      <div class="grid r" style="grid-template-columns:1fr 1fr;">
+        <div class="card"><div class="num">5</div><div class="num-l">til: uz · ru · en · kk · ky</div></div>
+        <div class="card"><div class="num">6</div><div class="num-l">dasturlash tili kod rejimida</div></div>
+        <div class="card"><div class="num">4</div><div class="num-l">rejim: so'zlar, vaqt, kod, kunlik</div></div>
+        <div class="card"><div class="num">90%</div><div class="num-l">aniqlik — reytingga kirish sharti</div></div>
+      </div>
+    </div>
+    <div class="foot"><span>Keylion · taqdimot</span><span><b>04</b> / 10</span></div>
+  </section>
+
+  <!-- 5. lessons -->
+  <section class="slide">
+    <div class="kicker r">Yangi: darslar</div>
+    <h2 class="r">Ko'r usulda yozishni <em>qadamma-qadam</em> o'rganing</h2>
+    <div class="lessons-layout">
+      <div class="r">
+        <div class="map-mini" id="mapMini">
+          <svg class="trail" width="100%" height="100%" viewBox="0 0 560 290" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M100 30 C100 82 230 82 230 135 C230 188 360 188 360 240" fill="none" stroke="#e0a940" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+            <path d="M360 240 C360 268 470 268 470 288" fill="none" stroke="#35353c" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+          </svg>
+          <div class="mnode done" style="left:100px; top:30px">✓</div><div class="mlabel" style="left:100px; top:30px">F va J ★★★</div>
+          <div class="mnode done" style="left:230px; top:135px">✓</div><div class="mlabel" style="left:230px; top:135px">D va K ★★</div>
+          <div class="mnode cur" style="left:360px; top:240px">★</div><div class="mlabel" style="left:360px; top:240px">S va L</div>
+        </div>
+        <div class="kb" aria-hidden="true">
+          <div class="kb-row" id="kbRow1"></div><div class="kb-row" id="kbRow2"></div><div class="kb-row" id="kbRow3"></div>
+        </div>
+      </div>
+      <div>
+        <ul class="list r" style="gap:10px; margin-bottom:18px;">
+          <li>Zigzag xarita: har bir qadam oldingisini o'tgach ochiladi</li>
+          <li>Noto'g'ri tugma bosilsa, to'g'risini bosmaguncha oldinga o'tilmaydi</li>
+          <li>Har bir barmoq o'z rangida, keyingi tugma va barmoq ko'rsatiladi</li>
+          <li>Natija: tezlik, aniqlik va 1–3 yulduz; progress hisobda saqlanadi</li>
+        </ul>
+        <div class="lesson-list r">
+          <div><span>1</span>Asosiy qator</div><div><span>5</span>O'zbek harflari</div>
+          <div><span>2</span>G, H va so'zlar</div><div><span>6</span>Shift va belgilar</div>
+          <div><span>3</span>Yuqori qator</div><div><span>7</span>Raqamlar</div>
+          <div><span>4</span>Pastki qator</div><div></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>Keylion · taqdimot</span><span><b>05</b> / 10</span></div>
+  </section>
+
+  <!-- 6. race -->
+  <section class="slide">
+    <div class="kicker r">Poyga</div>
+    <h2 class="r">Do'stlar bilan <em>real vaqtda</em> bellashing</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:34px; align-items:center;">
+      <ul class="list r">
+        <li>Xona yarating va havolani do'stlaringizga yuboring</li>
+        <li>Bitta xonada <b>10 tagacha</b> o'yinchi</li>
+        <li>Har kimning progressi ekranda poyga yo'lagi ko'rinishida</li>
+        <li>Natijada g'olib, tezlik va aniqlik e'lon qilinadi</li>
+        <li>Sinfda yoki do'stlar orasida musobaqa o'tkazish uchun qulay</li>
+      </ul>
+      <div class="card r" style="padding:24px 26px;">
+        <div class="mono" style="color:var(--dim); font-size:13px; margin-bottom:16px;">XONA · K7Q2 · 3 o'yinchi</div>
+        <div id="raceLanes"></div>
+      </div>
+    </div>
+    <div class="foot"><span>Keylion · taqdimot</span><span><b>06</b> / 10</span></div>
+  </section>
+
+  <!-- 7. leaderboard -->
+  <section class="slide">
+    <div class="kicker r">Reyting va darajalar</div>
+    <h2 class="r">Halol reyting — <em>haqiqiy</em> natijalar</h2>
+    <div class="tiers r">
+      <div class="tier" style="--c:#c58a5c; height:38%"><b>Bronza</b><small>0–30</small></div>
+      <div class="tier" style="--c:#b9c3cf; height:50%"><b>Kumush</b><small>30–50</small></div>
+      <div class="tier" style="--c:#e8b647; height:62%"><b>Oltin</b><small>50–70</small></div>
+      <div class="tier" style="--c:#4fd1d9; height:74%"><b>Platina</b><small>70–90</small></div>
+      <div class="tier" style="--c:#a78bfa; height:87%"><b>Olmos</b><small>90–110</small></div>
+      <div class="tier" style="--c:#f05252; height:100%"><b>Usta</b><small>110+ wpm</small></div>
+    </div>
+    <div class="grid r" style="grid-template-columns:repeat(3,1fr); margin-top:22px;">
+      <div class="card"><p><b style="color:var(--text)">Daraja</b> — oxirgi 10 ta test o'rtachasi bo'yicha, bitta omadli urinish bilan sakrab bo'lmaydi.</p></div>
+      <div class="card"><p><b style="color:var(--text)">Bir o'yinchi — bir qator</b>: eng yaxshi natija; kun, hafta, oy va umumiy davr bo'yicha.</p></div>
+      <div class="card"><p><b style="color:var(--text)">Firibgarlikka qarshi</b>: natija serverda qayta hisoblanadi, shubhali natijalar admin tekshiruviga tushadi.</p></div>
+    </div>
+    <div class="foot"><span>Keylion · taqdimot</span><span><b>07</b> / 10</span></div>
+  </section>
+
+  <!-- 8. profile, motivation, AI -->
+  <section class="slide">
+    <div class="kicker r">Profil va motivatsiya</div>
+    <h2 class="r">Har kuni qaytib kelish uchun <em>sabab</em></h2>
+    <div class="grid r" style="grid-template-columns:repeat(4,1fr);">
+      <div class="card"><div class="num">14</div><div class="num-l">yutuq: birinchi test, 100 wpm, poyga g'olibi, 30 kunlik seriya…</div></div>
+      <div class="card"><div class="num">🔥</div><div class="num-l">kunlik seriya (streak) — har kuni mashq qilganlar uchun</div></div>
+      <div class="card"><div class="num">6+</div><div class="num-l">fon rasmi: Registon, tog'lar, shahar… yoki o'z rasmingiz</div></div>
+      <div class="card"><div class="num">AI</div><div class="num-l">murabbiy — ko'p xato qilingan harflar bo'yicha shaxsiy maslahat</div></div>
+    </div>
+    <ul class="list r" style="margin-top:26px;">
+      <li><b>Profil sahifasi</b>: natijalar tarixi, tezlik grafigi, eng yaxshi natija va daraja nishoni</li>
+      <li><b>Sozlamalar</b>: kursor shakli, harf animatsiyalari, xato effekti, klaviatura ovozi va rang</li>
+      <li><b>Ulashish</b>: natijalar kartochkasini rasm qilib saqlash, profil havolasini Telegram'da yuborish</li>
+    </ul>
+    <div class="foot"><span>Keylion · taqdimot</span><span><b>08</b> / 10</span></div>
+  </section>
+
+  <!-- 9. technology -->
+  <section class="slide">
+    <div class="kicker r">Texnologiyalar</div>
+    <h2 class="r">Qanday <em>qurilgan</em></h2>
+    <div class="arch r">
+      <div class="card"><small>Frontend</small><b>HTML · CSS · JavaScript</b><p>Freymvorksiz, tez yuklanadi; telefon va kompyuterga moslashgan.</p></div>
+      <div class="arrow">→</div>
+      <div class="card"><small>Backend</small><b>Node.js API</b><p>Bitta API moduli: hisob, natijalar, reyting, poyga xonalari, admin.</p></div>
+      <div class="arrow">→</div>
+      <div class="card"><small>Ma'lumotlar bazasi</small><b>Turso (libSQL)</b><p>Foydalanuvchilar, natijalar, darslar progressi, yuklangan rasmlar.</p></div>
+    </div>
+    <div class="grid r" style="grid-template-columns:repeat(3,1fr);">
+      <div class="card"><h3 style="font-size:18px">Kirish</h3><p>Email va parol, Google orqali kirish yoki mehmon sifatida; JWT tokenlar.</p></div>
+      <div class="card"><h3 style="font-size:18px">AI</h3><p>Groq API (Llama 3.3) — murabbiy maslahatlari va natija tahlili.</p></div>
+      <div class="card"><h3 style="font-size:18px">Xavfsizlik</h3><p>Parollar xeshlanadi, so'rovlar soni cheklanadi, admin panelda moderatsiya.</p></div>
+    </div>
+    <div class="foot"><span>Kod: github.com/samadbekxolmamatov2009/keylion</span><span><b>09</b> / 10</span></div>
+  </section>
+
+  <!-- 10. contact -->
+  <section class="slide">
+    <div class="kicker r">Bog'lanish</div>
+    <h2 class="r">Rahmat! <em>Sinab ko'ring</em> va fikringizni yozing</h2>
+    <p class="lead r">Keylion bepul va doimiy rivojlanmoqda. Taklif, xato yoki hamkorlik bo'yicha Telegram orqali bog'laning.</p>
+    <div class="contact r">
+      <a href="https://t.me/xolmamatov09" target="_blank" rel="noopener"><div class="card tg"><small>Telegram</small><b>@xolmamatov09</b></div></a>
+      <a href="https://v0-new-project-k1yqiqxaqoj.vercel.app/" target="_blank" rel="noopener"><div class="card"><small>Sayt</small><b>v0-new-project-k1yqiqxaqoj.vercel.app</b></div></a>
+      <a href="https://github.com/samadbekxolmamatov2009/keylion" target="_blank" rel="noopener"><div class="card"><small>GitHub</small><b>samadbekxolmamatov2009/keylion</b></div></a>
+    </div>
+    <div class="logo r" style="margin-top:40px;">
+      <div class="logo-mark" style="width:48px;height:48px;border-radius:12px"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:30px;height:30px"><path fill-rule="evenodd" d="M12.00 0.40 13.91 3.62 17.03 1.55 17.36 5.28 21.07 4.77 19.75 8.27 23.31 9.42 20.60 12.00 23.31 14.58 19.75 15.73 21.07 19.23 17.36 18.72 17.03 22.45 13.91 20.38 12.00 23.60 10.09 20.38 6.97 22.45 6.64 18.72 2.93 19.23 4.25 15.73 0.69 14.58 3.40 12.00 0.69 9.42 4.25 8.27 2.93 4.77 6.64 5.28 6.97 1.55 10.09 3.62ZM7.20 7.50 9.48 7.50 9.48 11.34 13.44 7.50 16.32 7.50 11.76 12.06 16.80 16.50 13.68 16.50 9.48 12.78 9.48 16.50 7.20 16.50Z"/></svg></div>
+      <div class="logo-word" style="font-size:26px">Key<span>lion</span></div>
+      <span class="pill" style="margin-left:14px">Samadbek Xolmamatov</span>
+    </div>
+    <div class="foot"><span>Telegram: @xolmamatov09</span><span><b>10</b> / 10</span></div>
+  </section>
+
+</div>
+</div>
+
+<div class="ui">
+  <button id="prev" aria-label="Oldingi slayd">←</button>
+  <span class="count" id="count">1 / 10</span>
+  <button id="next" aria-label="Keyingi slayd">→</button>
+  <button id="full" aria-label="To'liq ekran" title="To'liq ekran (F)">⛶</button>
+</div>
+<div class="hint">← → yoki probel · F — to'liq ekran</div>
+
+<script>
+(function(){
+  const slides = [...document.querySelectorAll('.slide')];
+  const deck = document.getElementById('deck');
+  let cur = 0;
+
+  function fit(){
+    const s = Math.min(window.innerWidth / 1280, (window.innerHeight - 56) / 720);
+    deck.style.transform = 'scale(' + Math.max(.2, s) + ')';
+  }
+  function go(i){
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((el, k)=>{ el.classList.toggle('on', k === i); el.classList.toggle('back', k < i); });
+    cur = i;
+    document.getElementById('count').textContent = (i + 1) + ' / ' + slides.length;
+    document.getElementById('progress').style.width = ((i + 1) / slides.length * 100) + '%';
+    if(location.hash !== '#' + (i + 1)) history.replaceState(null, '', '#' + (i + 1));
+    if(i === 0) startTyping();
+    if(i === 5) startRace();
+  }
+  document.getElementById('prev').addEventListener('click', ()=> go(cur - 1));
+  document.getElementById('next').addEventListener('click', ()=> go(cur + 1));
+  document.getElementById('full').addEventListener('click', toggleFull);
+  function toggleFull(){
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(()=>{});
+    else document.exitFullscreen && document.exitFullscreen();
+  }
+  document.addEventListener('keydown', (e)=>{
+    if(e.ctrlKey || e.metaKey || e.altKey) return;
+    if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){ e.preventDefault(); go(cur + 1); }
+    else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){ e.preventDefault(); go(cur - 1); }
+    else if(e.key === 'Home') go(0);
+    else if(e.key === 'End') go(slides.length - 1);
+    else if(e.key === 'f' || e.key === 'F') toggleFull();
+  });
+  let tx = null;
+  document.addEventListener('touchstart', (e)=>{ tx = e.touches[0].clientX; }, { passive:true });
+  document.addEventListener('touchend', (e)=>{
+    if(tx === null) return;
+    const dx = e.changedTouches[0].clientX - tx; tx = null;
+    if(Math.abs(dx) > 40) go(cur + (dx < 0 ? 1 : -1));
+  });
+  window.addEventListener('resize', fit);
+  window.addEventListener('hashchange', ()=>{ const n = parseInt(location.hash.slice(1), 10); if(n && n - 1 !== cur) go(n - 1); });
+
+  /* slide 1: a sentence typing itself */
+  const sentence = "O'zbekiston — mening vatanim. Tez va xatosiz yozamiz!";
+  let typeTimer = null;
+  function startTyping(){
+    clearInterval(typeTimer);
+    const el = document.getElementById('typeDemo'), wpm = document.getElementById('demoWpm');
+    let n = 0;
+    typeTimer = setInterval(()=>{
+      n = n >= sentence.length + 12 ? 0 : n + 1;
+      const k = Math.min(n, sentence.length);
+      el.innerHTML = '<span class="ok">' + sentence.slice(0, k).replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span><span class="cur"></span>' + sentence.slice(k).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      wpm.textContent = k ? 40 + Math.round(k / sentence.length * 32) : 0;
+    }, 95);
+  }
+
+  /* slide 5: finger-coloured home keys */
+  const F = { q:'lp',a:'lp',z:'lp', w:'lr',s:'lr',x:'lr', e:'lm',d:'lm',c:'lm', r:'li',t:'li',f:'li',g:'li',v:'li',b:'li',
+              y:'ri',u:'ri',h:'ri',j:'ri',n:'ri',m:'ri', i:'rm',k:'rm', o:'rr',l:'rr', p:'rp',';':'rp' };
+  [['q','w','e','r','t','y','u','i','o','p'], ['a','s','d','f','g','h','j','k','l',';'], ['z','x','c','v','b','n','m']].forEach((row, ri)=>{
+    document.getElementById('kbRow' + (ri + 1)).innerHTML = row.map(k=> '<div class="key' + ('sl'.includes(k) ? ' on' : '') + '" style="background:var(--' + F[k] + ')">' + k.toUpperCase() + '</div>').join('');
+  });
+
+  /* slide 6: three racers */
+  const racers = [ { n:'Aziza', c:'#e0a940', w:72 }, { n:'Jasur', c:'#4fb8c9', w:64 }, { n:'Siz', c:'#7fc95c', w:58 } ];
+  document.getElementById('raceLanes').innerHTML = racers.map((r, i)=>
+    '<div style="margin-bottom:16px"><div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:6px"><span>' + r.n + '</span><span class="mono" style="color:var(--dim)" id="rw' + i + '">0 wpm</span></div>' +
+    '<div style="height:12px; background:var(--panel2); border-radius:999px; overflow:hidden"><div id="rb' + i + '" style="height:100%; width:0; background:' + r.c + '; border-radius:999px; transition:width .25s linear"></div></div></div>').join('');
+  let raceTimer = null;
+  function startRace(){
+    clearInterval(raceTimer);
+    let p = racers.map(()=> 0);
+    raceTimer = setInterval(()=>{
+      p = p.map((v, i)=> Math.min(100, v + racers[i].w / 40 + Math.random() * .8));
+      p.forEach((v, i)=>{ document.getElementById('rb' + i).style.width = v + '%'; document.getElementById('rw' + i).textContent = (v ? racers[i].w - 3 + Math.round(Math.random() * 6) : 0) + ' wpm'; });
+      if(p[0] >= 100){ clearInterval(raceTimer); document.getElementById('rw0').textContent = '🏆 ' + racers[0].w + ' wpm'; setTimeout(()=>{ if(cur === 5) startRace(); }, 2500); }
+    }, 120);
+  }
+
+  fit();
+  const start = parseInt(location.hash.slice(1), 10);
+  go(start ? start - 1 : 0);
+})();
+</script>
+</body>
+</html>
