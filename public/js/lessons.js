@@ -233,16 +233,17 @@
     }
     function keyEl(k){ return $('lsKb').querySelector(`[data-k="${k === ' ' ? 'space' : CSS.escape(k)}"]`); }
 
-    /* two simple hands; each finger is a rounded bar that lights up in its colour.
-       Left hand: pinky → index runs left to right (thumb on the right); right hand: index → pinky runs left to right (thumb on the left) */
+    /* two hands: four rounded fingers (longest = middle) behind a soft palm, thumb angled outwards.
+       Each finger is a bar that lights up in its key colour. The right hand is the left one mirrored. */
     function handSvg(left){
-      const ids = left ? ['lp','lr','lm','li'] : ['ri','rm','rr','rp'];
-      const xs = [18, 50, 82, 114], hs = [70, 92, 100, 88];
+      const ids = left ? ['lp','lr','lm','li'] : ['rp','rr','rm','ri'];   // drawn pinky → index (left hand's view)
+      const xs = [12, 48, 84, 120], tops = [74, 40, 24, 46];
       let f = '';
-      ids.forEach((id, i)=>{ const h = left ? hs[i] : hs[3 - i]; f += `<rect class="ls-finger" data-f="${id}" x="${xs[i]}" y="${118 - h}" width="26" height="${h + 30}" rx="13"/>`; });
-      const thumb = left ? '<rect class="ls-finger" data-f="th" x="140" y="150" width="26" height="62" rx="13" transform="rotate(-38 153 181)"/>'
-                         : '<rect class="ls-finger" data-f="th" x="-6" y="150" width="26" height="62" rx="13" transform="rotate(38 7 181)"/>';
-      return `<svg viewBox="0 0 160 230" aria-hidden="true"><path class="ls-palm" d="M12 140 Q12 120 30 118 L138 118 Q150 120 150 140 L146 200 Q140 226 110 228 L50 228 Q20 226 14 200 Z"/>${f}${thumb}</svg>`;
+      ids.forEach((id, i)=>{ f += `<rect class="ls-finger" data-f="${id}" x="${xs[i]}" y="${tops[i]}" width="30" height="${150 - tops[i]}" rx="15"/>`; });
+      const thumb = '<rect class="ls-finger" data-f="th" x="146" y="112" width="30" height="86" rx="15" transform="rotate(32 161 190)"/>';
+      const palm = '<path class="ls-palm" d="M10 138 Q10 118 30 118 L132 118 Q154 118 154 140 L154 192 Q154 234 112 234 L54 234 Q10 234 10 192 Z"/>';
+      const body = thumb + f + palm;
+      return `<svg viewBox="-40 10 250 235" aria-hidden="true">${left ? body : `<g transform="translate(164 0) scale(-1 1)">${body}</g>`}</svg>`;
     }
 
     function highlight(keys, nextCh){

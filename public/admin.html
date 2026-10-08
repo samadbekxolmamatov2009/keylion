@@ -117,8 +117,8 @@
 
   <div id="gate" class="panel" style="max-width:380px; margin:32px auto; text-align:center;">
     <p style="margin:0 0 16px; font-size:13px; color:var(--text-faint);">Admin email va parolingiz bilan kiring.</p>
-    <input type="email" id="gateEmail" placeholder="email" autocomplete="username" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:8px; font-family:var(--font-body);">
-    <input type="password" id="gatePassword" placeholder="parol (kamida 6 belgi)" autocomplete="current-password" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:12px; font-family:var(--font-body);">
+    <input type="email" id="gateEmail" name="admin-email" placeholder="email" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:8px; font-family:var(--font-body);">
+    <input type="password" id="gatePassword" name="admin-password" placeholder="parol" autocomplete="new-password" style="width:100%; background:var(--bg-elev-2); border:1px solid var(--border); border-radius:var(--radius); padding:10px; color:var(--text); font-size:13px; margin-bottom:12px; font-family:var(--font-body);">
     <button class="btn accent" id="btnAdminLogin" style="width:100%; justify-content:center;">kirish</button>
     <div id="gateError" style="color:var(--error); font-size:12px; margin-top:10px; min-height:14px;"></div>
   </div>
@@ -296,7 +296,7 @@
 
   document.getElementById('btnAdminLogin').addEventListener('click', ()=>{
     const email = document.getElementById('gateEmail').value.trim();
-    const password = document.getElementById('gatePassword').value;
+    const password = document.getElementById('gatePassword').value.trim();
     const errEl = document.getElementById('gateError');
     errEl.textContent = '';
     adminApi('POST', '/admin/login', { email, password }).then((res)=>{
@@ -304,7 +304,7 @@
       try{ sessionStorage.setItem('tezlash.admin', adminToken); }catch(e){}
       showAdmin();
     }).catch((err)=>{
-      errEl.textContent = err.status === 401 ? 'Email yoki parol noto\'g\'ri.' : 'Xato: ' + err.message;
+      errEl.textContent = err.status === 401 ? 'Email yoki parol noto\'g\'ri.' : 'Xato (' + (err.status || 'tarmoq') + '): ' + err.message;
     });
   });
 

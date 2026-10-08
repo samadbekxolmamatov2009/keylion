@@ -838,8 +838,8 @@
   .ls-key.lit{ opacity:.75; }
   .ls-key.next{ opacity:1; transform: translateY(-3px); box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent), 0 8px 18px rgba(0,0,0,.5); }
   .ls-key.miss{ animation: ls-shake .18s; box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--error); }
-  .ls-hands{ display:flex; justify-content:center; gap:40px; }
-  .ls-hands svg{ width:112px; height:auto; }
+  .ls-hands{ display:flex; justify-content:center; gap:12px; }
+  .ls-hands svg{ width:150px; height:auto; }
   .ls-finger{ fill: var(--bg-elev-2); stroke: var(--border-strong); stroke-width:1.5; transition: fill .12s; }
   .ls-palm{ fill: var(--bg-elev); stroke: var(--border-strong); stroke-width:1.5; }
   .ls-legend{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px 14px; margin-top:12px; font-size:11px; color: var(--text-faint); }
