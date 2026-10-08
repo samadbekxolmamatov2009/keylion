@@ -310,7 +310,7 @@
     x.beginPath(); x.arc(1080, 90, 260, 0, Math.PI*2); x.fill();
     x.beginPath(); x.arc(120, 640, 200, 0, Math.PI*2); x.fill();
     x.globalAlpha = 1;
-    x.fillStyle = accent; x.font = '600 34px Sora, sans-serif'; x.fillText('Tezlash', 70, 92);
+    x.fillStyle = accent; x.font = '600 34px Sora, sans-serif'; x.fillText('Keylion', 70, 92);
     x.fillStyle = '#eae7e0'; x.font = '700 64px Sora, sans-serif';
     let name = p.name;
     while(x.measureText(name).width > 680 && name.length > 3) name = name.slice(0, -2);
@@ -332,7 +332,7 @@
       x.fillStyle = '#eae7e0'; x.font = '700 52px Sora, sans-serif'; x.fillText(s[0], sx, sy);
       x.fillStyle = '#9a9aa2'; x.font = '500 22px Inter, sans-serif'; x.fillText(s[1], sx, sy + 34);
     });
-    x.fillStyle = '#6a6a72'; x.font = '500 24px Inter, sans-serif'; x.fillText(location.host || 'tezlash', 70, 572);
+    x.fillStyle = '#6a6a72'; x.font = '500 24px Inter, sans-serif'; x.fillText(location.host || 'keylion', 70, 572);
     return new Promise((resolve)=> c.toBlob(resolve, 'image/png'));
   }
   async function shareCard(){
