@@ -342,7 +342,7 @@
     if(!p) return;
     const blob = await makeShareCard(p);
     if(!blob) return;
-    const file = new File([blob], 'tezlash-' + (p.name.replace(/[^\p{L}\p{N}]+/gu, '_') || 'card') + '.png', { type: 'image/png' });
+    const file = new File([blob], 'keylion-' + (p.name.replace(/[^\p{L}\p{N}]+/gu, '_') || 'card') + '.png', { type: 'image/png' });
     if(navigator.canShare && navigator.canShare({ files: [file] })){
       try{ await navigator.share({ files: [file], text: shareText(p), url: profileUrl(p) }); return; }
       catch(e){ if(e.name === 'AbortError') return; }
