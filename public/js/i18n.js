@@ -772,6 +772,7 @@ const I18N = {
     if(typeof currentView !== 'undefined' && fbReady){
       if(currentView === 'profile') renderProfile();
       if(currentView === 'leaderboard') loadLeaderboard();
+      if(currentView === 'lessons' && typeof lessonsLangChanged === 'function') lessonsLangChanged();
     }
   }
 
