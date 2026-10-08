@@ -29,8 +29,8 @@
   document.getElementById('btnProfile').addEventListener('click', ()=> openProfile(null, 'overview'));
 
   /* ============ nav + routing ============
-     #/race, #/leaderboard, #/coach, #/profile, #/settings, #/u/<id>; no hash = the typing test */
-  const views = ['test','race','leaderboard','coach','profile'];
+     #/lessons, #/race, #/leaderboard, #/coach, #/profile, #/settings, #/u/<id>; no hash = the typing test */
+  const views = ['test','lessons','race','leaderboard','coach','profile'];
   let currentView = 'test';
   document.getElementById('mainNav').addEventListener('click', (e)=>{
     const btn = e.target.closest('button[data-view]');
@@ -38,6 +38,7 @@
     switchView(btn.dataset.view);
   });
   function switchView(name, fromRouter){
+    if(currentView === 'lessons' && name !== 'lessons') leaveLessons();
     currentView = name;
     views.forEach(v=>{
       document.getElementById('view-'+v).classList.toggle('active', v===name);
@@ -56,6 +57,7 @@
     }
     if(name==='leaderboard') loadLeaderboard();
     if(name==='coach') renderCoach();
+    if(name==='lessons') renderLessons();
     if(name==='test') setTimeout(()=> typeInput.focus(), 0);
   }
   function routeFromHash(){
@@ -64,7 +66,7 @@
     if(m) openProfile(m[1], 'overview', true);
     else if(h === '#/profile') openProfile(null, 'overview', true);
     else if(h === '#/settings') openProfile(null, 'settings', true);
-    else if(['#/race', '#/leaderboard', '#/coach'].includes(h)) switchView(h.slice(2), true);
+    else if(['#/lessons', '#/race', '#/leaderboard', '#/coach'].includes(h)) switchView(h.slice(2), true);
     else if(!h && currentView !== 'test') switchView('test', true);
   }
   window.addEventListener('hashchange', routeFromHash);

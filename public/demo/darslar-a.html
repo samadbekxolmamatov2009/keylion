@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tezlash darslari — A namuna (klassik)</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0c; --panel:#131316; --panel2:#1c1c20; --border:#26262b; --text:#eae7e0; --dim:#7a7a82; --faint:#4b4b52;
+    --accent:#e0a940; --accent-bg:#241d0e; --ok:#7fc95c; --err:#e2574c; --err-bg:#2a1412;
+    --lp:#ef6f6c; --lr:#f0a35e; --lm:#e8c547; --li:#6cc36c; --ri:#4fb8c9; --rm:#6c8ef0; --rr:#a17cf0; --rp:#e57ac9; --th:#9aa0a6;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:Inter,system-ui,sans-serif; min-height:100vh; }
+  header{ display:flex; align-items:center; gap:14px; padding:16px 28px; border-bottom:1px solid var(--border); }
+  .logo{ display:flex; align-items:center; gap:10px; font-family:Sora,sans-serif; font-weight:700; font-size:19px; }
+  .logo-mark{ width:38px; height:38px; border-radius:10px; border:1px solid #35353c; background:linear-gradient(155deg,var(--accent-bg),var(--panel2)); display:flex; align-items:center; justify-content:center; color:var(--accent); }
+  .logo span span{ color:var(--accent); }
+  .crumb{ color:var(--dim); font-size:14px; }
+  .badge{ margin-left:auto; font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--accent); border:1px solid #6b5420; border-radius:999px; padding:4px 10px; }
+  .layout{ display:grid; grid-template-columns:290px 1fr; gap:24px; max-width:1240px; margin:0 auto; padding:28px; }
+  aside{ display:flex; flex-direction:column; gap:14px; }
+  .lesson{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px; }
+  .lesson h3{ margin:0 0 2px; font-family:Sora,sans-serif; font-size:15px; }
+  .lesson .sub{ color:var(--dim); font-size:12px; font-family:'JetBrains Mono',monospace; margin-bottom:10px; }
+  .steps{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }
+  .steps button{ width:100%; display:flex; align-items:center; gap:10px; background:none; border:1px solid transparent; color:var(--text); padding:8px 10px; border-radius:9px; font:inherit; font-size:13px; cursor:pointer; text-align:left; }
+  .steps button:hover{ background:var(--panel2); }
+  .steps button.active{ background:var(--accent-bg); border-color:#6b5420; }
+  .dot{ width:20px; height:20px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; font-size:11px; border:1.5px solid var(--faint); color:var(--dim); }
+  .done .dot{ background:var(--ok); border-color:var(--ok); color:#0a0a0c; font-weight:700; }
+  .mini-stars{ margin-left:auto; color:var(--accent); font-size:11px; letter-spacing:1px; }
+  main{ background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:26px 30px 30px; min-width:0; position:relative; }
+  .top{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  .top h2{ margin:0; font-family:Sora,sans-serif; font-size:22px; }
+  .top .of{ color:var(--dim); font-size:13px; }
+  .bar{ height:6px; background:var(--panel2); border-radius:999px; overflow:hidden; margin:14px 0 22px; }
+  .bar div{ height:100%; background:var(--accent); border-radius:999px; transition:width .25s; }
+  .intro{ font-size:16px; line-height:1.7; color:#cfccc4; max-width:760px; margin-bottom:20px; }
+  .line{ font-family:'JetBrains Mono',monospace; font-size:34px; letter-spacing:1px; line-height:1.6; background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:22px 24px; margin-bottom:16px; word-break:break-word; min-height:110px; }
+  .line span{ color:var(--faint); border-radius:4px; }
+  .line span.ok{ color:var(--text); }
+  .line span.fixed{ color:var(--err); }
+  .line span.cur{ color:var(--accent); background:var(--accent-bg); box-shadow:inset 0 -3px 0 var(--accent); }
+  .line span.cur.bad{ background:var(--err-bg); box-shadow:inset 0 -3px 0 var(--err); animation:shake .18s; }
+  .line span.space.cur{ display:inline-block; min-width:.6em; }
+  @keyframes shake{ 25%{ transform:translateX(-3px);} 75%{ transform:translateX(3px);} }
+  .hint-row{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:18px; }
+  .hint{ font-size:15px; color:#cfccc4; }
+  .hint b{ color:var(--accent); font-family:'JetBrains Mono',monospace; }
+  .hint i{ font-style:normal; padding:2px 8px; border-radius:6px; color:#0a0a0c; font-weight:600; font-size:13px; }
+  .stats{ margin-left:auto; display:flex; gap:20px; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--dim); }
+  .stats b{ color:var(--text); font-size:16px; }
+  .kb{ display:flex; flex-direction:column; gap:6px; align-items:center; margin:6px auto 18px; user-select:none; }
+  .kb-row{ display:flex; gap:6px; }
+  .kb-row:nth-child(2){ margin-left:24px; } .kb-row:nth-child(3){ margin-left:44px; } .kb-row:nth-child(4){ margin-left:-20px; }
+  .key{ width:46px; height:44px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:600; color:#0a0a0c; opacity:.38; position:relative; transition:transform .08s, opacity .1s, box-shadow .1s; }
+  .key.space{ width:330px; }
+  .key.home::after{ content:''; position:absolute; bottom:6px; width:12px; height:2px; border-radius:2px; background:#0a0a0c; opacity:.6; }
+  .key.lit{ opacity:.75; }
+  .key.next{ opacity:1; transform:translateY(-3px); box-shadow:0 0 0 3px var(--bg), 0 0 0 5px var(--accent), 0 8px 18px rgba(0,0,0,.5); }
+  .key.miss{ animation:shake .18s; box-shadow:0 0 0 3px var(--bg), 0 0 0 5px var(--err); }
+  .hands{ display:flex; justify-content:center; gap:40px; }
+  .hands svg{ width:120px; height:auto; }
+  .finger{ fill:#2a2a30; stroke:#3a3a42; stroke-width:1.5; transition:fill .12s; }
+  .palm{ fill:#202026; stroke:#3a3a42; stroke-width:1.5; }
+  .legend{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px 14px; margin-top:12px; font-size:11px; color:var(--dim); }
+  .legend span::before{ content:''; display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; background:var(--c); }
+  .btn{ display:inline-flex; align-items:center; gap:8px; background:var(--panel2); color:var(--text); border:1px solid #35353c; border-radius:11px; padding:11px 20px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#0a0a0c; }
+  .btn kbd{ font-family:'JetBrains Mono',monospace; font-size:11px; opacity:.7; }
+  .result{ position:absolute; inset:0; background:rgba(10,10,12,.86); backdrop-filter:blur(4px); border-radius:18px; display:none; align-items:center; justify-content:center; }
+  .result.show{ display:flex; }
+  .result-card{ background:var(--panel2); border:1px solid #35353c; border-radius:18px; padding:30px 40px; text-align:center; min-width:340px; animation:pop .25s ease; }
+  @keyframes pop{ from{ transform:scale(.92); opacity:0; } }
+  .result-stars{ font-size:44px; letter-spacing:6px; color:var(--accent); margin:6px 0 4px; }
+  .result-stars .off{ color:#3a3a42; }
+  .result h3{ margin:0; font-family:Sora,sans-serif; font-size:22px; }
+  .result-nums{ display:flex; justify-content:center; gap:28px; margin:18px 0 22px; font-family:'JetBrains Mono',monospace; color:var(--dim); font-size:12px; }
+  .result-nums b{ display:block; color:var(--text); font-size:26px; font-family:Sora,sans-serif; }
+  .result .btns{ display:flex; gap:10px; justify-content:center; }
+  @media (max-width: 900px){ .layout{ grid-template-columns:1fr; padding:16px; } main{ padding:18px; } .line{ font-size:24px; } .hands{ display:none; } .stats{ margin-left:0; } }
+  @media (max-width: 600px){ .kb-row{ gap:3px; margin-left:0 !important; } .kb{ gap:4px; } .key{ width:23px; height:32px; font-size:10px; border-radius:6px; } .key.space{ width:160px; } header{ padding:12px 16px; flex-wrap:wrap; } .crumb{ display:none; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-mark"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><g transform="matrix(1 0 -0.2126 1 4.851 0)"><rect x="7.2" y="6" width="5.2" height="14.5" rx="1.3"/><rect x="7.2" y="3.5" width="12.2" height="6.6" rx="1.3"/><rect x="0" y="3.5" width="9" height="2.6" rx="1.3"/><rect x="3" y="7.5" width="6" height="2.6" rx="1.3"/></g></svg></div><span>Tez<span>lash</span></span></div>
+  <div class="crumb">/ Darslar · ko'r usulda yozish</div>
+  <div class="badge">NAMUNA A · KLASSIK</div>
+</header>
+
+<div class="layout">
+  <aside id="aside"></aside>
+  <main>
+    <div class="top"><h2 id="stepTitle"></h2><span class="of" id="stepOf"></span></div>
+    <div class="bar"><div id="barFill"></div></div>
+    <div id="introBox">
+      <p class="intro" id="introText"></p>
+    </div>
+    <div id="drillBox">
+      <div class="line" id="line"></div>
+      <div class="hint-row">
+        <div class="hint" id="hint"></div>
+        <div class="stats"><span>aniqlik <b id="sAcc">100%</b></span><span>xato <b id="sErr">0</b></span></div>
+      </div>
+    </div>
+    <div class="kb" id="kb"></div>
+    <div class="hands" id="hands"></div>
+    <div class="legend" id="legend"></div>
+    <div style="text-align:center; margin-top:22px;" id="introBtnWrap"><button class="btn primary" id="btnStart">Boshlash <kbd>Enter</kbd></button></div>
+    <div class="result" id="result">
+      <div class="result-card">
+        <h3 id="resTitle">Ajoyib!</h3>
+        <div class="result-stars" id="resStars"></div>
+        <div class="result-nums"><div><b id="resWpm">0</b>so'z/daq</div><div><b id="resAcc">0%</b>aniqlik</div><div><b id="resErr">0</b>xato</div></div>
+        <div class="btns"><button class="btn" id="btnRetry">Qayta</button><button class="btn primary" id="btnNext">Keyingi <kbd>Enter</kbd></button></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ===== Tezlash darslari: shared lesson data + typing engine (both demo designs use it) ===== */
+const LESSONS = [
+  { id: 'l1', title: '1-dars: Asosiy qator', sub: 'F J · D K · S L · A ;', steps: [
+    { type: 'intro', title: 'Barmoqlarni joylashtiring', keys: ['a','s','d','f','j','k','l',';'],
+      text: "Chap qo'l barmoqlari A S D F, o'ng qo'l barmoqlari J K L ; tugmalari ustida tursin. F va J tugmalaridagi kichik bo'rtiqlarni ko'rsatkich barmoqlaringiz bilan toping — klaviaturaga qaramang, his qiling. Bosh barmoqlar probel ustida." },
+    { type: 'drill', title: 'F va J', keys: ['f','j'], text: 'fff jjj fff jjj fj fj jf jf ffj jjf fjf jfj' },
+    { type: 'drill', title: 'D va K', keys: ['d','k'], text: 'ddd kkk dk kd fdf jkj dkd kdk fdk jkd' },
+    { type: 'drill', title: 'S va L', keys: ['s','l'], text: 'sss lll sl ls sds lkl fds jkl sdf lkj' },
+    { type: 'drill', title: 'A va ;', keys: ['a',';'], text: 'aaa ;;; a; ;a asdf jkl; asdf jkl; fdsa ;lkj' },
+    { type: 'drill', title: 'Hammasi birga', keys: [], text: 'asdf jkl; sad lad ask all fall dad flask jaks' },
+  ]},
+  { id: 'l2', title: "2-dars: G, H va so'zlar", sub: "G H · bo'g'inlar · so'zlar", steps: [
+    { type: 'intro', title: "Ko'rsatkich barmoqlar yonga", keys: ['g','h'],
+      text: "G tugmasini chap ko'rsatkich barmoq F dan bir qadam o'ngga cho'zilib bosadi, H ni esa o'ng ko'rsatkich barmoq J dan chapga. Bosgandan so'ng barmoq yana F / J ga qaytadi." },
+    { type: 'drill', title: 'G va H', keys: ['g','h'], text: 'fgf jhj ggg hhh gh hg fgh jhg ghg hgh' },
+    { type: 'drill', title: "Bo'g'inlar", keys: [], text: 'ha la sa da ka ja ga has lag dag hak' },
+    { type: 'drill', title: "O'zbekcha so'zlar", keys: [], text: 'dala hal sada lak jala shah salla dala' },
+    { type: 'drill', title: 'Yakuniy mashq', keys: [], text: 'dala sada hal salla jala lak shah dala hal sada' },
+  ]},
+];
+
+/* which finger presses which key (QWERTY) */
+const FINGER_NAMES = { lp: "chap jimjiloq", lr: "chap nomsiz", lm: "chap o'rta", li: "chap ko'rsatkich",
+  ri: "o'ng ko'rsatkich", rm: "o'ng o'rta", rr: "o'ng nomsiz", rp: "o'ng jimjiloq", th: 'bosh barmoq' };
+const KEY_FINGER = {};
+[['lp', "`1qaz"], ['lr', '2wsx'], ['lm', '3edc'], ['li', '45rtfgvb'], ['ri', '67yuhjnm'],
+ ['rm', '8ik,'], ['rr', '9ol.'], ['rp', "0-=p[];'/\\"], ['th', ' ']].forEach(([f, ks]) => { for (const k of ks) KEY_FINGER[k] = f; });
+const KB_ROWS = [
+  ['`','1','2','3','4','5','6','7','8','9','0','-','='],
+  ['q','w','e','r','t','y','u','i','o','p','[',']'],
+  ['a','s','d','f','g','h','j','k','l',';',"'"],
+  ['z','x','c','v','b','n','m',',','.','/'],
+  [' '],
+];
+const fingerText = (f) => (f === 'th' ? 'bosh barmoq' : FINGER_NAMES[f] + ' barmoq');
+const keyLabel = (k) => (k === ' ' ? 'probel' : k.toUpperCase());
+
+/* progress kept per demo in localStorage: { 'l1:1': {stars, wpm, acc}, ... } */
+function loadProgress(ns) { try { return JSON.parse(localStorage.getItem(ns) || '{}'); } catch (e) { return {}; } }
+function saveProgress(ns, p) { try { localStorage.setItem(ns, JSON.stringify(p)); } catch (e) {} }
+function starsFor(acc) { return acc >= 95 ? 3 : acc >= 85 ? 2 : 1; }
+
+/* one drill: the player must press the right key to move on (wrong keys are counted, like typing.com) */
+function createDrill(text, hooks) {
+  const st = { text, pos: 0, errors: 0, wrongAt: new Set(), start: 0, done: false };
+  function onKey(e) {
+    if (st.done || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key.length !== 1) return;
+    e.preventDefault();
+    if (!st.start) st.start = performance.now();
+    const expected = st.text[st.pos];
+    const typed = e.key === "’" || e.key === '`' ? "'" : e.key;
+    if (typed.toLowerCase() === expected) {
+      st.pos++;
+      hooks.update(st, true);
+      if (st.pos >= st.text.length) {
+        st.done = true;
+        const minutes = Math.max((performance.now() - st.start) / 60000, 1 / 600);
+        const acc = Math.round(st.text.length / (st.text.length + st.errors) * 100);
+        const wpm = Math.round((st.text.length / 5) / minutes);
+        hooks.finish({ acc, wpm, errors: st.errors, stars: starsFor(acc) });
+      }
+    } else {
+      st.errors++;
+      st.wrongAt.add(st.pos);
+      hooks.update(st, false, typed);
+    }
+  }
+  document.addEventListener('keydown', onKey);
+  hooks.update(st, true);
+  return { stop() { document.removeEventListener('keydown', onKey); }, state: st };
+}
+
+
+const NS = 'tezlash-demo-a';
+let progress = loadProgress(NS);
+let cur = { l: 0, s: 0 }, drill = null, resultOpen = false;
+const $ = (id) => document.getElementById(id);
+const FINGER_COLORS = { lp:'var(--lp)', lr:'var(--lr)', lm:'var(--lm)', li:'var(--li)', ri:'var(--ri)', rm:'var(--rm)', rr:'var(--rr)', rp:'var(--rp)', th:'var(--th)' };
+
+function renderAside() {
+  $('aside').innerHTML = LESSONS.map((L, li) => `<div class="lesson"><h3>${L.title}</h3><div class="sub">${L.sub}</div><ul class="steps">` +
+    L.steps.map((s, si) => {
+      const p = progress[L.id + ':' + si];
+      const active = li === cur.l && si === cur.s;
+      return `<li><button class="${active ? 'active' : ''} ${p ? 'done' : ''}" data-l="${li}" data-s="${si}"><span class="dot">${p ? '✓' : si + 1}</span>${s.title}` +
+        (p && p.stars ? `<span class="mini-stars">${'★'.repeat(p.stars)}</span>` : '') + '</button></li>';
+    }).join('') + '</ul></div>').join('');
+}
+$('aside').addEventListener('click', (e) => { const b = e.target.closest('button[data-l]'); if (b) openStep(+b.dataset.l, +b.dataset.s); });
+
+function renderKeyboard() {
+  $('kb').innerHTML = KB_ROWS.map((row) => '<div class="kb-row">' + row.map((k) =>
+    `<div class="key ${k === ' ' ? 'space' : ''} ${k === 'f' || k === 'j' ? 'home' : ''}" data-k="${k === ' ' ? 'space' : k}" style="background:${FINGER_COLORS[KEY_FINGER[k]]}">${k === ' ' ? '' : k.toUpperCase()}</div>`).join('') + '</div>').join('');
+  $('legend').innerHTML = ['lp','lr','lm','li','ri','rm','rr','rp','th'].map((f) => `<span style="--c:${FINGER_COLORS[f]}">${FINGER_NAMES[f]}</span>`).join('');
+}
+function keyEl(k) { return $('kb').querySelector(`[data-k="${k === ' ' ? 'space' : CSS.escape(k)}"]`); }
+
+/* two simple hands; each finger is a rounded bar that lights up in its colour */
+function handSvg(side) {
+  const L = side === 'l';
+  const ids = L ? ['lp','lr','lm','li'] : ['ri','rm','rr','rp'];
+  const xs = [18, 50, 82, 114], hs = [70, 92, 100, 88];
+  let f = '';
+  ids.forEach((id, i) => { const j = L ? i : 3 - i; const h = L ? hs[i] : hs[3 - i]; f += `<rect class="finger" data-f="${id}" x="${xs[j]}" y="${118 - h}" width="26" height="${h + 30}" rx="13"/>`; });
+  const thumb = L ? `<rect class="finger" data-f="th" x="140" y="150" width="26" height="62" rx="13" transform="rotate(-38 153 181)"/>` : `<rect class="finger" data-f="th" x="-6" y="150" width="26" height="62" rx="13" transform="rotate(38 7 181)"/>`;
+  return `<svg viewBox="0 0 160 230"><path class="palm" d="M12 140 Q12 120 30 118 L138 118 Q150 120 150 140 L146 200 Q140 226 110 228 L50 228 Q20 226 14 200 Z"/>${f}${thumb}</svg>`;
+}
+$('hands').innerHTML = handSvg('l') + handSvg('r');
+
+function highlight(keys, next) {
+  document.querySelectorAll('.key').forEach((el) => el.classList.remove('lit', 'next'));
+  keys.forEach((k) => { const el = keyEl(k); if (el) el.classList.add('lit'); });
+  document.querySelectorAll('.finger').forEach((el) => { el.style.fill = ''; });
+  if (next !== undefined) {
+    const el = keyEl(next); if (el) el.classList.add('next');
+    const f = KEY_FINGER[next];
+    const fe = document.querySelector(`.finger[data-f="${f}"]`); if (fe) fe.style.fill = FINGER_COLORS[f];
+  }
+}
+
+function openStep(l, s) {
+  if (drill) { drill.stop(); drill = null; }
+  closeResult();
+  cur = { l, s };
+  const L = LESSONS[l], step = L.steps[s];
+  $('stepTitle').textContent = step.title;
+  $('stepOf').textContent = `${L.title} · ${s + 1} / ${L.steps.length}`;
+  $('barFill').style.width = (s / L.steps.length * 100) + '%';
+  renderAside();
+  const isIntro = step.type === 'intro';
+  $('introBox').style.display = isIntro ? '' : 'none';
+  $('introBtnWrap').style.display = isIntro ? '' : 'none';
+  $('drillBox').style.display = isIntro ? 'none' : '';
+  if (isIntro) {
+    $('introText').textContent = step.text;
+    highlight(step.keys);
+    document.querySelectorAll('.finger').forEach((el) => { if (step.keys.some((k) => KEY_FINGER[k] === el.dataset.f)) el.style.fill = FINGER_COLORS[el.dataset.f]; });
+    return;
+  }
+  const line = $('line');
+  line.innerHTML = [...step.text].map((c) => `<span class="${c === ' ' ? 'space' : ''}">${c === ' ' ? '&nbsp;' : c}</span>`).join('');
+  const spans = line.children;
+  drill = createDrill(step.text, {
+    update(st, ok, wrongKey) {
+      for (let i = 0; i < spans.length; i++) {
+        spans[i].className = (step.text[i] === ' ' ? 'space ' : '') + (i < st.pos ? (st.wrongAt.has(i) ? 'fixed' : 'ok') : i === st.pos ? 'cur' + (ok ? '' : ' bad') : '');
+      }
+      const next = step.text[st.pos];
+      highlight(step.keys, next);
+      if (!ok && wrongKey) { const el = keyEl(wrongKey); if (el) { el.classList.remove('miss'); void el.offsetWidth; el.classList.add('miss'); } }
+      const f = KEY_FINGER[next];
+      $('hint').innerHTML = next === undefined ? '' : `Keyingi: <b>${keyLabel(next)}</b> — <i style="background:${FINGER_COLORS[f]}">${fingerText(f)}</i>`;
+      $('sErr').textContent = st.errors;
+      $('sAcc').textContent = (st.pos ? Math.round(st.pos / (st.pos + st.errors) * 100) : 100) + '%';
+      $('barFill').style.width = ((s + st.pos / step.text.length) / L.steps.length * 100) + '%';
+    },
+    finish(r) {
+      const key = L.id + ':' + s, prev = progress[key];
+      if (!prev || r.stars >= prev.stars) progress[key] = r;
+      saveProgress(NS, progress);
+      showResult(r);
+    },
+  });
+}
+
+function showResult(r) {
+  resultOpen = true;
+  $('resTitle').textContent = r.stars === 3 ? 'Ajoyib!' : r.stars === 2 ? 'Yaxshi!' : 'Yana bir urinib ko\'ring';
+  $('resStars').innerHTML = [1,2,3].map((i) => `<span class="${i <= r.stars ? '' : 'off'}">★</span>`).join('');
+  $('resWpm').textContent = r.wpm; $('resAcc').textContent = r.acc + '%'; $('resErr').textContent = r.errors;
+  $('result').classList.add('show');
+  renderAside();
+}
+function closeResult() { resultOpen = false; $('result').classList.remove('show'); }
+function nextStep() {
+  const L = LESSONS[cur.l];
+  if (cur.s + 1 < L.steps.length) openStep(cur.l, cur.s + 1);
+  else if (cur.l + 1 < LESSONS.length) openStep(cur.l + 1, 0);
+  else openStep(0, 0);
+}
+$('btnStart').addEventListener('click', nextStep);
+$('btnNext').addEventListener('click', nextStep);
+$('btnRetry').addEventListener('click', () => openStep(cur.l, cur.s));
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const step = LESSONS[cur.l].steps[cur.s];
+  if (resultOpen || step.type === 'intro') { e.preventDefault(); nextStep(); }
+});
+
+renderKeyboard();
+openStep(0, 0);
+</script>
+</body>
+</html>

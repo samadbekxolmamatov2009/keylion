@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tezlash darslari — B namuna (o'yin yo'li)</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#fff8ec; --ink:#2b2340; --soft:#8a809e; --line:#efe3cc; --gold:#f4b22e; --gold-d:#d9940f; --green:#3cc47c; --green-d:#2a9d5f; --red:#ef5b5b; --blue:#4b8df8; --card:#ffffff; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:Nunito,system-ui,sans-serif; min-height:100vh;
+    background-image: radial-gradient(circle at 10% 10%, #ffe9c2 0, transparent 30%), radial-gradient(circle at 90% 80%, #e3f3ff 0, transparent 35%); }
+  header{ display:flex; align-items:center; gap:12px; padding:14px 26px; }
+  .logo{ display:flex; align-items:center; gap:9px; font-weight:900; font-size:22px; }
+  .logo-mark{ width:40px; height:40px; border-radius:12px; background:var(--ink); color:var(--gold); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 0 #120d22; }
+  .logo b{ color:var(--gold-d); }
+  .pill{ display:flex; align-items:center; gap:6px; background:var(--card); border:2px solid var(--line); border-radius:999px; padding:6px 12px; font-weight:800; font-size:14px; }
+  .pill.stars{ margin-left:auto; color:var(--gold-d); }
+  .badge{ font-size:11px; font-weight:800; letter-spacing:.5px; color:var(--blue); background:#e8f0ff; border-radius:999px; padding:5px 10px; }
+  .screen{ display:none; } .screen.on{ display:block; }
+
+  /* ---- map ---- */
+  .map{ max-width:720px; margin:0 auto; padding:10px 20px 60px; }
+  .unit{ background:var(--card); border:2px solid var(--line); border-radius:22px; padding:16px 20px; margin:26px 0 8px; display:flex; align-items:center; gap:14px; box-shadow:0 5px 0 var(--line); }
+  .unit .num{ width:46px; height:46px; border-radius:14px; background:var(--gold); color:#fff; font-weight:900; font-size:22px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 0 var(--gold-d); }
+  .unit h2{ margin:0; font-size:20px; font-weight:900; }
+  .unit p{ margin:2px 0 0; color:var(--soft); font-weight:700; font-size:14px; }
+  .path{ position:relative; display:flex; flex-direction:column; align-items:center; gap:22px; padding:22px 0; }
+  .node-wrap{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .node{ width:78px; height:78px; border-radius:50%; border:none; cursor:pointer; font-size:30px; font-weight:900; color:#fff; background:var(--green); box-shadow:0 7px 0 var(--green-d); transition:transform .1s; display:flex; align-items:center; justify-content:center; }
+  .node:hover{ transform:translateY(-2px); }
+  .node:active{ transform:translateY(4px); box-shadow:0 3px 0 var(--green-d); }
+  .node.locked{ background:#e3dccd; box-shadow:0 7px 0 #cfc5b1; color:#b0a690; cursor:not-allowed; }
+  .node.current{ background:var(--gold); box-shadow:0 7px 0 var(--gold-d), 0 0 0 8px rgba(244,178,46,.25); animation:bob 1.6s ease-in-out infinite; }
+  .node.intro{ font-size:26px; }
+  @keyframes bob{ 50%{ transform:translateY(-6px); } }
+  .node-label{ font-weight:800; font-size:13px; color:var(--soft); }
+  .node-stars{ color:var(--gold); font-size:15px; letter-spacing:2px; min-height:18px; }
+  .node-stars .off{ color:#e3dccd; }
+
+  /* ---- exercise ---- */
+  .ex{ max-width:980px; margin:0 auto; padding:6px 24px 40px; }
+  .ex-top{ display:flex; align-items:center; gap:16px; }
+  .x{ width:44px; height:44px; border-radius:12px; border:2px solid var(--line); background:var(--card); font-size:22px; font-weight:900; color:var(--soft); cursor:pointer; }
+  .prog{ flex:1; height:18px; background:#eee3cf; border-radius:999px; overflow:hidden; }
+  .prog div{ height:100%; width:0; background:linear-gradient(90deg,var(--green),#6be0a0); border-radius:999px; transition:width .2s; box-shadow:inset 0 -4px 0 rgba(0,0,0,.08); }
+  .hearts{ font-weight:900; color:var(--red); font-size:18px; min-width:70px; text-align:right; }
+  .ex h1{ text-align:center; font-size:30px; font-weight:900; margin:26px 0 4px; }
+  .ex .sub{ text-align:center; color:var(--soft); font-weight:700; margin:0 0 26px; }
+  .tiles{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:0 auto 26px; max-width:900px; }
+  .tile{ min-width:52px; height:64px; padding:0 8px; border-radius:14px; background:var(--card); border:2px solid var(--line); box-shadow:0 5px 0 var(--line); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:30px; color:#c9bea6; transition:transform .12s, background .12s; }
+  .tile.space{ min-width:30px; background:transparent; border-color:transparent; box-shadow:none; }
+  .tile.done{ color:var(--green-d); background:#e9f9f0; border-color:#bfead2; box-shadow:0 5px 0 #bfead2; }
+  .tile.done.fixed{ color:var(--red); background:#fdeeee; border-color:#f6c9c9; box-shadow:0 5px 0 #f6c9c9; }
+  .tile.cur{ color:var(--ink); border-color:var(--gold); box-shadow:0 5px 0 var(--gold-d); transform:translateY(-8px) scale(1.08); background:#fff6df; }
+  .tile.space.cur{ background:#fff6df; border-color:var(--gold); box-shadow:0 5px 0 var(--gold-d); min-width:52px; }
+  .tile.cur.bad{ animation:wob .25s; border-color:var(--red); box-shadow:0 5px 0 #c94242; background:#fdeeee; }
+  @keyframes wob{ 25%{ transform:translateY(-8px) rotate(-6deg);} 75%{ transform:translateY(-8px) rotate(6deg);} }
+  .coach{ display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:22px; }
+  .bubble{ background:var(--card); border:2px solid var(--line); border-radius:18px; padding:12px 18px; font-weight:800; font-size:17px; box-shadow:0 4px 0 var(--line); }
+  .bubble b{ display:inline-block; background:var(--ink); color:#fff; border-radius:8px; padding:0 9px; font-family:'JetBrains Mono',monospace; margin:0 2px; }
+  .finger-chip{ display:inline-block; border-radius:999px; padding:2px 10px; color:#fff; font-size:14px; }
+  .kb{ display:flex; flex-direction:column; align-items:center; gap:7px; user-select:none; }
+  .kb-row{ display:flex; gap:7px; }
+  .kb-row:nth-child(2){ margin-left:26px; } .kb-row:nth-child(3){ margin-left:46px; } .kb-row:nth-child(4){ margin-left:-18px; }
+  .key{ width:46px; height:46px; border-radius:12px; background:var(--card); border:2px solid var(--line); box-shadow:0 4px 0 var(--line); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:15px; color:#b9ae96; text-transform:uppercase; transition:transform .08s; position:relative; }
+  .key.space{ width:320px; }
+  .key.learn{ color:var(--ink); border-color:#d9cdb3; }
+  .key.home::after{ content:''; position:absolute; bottom:7px; width:12px; height:3px; border-radius:2px; background:currentColor; opacity:.5; }
+  .key.next{ color:#fff; transform:translateY(-4px); }
+  .key.miss{ animation:wob2 .2s; }
+  @keyframes wob2{ 25%{ transform:translateX(-3px);} 75%{ transform:translateX(3px);} }
+  .intro-card{ max-width:720px; margin:0 auto 26px; background:var(--card); border:2px solid var(--line); border-radius:22px; padding:22px 26px; font-size:18px; line-height:1.65; font-weight:700; box-shadow:0 6px 0 var(--line); }
+  .go{ display:block; margin:26px auto 0; border:none; border-radius:16px; background:var(--green); color:#fff; font:inherit; font-weight:900; font-size:19px; padding:14px 44px; box-shadow:0 6px 0 var(--green-d); cursor:pointer; letter-spacing:.3px; }
+  .go:active{ transform:translateY(4px); box-shadow:0 2px 0 var(--green-d); }
+
+  /* ---- result ---- */
+  .res{ text-align:center; padding:40px 20px; }
+  .big-stars{ font-size:70px; letter-spacing:10px; margin:6px 0; }
+  .big-stars span{ display:inline-block; color:#e3dccd; }
+  .big-stars span.on{ color:var(--gold); animation:pop .45s ease backwards; text-shadow:0 5px 0 var(--gold-d); }
+  .big-stars span:nth-child(2){ animation-delay:.15s; } .big-stars span:nth-child(3){ animation-delay:.3s; }
+  @keyframes pop{ from{ transform:scale(0) rotate(-30deg); } 70%{ transform:scale(1.25); } }
+  .res h1{ font-size:34px; font-weight:900; margin:8px 0; }
+  .cards{ display:flex; justify-content:center; gap:14px; margin:22px 0 10px; flex-wrap:wrap; }
+  .card{ width:140px; border-radius:18px; border:2px solid; padding:12px 8px; font-weight:900; }
+  .card small{ display:block; font-size:12px; letter-spacing:.6px; text-transform:uppercase; }
+  .card b{ display:block; font-size:28px; margin-top:4px; }
+  .card.c1{ border-color:var(--gold); color:var(--gold-d); background:#fff6df; }
+  .card.c2{ border-color:var(--green); color:var(--green-d); background:#e9f9f0; }
+  .card.c3{ border-color:var(--blue); color:var(--blue); background:#e8f0ff; }
+  .res .row{ display:flex; justify-content:center; gap:12px; margin-top:24px; }
+  .ghost{ border:2px solid var(--line); background:var(--card); border-radius:16px; font:inherit; font-weight:900; font-size:17px; padding:12px 26px; color:var(--soft); cursor:pointer; box-shadow:0 5px 0 var(--line); }
+  .confetti{ position:fixed; inset:0; pointer-events:none; overflow:hidden; }
+  .confetti i{ position:absolute; top:-12px; width:10px; height:14px; border-radius:2px; animation:fall linear forwards; }
+  @keyframes fall{ to{ transform:translateY(110vh) rotate(720deg); } }
+  @media (max-width: 760px){ .kb-row{ gap:3px; margin-left:0 !important; } .kb{ gap:5px; } .key{ width:23px; height:32px; font-size:10px; border-radius:7px; box-shadow:0 3px 0 var(--line); } .key.space{ width:160px; } .tile{ min-width:30px; height:42px; font-size:20px; border-radius:10px; } .ex h1{ font-size:24px; } header{ padding:12px 14px; flex-wrap:wrap; } .badge{ display:none; } .node-wrap{ max-width:100%; } .path .node-wrap{ transform:translateX(calc(var(--o) * .45)) !important; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-mark"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><g transform="matrix(1 0 -0.2126 1 4.851 0)"><rect x="7.2" y="6" width="5.2" height="14.5" rx="1.3"/><rect x="7.2" y="3.5" width="12.2" height="6.6" rx="1.3"/><rect x="0" y="3.5" width="9" height="2.6" rx="1.3"/><rect x="3" y="7.5" width="6" height="2.6" rx="1.3"/></g></svg></div><span>Tez<b>lash</b></span></div>
+  <span class="badge">NAMUNA B · O'YIN YO'LI</span>
+  <span class="pill stars">★ <span id="totalStars">0</span></span>
+  <span class="pill">🔥 <span id="streak">1</span> kun</span>
+</header>
+
+<section class="screen on" id="mapScreen"><div class="map" id="map"></div></section>
+
+<section class="screen" id="exScreen">
+  <div class="ex">
+    <div class="ex-top"><button class="x" id="btnExit" title="xaritaga">×</button><div class="prog"><div id="progFill"></div></div><div class="hearts" id="errs"></div></div>
+    <h1 id="exTitle"></h1>
+    <p class="sub" id="exSub"></p>
+    <div id="introPart"><div class="intro-card" id="introText"></div></div>
+    <div id="drillPart"><div class="tiles" id="tiles"></div><div class="coach"><div class="bubble" id="bubble"></div></div></div>
+    <div class="kb" id="kb"></div>
+    <button class="go" id="btnGo">Tushunarli, boshladik! ↵</button>
+  </div>
+</section>
+
+<section class="screen" id="resScreen">
+  <div class="res">
+    <div class="big-stars" id="bigStars"></div>
+    <h1 id="resTitle"></h1>
+    <div class="cards"><div class="card c1"><small>tezlik · so'z/daq</small><b id="rWpm"></b></div><div class="card c2"><small>aniqlik</small><b id="rAcc"></b></div><div class="card c3"><small>xatolar</small><b id="rErr"></b></div></div>
+    <div class="row"><button class="ghost" id="btnAgain">Qayta</button><button class="go" style="margin:0" id="btnCont">Davom etish ↵</button></div>
+  </div>
+</section>
+<div class="confetti" id="confetti"></div>
+
+<script>
+/* ===== Tezlash darslari: shared lesson data + typing engine (both demo designs use it) ===== */
+const LESSONS = [
+  { id: 'l1', title: '1-dars: Asosiy qator', sub: 'F J · D K · S L · A ;', steps: [
+    { type: 'intro', title: 'Barmoqlarni joylashtiring', keys: ['a','s','d','f','j','k','l',';'],
+      text: "Chap qo'l barmoqlari A S D F, o'ng qo'l barmoqlari J K L ; tugmalari ustida tursin. F va J tugmalaridagi kichik bo'rtiqlarni ko'rsatkich barmoqlaringiz bilan toping — klaviaturaga qaramang, his qiling. Bosh barmoqlar probel ustida." },
+    { type: 'drill', title: 'F va J', keys: ['f','j'], text: 'fff jjj fff jjj fj fj jf jf ffj jjf fjf jfj' },
+    { type: 'drill', title: 'D va K', keys: ['d','k'], text: 'ddd kkk dk kd fdf jkj dkd kdk fdk jkd' },
+    { type: 'drill', title: 'S va L', keys: ['s','l'], text: 'sss lll sl ls sds lkl fds jkl sdf lkj' },
+    { type: 'drill', title: 'A va ;', keys: ['a',';'], text: 'aaa ;;; a; ;a asdf jkl; asdf jkl; fdsa ;lkj' },
+    { type: 'drill', title: 'Hammasi birga', keys: [], text: 'asdf jkl; sad lad ask all fall dad flask jaks' },
+  ]},
+  { id: 'l2', title: "2-dars: G, H va so'zlar", sub: "G H · bo'g'inlar · so'zlar", steps: [
+    { type: 'intro', title: "Ko'rsatkich barmoqlar yonga", keys: ['g','h'],
+      text: "G tugmasini chap ko'rsatkich barmoq F dan bir qadam o'ngga cho'zilib bosadi, H ni esa o'ng ko'rsatkich barmoq J dan chapga. Bosgandan so'ng barmoq yana F / J ga qaytadi." },
+    { type: 'drill', title: 'G va H', keys: ['g','h'], text: 'fgf jhj ggg hhh gh hg fgh jhg ghg hgh' },
+    { type: 'drill', title: "Bo'g'inlar", keys: [], text: 'ha la sa da ka ja ga has lag dag hak' },
+    { type: 'drill', title: "O'zbekcha so'zlar", keys: [], text: 'dala hal sada lak jala shah salla dala' },
+    { type: 'drill', title: 'Yakuniy mashq', keys: [], text: 'dala sada hal salla jala lak shah dala hal sada' },
+  ]},
+];
+
+/* which finger presses which key (QWERTY) */
+const FINGER_NAMES = { lp: "chap jimjiloq", lr: "chap nomsiz", lm: "chap o'rta", li: "chap ko'rsatkich",
+  ri: "o'ng ko'rsatkich", rm: "o'ng o'rta", rr: "o'ng nomsiz", rp: "o'ng jimjiloq", th: 'bosh barmoq' };
+const KEY_FINGER = {};
+[['lp', "`1qaz"], ['lr', '2wsx'], ['lm', '3edc'], ['li', '45rtfgvb'], ['ri', '67yuhjnm'],
+ ['rm', '8ik,'], ['rr', '9ol.'], ['rp', "0-=p[];'/\\"], ['th', ' ']].forEach(([f, ks]) => { for (const k of ks) KEY_FINGER[k] = f; });
+const KB_ROWS = [
+  ['`','1','2','3','4','5','6','7','8','9','0','-','='],
+  ['q','w','e','r','t','y','u','i','o','p','[',']'],
+  ['a','s','d','f','g','h','j','k','l',';',"'"],
+  ['z','x','c','v','b','n','m',',','.','/'],
+  [' '],
+];
+const fingerText = (f) => (f === 'th' ? 'bosh barmoq' : FINGER_NAMES[f] + ' barmoq');
+const keyLabel = (k) => (k === ' ' ? 'probel' : k.toUpperCase());
+
+/* progress kept per demo in localStorage: { 'l1:1': {stars, wpm, acc}, ... } */
+function loadProgress(ns) { try { return JSON.parse(localStorage.getItem(ns) || '{}'); } catch (e) { return {}; } }
+function saveProgress(ns, p) { try { localStorage.setItem(ns, JSON.stringify(p)); } catch (e) {} }
+function starsFor(acc) { return acc >= 95 ? 3 : acc >= 85 ? 2 : 1; }
+
+/* one drill: the player must press the right key to move on (wrong keys are counted, like typing.com) */
+function createDrill(text, hooks) {
+  const st = { text, pos: 0, errors: 0, wrongAt: new Set(), start: 0, done: false };
+  function onKey(e) {
+    if (st.done || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key.length !== 1) return;
+    e.preventDefault();
+    if (!st.start) st.start = performance.now();
+    const expected = st.text[st.pos];
+    const typed = e.key === "’" || e.key === '`' ? "'" : e.key;
+    if (typed.toLowerCase() === expected) {
+      st.pos++;
+      hooks.update(st, true);
+      if (st.pos >= st.text.length) {
+        st.done = true;
+        const minutes = Math.max((performance.now() - st.start) / 60000, 1 / 600);
+        const acc = Math.round(st.text.length / (st.text.length + st.errors) * 100);
+        const wpm = Math.round((st.text.length / 5) / minutes);
+        hooks.finish({ acc, wpm, errors: st.errors, stars: starsFor(acc) });
+      }
+    } else {
+      st.errors++;
+      st.wrongAt.add(st.pos);
+      hooks.update(st, false, typed);
+    }
+  }
+  document.addEventListener('keydown', onKey);
+  hooks.update(st, true);
+  return { stop() { document.removeEventListener('keydown', onKey); }, state: st };
+}
+
+
+const NS = 'tezlash-demo-b';
+let progress = loadProgress(NS);
+let cur = null, drill = null;
+const $ = (id) => document.getElementById(id);
+const COLORS = { lp:'#ef6f6c', lr:'#f0a35e', lm:'#e3b93a', li:'#3cc47c', ri:'#2eb2c8', rm:'#4b8df8', rr:'#9b6cf0', rp:'#e061b8', th:'#8a809e' };
+const flat = [];   // every step in order, for unlocking
+LESSONS.forEach((L, li) => L.steps.forEach((s, si) => flat.push({ li, si, key: L.id + ':' + si })));
+
+function show(id) { document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('on', s.id === id)); window.scrollTo(0, 0); }
+
+function renderMap() {
+  const firstOpen = flat.findIndex((f) => !progress[f.key]);
+  let html = '', total = 0;
+  LESSONS.forEach((L, li) => {
+    html += `<div class="unit"><div class="num">${li + 1}</div><div><h2>${L.title.replace(/^\d+-dars: /, '')}</h2><p>${L.sub}</p></div></div><div class="path">`;
+    L.steps.forEach((s, si) => {
+      const idx = flat.findIndex((f) => f.li === li && f.si === si);
+      const p = progress[L.id + ':' + si];
+      if (p && p.stars) total += p.stars;
+      const state = p ? '' : idx === firstOpen ? 'current' : idx > firstOpen && firstOpen !== -1 ? 'locked' : '';
+      const offset = Math.round(Math.sin(si * 1.25) * 110);
+      const icon = s.type === 'intro' ? '✋' : p ? '✓' : state === 'locked' ? '🔒' : '★';
+      html += `<div class="node-wrap" style="--o:${offset}px; transform:translateX(${offset}px)"><button class="node ${state} ${s.type === 'intro' ? 'intro' : ''}" data-l="${li}" data-s="${si}" ${state === 'locked' ? 'disabled' : ''}>${icon}</button>` +
+        `<div class="node-label">${s.title}</div><div class="node-stars">${p && p.stars ? [1,2,3].map((i) => `<span class="${i <= p.stars ? '' : 'off'}">★</span>`).join('') : ''}</div></div>`;
+    });
+    html += '</div>';
+  });
+  $('map').innerHTML = html;
+  $('totalStars').textContent = total;
+}
+$('map').addEventListener('click', (e) => { const b = e.target.closest('.node:not(.locked)'); if (b) openStep(+b.dataset.l, +b.dataset.s); });
+
+function renderKb(learnKeys) {
+  $('kb').innerHTML = KB_ROWS.map((row) => '<div class="kb-row">' + row.map((k) =>
+    `<div class="key ${k === ' ' ? 'space' : ''} ${k === 'f' || k === 'j' ? 'home' : ''} ${learnKeys.includes(k) ? 'learn' : ''}" data-k="${k === ' ' ? 'space' : k}">${k === ' ' ? 'probel' : k}</div>`).join('') + '</div>').join('');
+}
+function keyEl(k) { return $('kb').querySelector(`[data-k="${k === ' ' ? 'space' : CSS.escape(k)}"]`); }
+function markNext(k) {
+  document.querySelectorAll('.key.next').forEach((el) => { el.classList.remove('next'); el.style.background = ''; el.style.borderColor = ''; el.style.boxShadow = ''; });
+  const el = keyEl(k); if (!el) return;
+  const c = COLORS[KEY_FINGER[k]];
+  el.classList.add('next'); el.style.background = c; el.style.borderColor = c; el.style.boxShadow = `0 4px 0 rgba(0,0,0,.25)`;
+}
+
+function openStep(li, si) {
+  if (drill) { drill.stop(); drill = null; }
+  cur = { li, si };
+  const L = LESSONS[li], step = L.steps[si];
+  show('exScreen');
+  $('exTitle').textContent = step.title;
+  $('exSub').textContent = `${L.title} · ${si + 1}-qadam`;
+  $('progFill').style.width = '0%';
+  const lessonKeys = [...new Set(L.steps.flatMap((s) => s.type === 'drill' ? [...s.text.replace(/ /g, '')] : s.keys))];
+  renderKb(step.keys.length ? step.keys : lessonKeys);
+  const intro = step.type === 'intro';
+  $('introPart').style.display = intro ? '' : 'none';
+  $('drillPart').style.display = intro ? 'none' : '';
+  $('btnGo').style.display = intro ? '' : 'none';
+  $('errs').textContent = '';
+  if (intro) {
+    $('introText').textContent = step.text;
+    step.keys.forEach((k) => { const el = keyEl(k); if (el) { el.style.background = COLORS[KEY_FINGER[k]]; el.style.color = '#fff'; el.style.borderColor = COLORS[KEY_FINGER[k]]; } });
+    return;
+  }
+  $('tiles').innerHTML = [...step.text].map((c) => `<div class="tile ${c === ' ' ? 'space' : ''}">${c === ' ' ? '' : c}</div>`).join('');
+  const tiles = $('tiles').children;
+  drill = createDrill(step.text, {
+    update(st, ok, wrongKey) {
+      for (let i = 0; i < tiles.length; i++) {
+        tiles[i].className = 'tile' + (step.text[i] === ' ' ? ' space' : '') + (i < st.pos ? ' done' + (st.wrongAt.has(i) ? ' fixed' : '') : i === st.pos ? ' cur' + (ok ? '' : ' bad') : '');
+      }
+      const next = step.text[st.pos];
+      markNext(next);
+      if (!ok && wrongKey) { const el = keyEl(wrongKey); if (el) { el.classList.remove('miss'); void el.offsetWidth; el.classList.add('miss'); } }
+      if (next !== undefined) {
+        const f = KEY_FINGER[next];
+        $('bubble').innerHTML = ok ? `<b>${keyLabel(next)}</b> ni bosing — <span class="finger-chip" style="background:${COLORS[f]}">${fingerText(f)}</span>` : `Oops! Bu <b>${keyLabel(next)}</b> edi — qaramasdan, his qilib toping 🙂`;
+      }
+      $('progFill').style.width = (st.pos / step.text.length * 100) + '%';
+      $('errs').textContent = st.errors ? '✗ ' + st.errors : '';
+    },
+    finish(r) {
+      const key = L.id + ':' + si, prev = progress[key];
+      if (!prev || r.stars >= prev.stars) progress[key] = r;
+      saveProgress(NS, progress);
+      setTimeout(() => showResult(r), 250);
+    },
+  });
+}
+
+function confetti() {
+  const box = $('confetti'), cols = ['#f4b22e','#3cc47c','#4b8df8','#ef5b5b','#9b6cf0'];
+  box.innerHTML = Array.from({ length: 70 }, (_, i) => `<i style="left:${Math.random() * 100}%; background:${cols[i % 5]}; animation-duration:${1.6 + Math.random() * 1.6}s; animation-delay:${Math.random() * .4}s"></i>`).join('');
+  setTimeout(() => { box.innerHTML = ''; }, 3600);
+}
+function showResult(r) {
+  show('resScreen');
+  $('bigStars').innerHTML = [1,2,3].map((i) => `<span class="${i <= r.stars ? 'on' : ''}">★</span>`).join('');
+  $('resTitle').textContent = r.stars === 3 ? 'Zo\'r! Mukammal bajarildi!' : r.stars === 2 ? 'Yaxshi! Yana ozgina mashq' : 'Davom eting, siz uddalaysiz!';
+  $('rWpm').textContent = r.wpm; $('rAcc').textContent = r.acc + '%'; $('rErr').textContent = r.errors;
+  if (r.stars >= 2) confetti();
+}
+function nextStep() {
+  const i = flat.findIndex((f) => f.li === cur.li && f.si === cur.si);
+  const n = flat[i + 1];
+  if (n) openStep(n.li, n.si); else { renderMap(); show('mapScreen'); }
+}
+$('btnGo').addEventListener('click', nextStep);
+$('btnCont').addEventListener('click', nextStep);
+$('btnAgain').addEventListener('click', () => openStep(cur.li, cur.si));
+$('btnExit').addEventListener('click', () => { if (drill) { drill.stop(); drill = null; } renderMap(); show('mapScreen'); });
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const on = document.querySelector('.screen.on').id;
+  if (on === 'resScreen' || (on === 'exScreen' && LESSONS[cur.li].steps[cur.si].type === 'intro')) { e.preventDefault(); nextStep(); }
+});
+renderMap();
+</script>
+</body>
+</html>

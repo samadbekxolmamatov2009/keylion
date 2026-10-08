@@ -59,6 +59,12 @@ export const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS media_chunks (store TEXT NOT NULL, key TEXT NOT NULL, idx INTEGER NOT NULL, data BLOB NOT NULL, PRIMARY KEY (store, key, idx))`,
   /* ad impressions/clicks per day */
   `CREATE TABLE IF NOT EXISTS ad_stats (day TEXT NOT NULL, kind TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (day, kind))`,
+  /* touch-typing lessons: the best result per passed step (step = '<lesson>:<step>' id from lessons.js) */
+  `CREATE TABLE IF NOT EXISTS lesson_progress (
+    user_id TEXT NOT NULL, step TEXT NOT NULL, stars INTEGER NOT NULL DEFAULT 0,
+    wpm INTEGER NOT NULL DEFAULT 0, acc INTEGER NOT NULL DEFAULT 0, ts INTEGER NOT NULL,
+    PRIMARY KEY (user_id, step)
+  )`,
 ];
 
 /* Columns added after the first release. SQLite has no "ADD COLUMN IF NOT EXISTS", so each one is

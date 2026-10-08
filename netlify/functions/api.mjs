@@ -306,6 +306,35 @@ route('PUT', '/me/settings', async (req, ctx, body) => {
   return json({ prefs, profilePublic: pub === 1 });
 });
 
+/* ---------- touch-typing lessons: progress per step, so it follows the account to any computer ---------- */
+const STEP_RE = /^[a-z0-9-]{1,24}:[a-z0-9-]{1,24}$/;
+route('GET', '/lessons', async (req) => {
+  const u = await requireUser(req);
+  const rows = await q('SELECT step, stars, wpm, acc FROM lesson_progress WHERE user_id = ?', [u.id]);
+  const progress = {};
+  rows.forEach((r) => { progress[r.step] = { stars: Number(r.stars), wpm: Number(r.wpm), acc: Number(r.acc) }; });
+  return json({ progress });
+});
+
+route('PUT', '/lessons', async (req, ctx, body) => {
+  const u = await requireUser(req);
+  await limit('lessons:' + u.id, 600, 3600e3);
+  const step = String(body.step || '');
+  if (!STEP_RE.test(step)) throw new HttpError(400, 'bad step');
+  const stars = num(body.stars, 0, 3), wpm = num(body.wpm, 0, 300), acc = num(body.acc, 0, 100);
+  const have = await q1('SELECT COUNT(*) AS n FROM lesson_progress WHERE user_id = ?', [u.id]);
+  if (Number(have.n) >= 300) {
+    const known = await q1('SELECT 1 AS x FROM lesson_progress WHERE user_id = ? AND step = ?', [u.id, step]);
+    if (!known) throw new HttpError(400, 'too many steps');
+  }
+  /* keep the best attempt: more stars, or the same stars at a higher speed */
+  await q(`INSERT INTO lesson_progress (user_id, step, stars, wpm, acc, ts) VALUES (?,?,?,?,?,?)
+           ON CONFLICT(user_id, step) DO UPDATE SET stars = excluded.stars, wpm = excluded.wpm, acc = excluded.acc, ts = excluded.ts
+           WHERE excluded.stars > lesson_progress.stars OR (excluded.stars = lesson_progress.stars AND excluded.wpm > lesson_progress.wpm)`,
+    [u.id, step, stars, wpm, acc, now()]);
+  return json({ ok: true });
+});
+
 /* custom backgrounds: already resized/compressed to WebP in the browser, stored in the database (media.mjs) */
 const BG_TYPES = { 'image/webp': '.webp', 'image/jpeg': '.jpg', 'image/png': '.png' };
 const MAX_UPLOADS = 3;
