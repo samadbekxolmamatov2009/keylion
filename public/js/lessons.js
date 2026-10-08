@@ -233,17 +233,27 @@
     }
     function keyEl(k){ return $('lsKb').querySelector(`[data-k="${k === ' ' ? 'space' : CSS.escape(k)}"]`); }
 
-    /* two hands: four rounded fingers (longest = middle) behind a soft palm, thumb angled outwards.
-       Each finger is a bar that lights up in its key colour. The right hand is the left one mirrored. */
+    /* two hands drawn as tapered fingers with nails and knuckle creases over a soft palm; the right
+       hand is the left one mirrored. Each finger is a shape that lights up in its key colour. */
     function handSvg(left){
       const ids = left ? ['lp','lr','lm','li'] : ['rp','rr','rm','ri'];   // drawn pinky → index (left hand's view)
-      const xs = [12, 48, 84, 120], tops = [74, 40, 24, 46];
+      const cxs = [27, 63, 99, 135], tops = [78, 44, 28, 50];
+      const gid = 'lsSkin' + (left ? 'L' : 'R');
+      const finger = (id, cx, top, base, wb, wt)=>{
+        const r = wt / 2, len = base - top;
+        return `<path class="ls-finger" data-f="${id}" fill="url(#${gid})" d="M${cx - wb/2} ${base} L${cx - wt/2} ${top + r} Q${cx - wt/2} ${top} ${cx} ${top} Q${cx + wt/2} ${top} ${cx + wt/2} ${top + r} L${cx + wb/2} ${base}Z"/>` +
+          `<rect class="ls-nail" x="${cx - wt*0.3}" y="${top + 6}" width="${wt*0.6}" height="${wt*0.5}" rx="${wt*0.22}"/>` +
+          `<path class="ls-crease" d="M${cx - wt*0.3} ${top + len*0.42}H${cx + wt*0.3}M${cx - wt*0.3} ${top + len*0.7}H${cx + wt*0.3}"/>`;
+      };
       let f = '';
-      ids.forEach((id, i)=>{ f += `<rect class="ls-finger" data-f="${id}" x="${xs[i]}" y="${tops[i]}" width="30" height="${150 - tops[i]}" rx="15"/>`; });
-      const thumb = '<rect class="ls-finger" data-f="th" x="146" y="112" width="30" height="86" rx="15" transform="rotate(32 161 190)"/>';
-      const palm = '<path class="ls-palm" d="M10 138 Q10 118 30 118 L132 118 Q154 118 154 140 L154 192 Q154 234 112 234 L54 234 Q10 234 10 192 Z"/>';
-      const body = thumb + f + palm;
-      return `<svg viewBox="-40 10 250 235" aria-hidden="true">${left ? body : `<g transform="translate(164 0) scale(-1 1)">${body}</g>`}</svg>`;
+      ids.forEach((id, i)=>{ f += finger(id, cxs[i], tops[i], 150, 31, 27); });
+      const thumb = `<g transform="translate(-24 6) rotate(34 166 200)"><path class="ls-finger" data-f="th" fill="url(#${gid})" d="M150 200 L152 132 Q152 112 168 112 Q184 112 184 132 L186 200Z"/>` +
+        '<rect class="ls-nail" x="158" y="119" width="20" height="17" rx="7"/><path class="ls-crease" d="M157 160H179"/></g>';
+      const palmFill = '<path class="ls-palm-fill" fill="url(#' + gid + ')" d="M10 140 Q10 120 30 120 L144 120 Q156 120 156 140 L150 192 Q146 240 116 240 L50 240 Q20 240 16 192Z"/>';
+      const palmLine = '<path class="ls-palm-line" d="M10 128 L10 140 L16 192 Q20 240 50 240 L116 240 Q146 240 150 192 L156 140 L156 128"/>';
+      const defs = `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b3b45"/><stop offset="1" stop-color="#25252c"/></linearGradient></defs>`;
+      const body = thumb + f + palmFill + palmLine;
+      return `<svg viewBox="-50 10 270 240" aria-hidden="true">${defs}${left ? body : `<g transform="translate(166 0) scale(-1 1)">${body}</g>`}</svg>`;
     }
 
     function highlight(keys, nextCh){
