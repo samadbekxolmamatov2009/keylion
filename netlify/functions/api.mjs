@@ -1,4 +1,4 @@
-/* Tezlash API — single Netlify Function (served at /api/*), backed by Turso (libSQL).
+/* Keylion API — single Netlify Function (served at /api/*), backed by Turso (libSQL).
    Env vars (Netlify → Site settings → Environment variables):
      TURSO_DATABASE_URL, TURSO_AUTH_TOKEN   database
      JWT_SECRET                             optional; signs login tokens (derived from the Turso token if unset)

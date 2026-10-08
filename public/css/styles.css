@@ -813,13 +813,12 @@
   .ls-bar{ height:6px; background: var(--bg-elev-2); border-radius:999px; overflow:hidden; margin:16px 0 22px; }
   .ls-bar div{ height:100%; width:0; background: linear-gradient(90deg, var(--accent), var(--ls-gold-hi)); border-radius:999px; transition: width .2s; }
   .ls-intro{ font-size:16px; line-height:1.7; color: color-mix(in srgb, var(--text) 85%, transparent); max-width:760px; margin:0 0 20px; }
-  .ls-line{ font-family: var(--font-mono); font-size:32px; letter-spacing:1px; line-height:1.6; background: var(--bg); border:1px solid var(--border); border-radius:14px; padding:20px 24px; margin-bottom:16px; word-break:break-word; min-height:106px; }
+  .ls-line{ font-family: var(--font-mono); font-size:32px; letter-spacing:1px; line-height:1.6; background: var(--bg); border:1px solid var(--border); border-radius:14px; padding:20px 24px; margin-bottom:16px; white-space:pre-wrap; word-break:normal; overflow-wrap:normal; user-select:none; min-height:106px; }
   .ls-line span{ color: var(--text-dim); border-radius:4px; }
   .ls-line span.ok{ color: var(--text); }
   .ls-line span.fixed{ color: var(--error); }
   .ls-line span.cur{ color: var(--accent); background: var(--accent-bg); box-shadow: inset 0 -3px 0 var(--accent); }
   .ls-line span.cur.bad{ background: var(--error-bg); box-shadow: inset 0 -3px 0 var(--error); animation: ls-shake .18s; }
-  .ls-line span.space.cur{ display:inline-block; min-width:.6em; }
   @keyframes ls-shake{ 25%{ transform: translateX(-3px); } 75%{ transform: translateX(3px); } }
   .ls-hint-row{ display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:18px; }
   .ls-hint{ font-size:15px; }

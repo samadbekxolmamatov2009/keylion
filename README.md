@@ -1,4 +1,4 @@
-# Tezlash
+# Keylion
 
 Typing-speed site: tests, multiplayer race, leaderboard, AI coach, profile & achievements.
 Static frontend in `public/`, backend = one API module (`netlify/functions/api.mjs`) on **Turso** (libSQL),

@@ -1,4 +1,4 @@
-/* Tezlash as a plain Node.js web server: the static site from public/ plus the API at /api/*.
+/* Keylion as a plain Node.js web server: the static site from public/ plus the API at /api/*.
    Used on hosts without Netlify (Render — see render.yaml — or any VPS), and locally: `npm start`.
    The API itself is the same code Netlify runs (netlify/functions/api.mjs). */
 import http from 'node:http';
