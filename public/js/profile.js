@@ -310,7 +310,9 @@
     x.beginPath(); x.arc(1080, 90, 260, 0, Math.PI*2); x.fill();
     x.beginPath(); x.arc(120, 640, 200, 0, Math.PI*2); x.fill();
     x.globalAlpha = 1;
-    x.fillStyle = accent; x.font = '600 34px Sora, sans-serif'; x.fillText('Keylion', 70, 92);
+    x.fillStyle = accent;
+    x.save(); x.translate(70, 50); x.scale(2.1, 2.1); x.fill(new Path2D('M12.00 0.40 13.91 3.62 17.03 1.55 17.36 5.28 21.07 4.77 19.75 8.27 23.31 9.42 20.60 12.00 23.31 14.58 19.75 15.73 21.07 19.23 17.36 18.72 17.03 22.45 13.91 20.38 12.00 23.60 10.09 20.38 6.97 22.45 6.64 18.72 2.93 19.23 4.25 15.73 0.69 14.58 3.40 12.00 0.69 9.42 4.25 8.27 2.93 4.77 6.64 5.28 6.97 1.55 10.09 3.62ZM7.20 7.50 9.48 7.50 9.48 11.34 13.44 7.50 16.32 7.50 11.76 12.06 16.80 16.50 13.68 16.50 9.48 12.78 9.48 16.50 7.20 16.50Z'), 'evenodd'); x.restore();
+    x.font = '600 34px Sora, sans-serif'; x.fillText('Keylion', 132, 92);
     x.fillStyle = '#eae7e0'; x.font = '700 64px Sora, sans-serif';
     let name = p.name;
     while(x.measureText(name).width > 680 && name.length > 3) name = name.slice(0, -2);
