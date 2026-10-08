@@ -233,12 +233,13 @@
     }
     function keyEl(k){ return $('lsKb').querySelector(`[data-k="${k === ' ' ? 'space' : CSS.escape(k)}"]`); }
 
-    /* two simple hands; each finger is a rounded bar that lights up in its colour */
+    /* two simple hands; each finger is a rounded bar that lights up in its colour.
+       Left hand: pinky → index runs left to right (thumb on the right); right hand: index → pinky runs left to right (thumb on the left) */
     function handSvg(left){
       const ids = left ? ['lp','lr','lm','li'] : ['ri','rm','rr','rp'];
       const xs = [18, 50, 82, 114], hs = [70, 92, 100, 88];
       let f = '';
-      ids.forEach((id, i)=>{ const j = left ? i : 3 - i, h = left ? hs[i] : hs[3 - i]; f += `<rect class="ls-finger" data-f="${id}" x="${xs[j]}" y="${118 - h}" width="26" height="${h + 30}" rx="13"/>`; });
+      ids.forEach((id, i)=>{ const h = left ? hs[i] : hs[3 - i]; f += `<rect class="ls-finger" data-f="${id}" x="${xs[i]}" y="${118 - h}" width="26" height="${h + 30}" rx="13"/>`; });
       const thumb = left ? '<rect class="ls-finger" data-f="th" x="140" y="150" width="26" height="62" rx="13" transform="rotate(-38 153 181)"/>'
                          : '<rect class="ls-finger" data-f="th" x="-6" y="150" width="26" height="62" rx="13" transform="rotate(38 7 181)"/>';
       return `<svg viewBox="0 0 160 230" aria-hidden="true"><path class="ls-palm" d="M12 140 Q12 120 30 118 L138 118 Q150 120 150 140 L146 200 Q140 226 110 228 L50 228 Q20 226 14 200 Z"/>${f}${thumb}</svg>`;
