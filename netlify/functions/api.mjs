@@ -890,20 +890,35 @@ route('GET', '/media/:key', async (req, ctx) => serveMedia(req, 'ads', ctx.key))
 route('HEAD', '/media/:key', async (req, ctx) => serveMedia(req, 'ads', ctx.key));
 
 /* ---------- AI coach (server-side Groq call, OpenAI-compatible API) ---------- */
-async function groqChat(messages, { json = false, maxTokens = 400 } = {}) {
-  if (!process.env.GROQ_API_KEY) throw new HttpError(503, 'coach unavailable');
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+const GROQ_FALLBACK_MODELS = ['llama-3.1-8b-instant', 'gemma2-9b-it'];
+async function groqCall(model, messages, maxTokens, json) {
+  return fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: 'Bearer ' + process.env.GROQ_API_KEY },
     body: JSON.stringify({
-      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
-      messages, max_tokens: maxTokens, temperature: 0.6,
+      model, messages, max_tokens: maxTokens, temperature: 0.6,
       ...(json ? { response_format: { type: 'json_object' } } : {}),
     }),
   });
-  if (!r.ok) { console.error('groq error', r.status, await r.text().catch(() => '')); throw new HttpError(502, 'coach upstream error'); }
-  const data = await r.json();
-  return data.choices?.[0]?.message?.content?.trim() || null;
+}
+async function groqChat(messages, { json = false, maxTokens = 400 } = {}) {
+  if (!process.env.GROQ_API_KEY) throw new HttpError(503, 'coach unavailable: GROQ_API_KEY missing');
+  /* the configured model first; when Groq rejects it (retired / not allowed for this key) try the fallbacks */
+  const models = [process.env.GROQ_MODEL || 'llama-3.3-70b-versatile', ...GROQ_FALLBACK_MODELS];
+  let last = '';
+  for (const model of models) {
+    let r;
+    try { r = await groqCall(model, messages, maxTokens, json); } catch (e) { last = 'network: ' + e.message; continue; }
+    if (r.ok) {
+      const data = await r.json();
+      return data.choices?.[0]?.message?.content?.trim() || null;
+    }
+    const text = await r.text().catch(() => '');
+    last = r.status + ' ' + text.slice(0, 160);
+    console.error('groq error', model, r.status, text);
+    if (r.status === 401 || r.status === 403 || r.status === 429) break;   // key problem or rate limit: another model won't help
+  }
+  throw new HttpError(502, 'coach upstream error: ' + last);
 }
 
 const LANG_NAMES = { uz: "Uzbek (Latin script)", ru: 'Russian', en: 'English', kk: 'Kazakh (Cyrillic)', ky: 'Kyrgyz (Cyrillic)' };
@@ -981,7 +996,14 @@ export default async (req, context) => {
       const names = ['TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN', 'JWT_SECRET', 'GOOGLE_CLIENT_ID', 'ADMIN_EMAIL', 'ADMIN_PASSWORD', 'GROQ_API_KEY'];
       let dbStatus = 'ok';
       try { await db().execute('SELECT 1'); } catch (e) { dbStatus = 'error: ' + String(e.message).slice(0, 200); }
-      return json({ api: 'ok', env: Object.fromEntries(names.map((k) => [k, !!process.env[k]])), database: dbStatus });
+      let groqStatus = 'no key';
+      if (process.env.GROQ_API_KEY) {
+        try {
+          const r = await fetch('https://api.groq.com/openai/v1/models', { headers: { authorization: 'Bearer ' + process.env.GROQ_API_KEY } });
+          groqStatus = r.ok ? 'ok' : 'error: ' + r.status + ' ' + (await r.text().catch(() => '')).slice(0, 160);
+        } catch (e) { groqStatus = 'error: ' + String(e.message).slice(0, 120); }
+      }
+      return json({ api: 'ok', env: Object.fromEntries(names.map((k) => [k, !!process.env[k]])), database: dbStatus, groq: groqStatus });
     }
     const missing = ['TURSO_DATABASE_URL', 'TURSO_AUTH_TOKEN'].filter((k) => !process.env[k] && !(k === 'TURSO_AUTH_TOKEN' && /^file:/.test(process.env.TURSO_DATABASE_URL || '')));
     if (missing.length) throw new HttpError(503, 'server not configured, missing environment variables: ' + missing.join(', '));
