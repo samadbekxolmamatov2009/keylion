@@ -5,6 +5,7 @@
      GOOGLE_CLIENT_ID                       Google OAuth web client id (for "Sign in with Google")
      ADMIN_EMAIL, ADMIN_PASSWORD            credentials for /admin.html
      GROQ_API_KEY                           AI coach (key never reaches the browser); optional GROQ_MODEL */
+import './load-env.mjs';
 import { createClient } from '@libsql/client';
 import { putMedia, headMedia, readMedia, listMedia, deleteMedia } from './media.mjs';
 import crypto from 'node:crypto';
